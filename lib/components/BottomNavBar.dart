@@ -61,7 +61,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
         labels: const ["Accueil", "Profil", "Créer", "Messages"],
         initialSelectedTab: "Accueil",
         tabIconColor: Colors.black,
-        tabSelectedColor: Colors.red,
+        tabSelectedColor: Colors.green[500],
         icons: const [Icons.home, Icons.person, Icons.add, Icons.message],
         textStyle: const TextStyle(color: Colors.black),
         onTabItemSelected: (int index) {
