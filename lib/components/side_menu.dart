@@ -29,8 +29,8 @@ class _SideMenuState extends State<SideMenu> {
             children: [
               const InfoCard(),
 
-              const SizedBox(height: 20),
-              Divider(color: Colors.green[700]),
+              const SizedBox(height: 40),
+              Divider(color: Colors.green[800]),
               _buildMenuItem(Icons.settings, 'Paramètres', 0),
               _buildMenuItem(Icons.home, 'Accueil', 1),
               _buildMenuItem(Icons.favorite, 'Favoris', 2),
@@ -50,7 +50,6 @@ class _SideMenuState extends State<SideMenu> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
-        color: isActive ? Colors.green[700] : Colors.transparent,
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
         child: Row(
           children: [
