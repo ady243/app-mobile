@@ -14,7 +14,7 @@ class MenuBtn extends StatelessWidget {
       child: GestureDetector(
         onTap: press,
         child: Container(
-          margin: const EdgeInsets.only(left: 16),
+          margin: const EdgeInsets.only(left: 10),
           height: 40,
           width: 40,
           decoration: const BoxDecoration(
@@ -31,7 +31,7 @@ class MenuBtn extends StatelessWidget {
           child: const Icon(
             Icons.menu,
             color: Colors.black,
-            size: 24.0,
+            size: 30.0,
           ),
         ),
       ),

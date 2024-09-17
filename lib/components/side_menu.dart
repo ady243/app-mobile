@@ -21,7 +21,7 @@ class _SideMenuState extends State<SideMenu> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        width: 288,
+        width: 500,
         height: double.infinity,
         color: Colors.green[500],
         child: SafeArea(
