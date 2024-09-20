@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/components/side_menu.dart';
+import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/pages/profileScreen.dart';
 import '../models/menu_btn.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+class EntryPoint extends StatefulWidget {
+  const EntryPoint({Key? key}) : super(key: key);
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _EtryPointState createState() => _EtryPointState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _EtryPointState extends State<EntryPoint> {
   bool isSideBarClosed = true;
 
   @override
@@ -40,7 +41,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(24)),
-              child: Profile(),
+              child: LoginPage(),
             ),
           ),
           AnimatedPositioned(

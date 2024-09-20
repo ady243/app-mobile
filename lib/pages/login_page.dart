@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:teamup/pages/signup_page.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -67,6 +68,7 @@ class LoginPage extends StatelessWidget {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () {
+
           },
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
@@ -75,7 +77,10 @@ class LoginPage extends StatelessWidget {
           ),
           child: const Text(
             "Login",
-            style: TextStyle(fontSize: 20),
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+            ),
           ),
         )
       ],
@@ -98,6 +103,10 @@ class LoginPage extends StatelessWidget {
         const Text("Dont have an account? "),
         TextButton(
             onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SignupPage()),
+              );
             },
             child: const Text("Sign Up", style: TextStyle(color: Colors.green),)
         )

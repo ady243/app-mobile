@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   rive: ^0.13.13
   rive_animated_icon: ^2.0.0
+  device_preview: ^1.2.0
 
 dev_dependencies:
   flutter_test:
