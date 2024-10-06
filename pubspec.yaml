@@ -39,6 +39,8 @@ dependencies:
   rive: ^0.13.13
   rive_animated_icon: ^2.0.0
   device_preview: ^1.2.0
+  dio: ^5.7.0
+  flutter_secure_storage: ^9.2.2
 
 dev_dependencies:
   flutter_test:

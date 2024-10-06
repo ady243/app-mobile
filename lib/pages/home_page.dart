@@ -1,33 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/components/side_menu.dart';
-import 'package:teamup/pages/login_page.dart';
-import 'package:teamup/pages/home_page.dart';
-import '../models/menu_btn.dart';
-import '../services/auth.service.dart';
+import '../components/BottomNavBar.dart';
 
-class EntryPoint extends StatefulWidget {
-  const EntryPoint({Key? key}) : super(key: key);
+
+
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  _EntryPointState createState() => _EntryPointState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _EntryPointState extends State<EntryPoint> {
+class _HomePageState extends State<HomePage> {
   bool isSideBarClosed = true;
-  bool isLoggedIn = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkLoginStatus();
-  }
-
-  void _checkLoginStatus() async {
-    bool loggedIn = await AuthService().isLoggedIn();
-    setState(() {
-      isLoggedIn = loggedIn;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +22,6 @@ class _EntryPointState extends State<EntryPoint> {
       extendBody: true,
       body: Stack(
         children: [
-          // Side menu
           AnimatedPositioned(
             duration: const Duration(milliseconds: 900),
             curve: Curves.fastOutSlowIn,
@@ -55,9 +39,11 @@ class _EntryPointState extends State<EntryPoint> {
                   ? const BorderRadius.all(Radius.circular(24))
                   : BorderRadius.zero,
             ),
-            child: ClipRRect(
-              borderRadius: const BorderRadius.all(Radius.circular(24)),
-              child: isLoggedIn ? HomePage() : const LoginPage(),
+            child: const Scaffold(
+              body: Center(
+                child: Text("Welcome to Home Page!"),
+              ),
+              bottomNavigationBar: BottomNavBar(),
             ),
           ),
           AnimatedPositioned(
@@ -65,8 +51,9 @@ class _EntryPointState extends State<EntryPoint> {
             curve: Curves.easeInCirc,
             left: isSideBarClosed ? 16 : MediaQuery.of(context).size.width - 160,
             top: 12,
-            child: MenuBtn(
-              press: () {
+            child: IconButton(
+              icon: Icon(isSideBarClosed ? Icons.menu : Icons.close),
+              onPressed: () {
                 setState(() {
                   isSideBarClosed = !isSideBarClosed;
                 });

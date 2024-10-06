@@ -24,7 +24,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
         ),
       ),
     ),
-    Profile(),
+    UserProfilePage(),
     Center(
       child: Text(
         'Créer une session sport',
