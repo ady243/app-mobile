@@ -37,7 +37,7 @@ class AuthService {
   Future<void> login(String email, String password) async {
     try {
       final response = await _dio.post(
-        'http://localhost:3003/api/login',
+        'http://10.0.2.2:3003/api/login',
         data: {
           'email': email,
           'password': password,
@@ -65,7 +65,7 @@ class AuthService {
   Future<void> register(String username, String email, String password) async {
     try {
       final response = await _dio.post(
-        'http://localhost:3003/api/register',
+        'http://10.0.2.2:3003/api/register',
         data: {
           'username': username,
           'email': email,

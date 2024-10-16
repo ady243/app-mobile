@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/components/info_card.dart';
+import 'package:teamup/pages/login_page.dart';
+import 'package:teamup/services/auth.service.dart';
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -15,26 +17,34 @@ class _SideMenuState extends State<SideMenu> {
     setState(() {
       _activeIndex = index;
     });
+
+    if (index == 5) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        width: 500,
-        height: double.infinity,
+        width: 1000,
         color: Colors.green[500],
         child: SafeArea(
           child: Column(
             children: [
               const InfoCard(),
+              const SizedBox(height: 20, width: double.infinity,),
 
-              const SizedBox(height: 40),
-              Divider(color: Colors.green[800]),
-              _buildMenuItem(Icons.settings, 'Paramètres', 0),
-              _buildMenuItem(Icons.home, 'Accueil', 1),
-              _buildMenuItem(Icons.favorite, 'Favoris', 2),
-              _buildMenuItem(Icons.person, 'Profil', 3),
+              _buildMenuItem(Icons.sports_soccer_rounded, 'Matches', 0),
+              _buildMenuItem(Icons.favorite, 'Favoris', 1),
+              _buildMenuItem(Icons.link, "Inviter", 2),
+              _buildMenuItem(Icons.person_search, 'chercher', 3),
+              const Spacer(),
+              _buildMenuItem(Icons.settings, 'Paramètres', 4),
+              _buildMenuItem(Icons.exit_to_app, 'Déconnexion', 5),
             ],
           ),
         ),
@@ -45,16 +55,17 @@ class _SideMenuState extends State<SideMenu> {
   Widget _buildMenuItem(IconData icon, String title, int index) {
     bool isActive = _activeIndex == index;
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => _onMenuItemTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
+        width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
         child: Row(
           children: [
             Icon(icon, color: isActive ? Colors.white : Colors.white70),
-            const SizedBox(width: 5),
+            const SizedBox(width: 10),
             Text(
               title,
               style: TextStyle(

@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:teamup/entry/entry_point.dart';
 import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/pages/signup_page.dart';
-import 'package:teamup/services/auth.service.dart'; // Service d'authentification
+import 'package:teamup/services/auth.service.dart';
 import 'package:device_preview/device_preview.dart';
 
 void main() {
   runApp(
-    DevicePreview(
-      enabled: !kReleaseMode,
-      builder: (context) => const MyApp(),
-    ),
+   // DevicePreview(
+     // enabled: !kReleaseMode,
+     // builder: (context) => const MyApp(),
+    //),
+    const MyApp(),
   );
 }
+
+
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

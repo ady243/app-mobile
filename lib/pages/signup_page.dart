@@ -73,7 +73,7 @@ class _SignupPageState extends State<SignupPage> {
               _buildHeader(),
               _buildInputFields(),
               _buildRegisterButton(),
-              const Center(child: Text("Or")),
+              const Center(child: Text("Ou")),
               _buildLoginOption(),
             ],
           ),
@@ -87,7 +87,7 @@ class _SignupPageState extends State<SignupPage> {
       children: [
         const SizedBox(height: 60.0),
         const Text(
-          "Sign up",
+          "Créer un compte",
           style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 20),
@@ -102,13 +102,13 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildInputFields() {
     return Column(
       children: [
-        _buildTextField(_usernameController, "Username", Icons.person),
+        _buildTextField(_usernameController, "Nom d'utilisateur", Icons.person),
         const SizedBox(height: 20),
         _buildTextField(_emailController, "Email", Icons.email),
         const SizedBox(height: 20),
-        _buildTextField(_passwordController, "Password", Icons.lock, isPassword: true),
+        _buildTextField(_passwordController, "Mot de passe", Icons.lock, isPassword: true),
         const SizedBox(height: 20),
-        _buildTextField(_confirmPasswordController, "Confirm Password", Icons.lock, isPassword: true),
+        _buildTextField(_confirmPasswordController, "Confirmer votre mot de passe ", Icons.lock, isPassword: true),
       ],
     );
   }
@@ -139,7 +139,7 @@ class _SignupPageState extends State<SignupPage> {
         backgroundColor: Colors.green[900],
       ),
       child: const Text(
-        "Sign up",
+        "S'inscrire",
         style: TextStyle(fontSize: 16, color: Colors.white),
       ),
     );
@@ -149,7 +149,7 @@ class _SignupPageState extends State<SignupPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Already have an account?"),
+        const Text("Vous avez déjà un compte ?"),
         TextButton(
           onPressed: () {
             Navigator.pushReplacement(
@@ -158,7 +158,7 @@ class _SignupPageState extends State<SignupPage> {
             );
           },
           child: Text(
-            "Login",
+            "Se connecter",
             style: TextStyle(color: Colors.green[900]),
           ),
         ),

@@ -28,11 +28,11 @@ class LoginPage extends StatelessWidget {
     return const Column(
       children: [
         Text(
-          "Welcome Back",
-          style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+          "Ha vous revoilà!",
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 10),
-        Text("Enter your credentials to login"),
+        Text("Connectez-vous pour continuer"),
       ],
     );
   }
@@ -62,7 +62,7 @@ class LoginPage extends StatelessWidget {
         TextField(
           controller: _passwordController,
           decoration: InputDecoration(
-            hintText: "Password",
+            hintText: "Mot de passe",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
@@ -91,7 +91,6 @@ class LoginPage extends StatelessWidget {
                 _showAlert(context, "Erreur lors de la connexion.");
               }
             } else {
-              // Afficher une alerte si les champs sont vides
               _showAlert(context, "Veuillez remplir tous les champs.");
             }
           },
@@ -101,7 +100,7 @@ class LoginPage extends StatelessWidget {
             backgroundColor: Colors.green[900],
           ),
           child: const Text(
-            "Login",
+            "Se connecter",
             style: TextStyle(
               fontSize: 20,
               color: Colors.white,
@@ -115,7 +114,7 @@ class LoginPage extends StatelessWidget {
   Widget _forgotPassword(BuildContext context) {
     return TextButton(
       onPressed: () {
-        // Implémenter la navigation vers la page "Mot de passe oublié"
+        _showAlert(context, "Contactez l'administrateur pour réinitialiser votre mot de passe.");
       },
       child: const Text(
         "Forgot password?",
@@ -145,7 +144,6 @@ class LoginPage extends StatelessWidget {
     );
   }
 
-  // Méthode pour afficher une alerte si les champs sont vides ou en cas d'erreur
   void _showAlert(BuildContext context, String message) {
     showDialog(
       context: context,

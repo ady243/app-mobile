@@ -6,20 +6,12 @@ class UserProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Padding(
-          padding: EdgeInsets.only(top: 40),
-          child: Text(
-            'Profile',
-          ),
-        ),
-      ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image de profil
             const CircleAvatar(
               radius: 60,
               backgroundImage: NetworkImage(
