@@ -11,7 +11,22 @@ class SideMenu extends StatefulWidget {
 }
 
 class _SideMenuState extends State<SideMenu> {
+  final logout = AuthService().logout;
   int _activeIndex = 0;
+  String? _username;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserInfo();
+  }
+
+  void _fetchUserInfo() async {
+    final userInfo = await AuthService().getUserInfo();
+    setState(() {
+      _username = userInfo?['username'];
+    });
+  }
 
   void _onMenuItemTap(int index) {
     setState(() {
@@ -19,6 +34,7 @@ class _SideMenuState extends State<SideMenu> {
     });
 
     if (index == 5) {
+      logout();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -36,8 +52,8 @@ class _SideMenuState extends State<SideMenu> {
           child: Column(
             children: [
               const InfoCard(),
+              if (_username != null)
               const SizedBox(height: 20, width: double.infinity,),
-
               _buildMenuItem(Icons.sports_soccer_rounded, 'Matches', 0),
               _buildMenuItem(Icons.favorite, 'Favoris', 1),
               _buildMenuItem(Icons.link, "Inviter", 2),
