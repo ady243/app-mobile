@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:motion_tab_bar_v2/motion-tab-bar.dart';
 
+import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
 
 class BottomNavBar extends StatefulWidget {
@@ -25,16 +26,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
       ),
     ),
     UserProfilePage(),
-    Center(
-      child: Text(
-        'Créer une session sport',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 24,
-          color: Colors.blue,
-        ),
-      ),
-    ),
+    CreateMatchPage(),
     Center(
       child: Text(
         'Messages',
