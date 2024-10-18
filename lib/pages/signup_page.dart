@@ -122,7 +122,7 @@ class _SignupPageState extends State<SignupPage> {
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
-        fillColor: Colors.green.withOpacity(0.1),
+        fillColor: Color(0xFF01BF6B).withOpacity(0.1),
         filled: true,
         prefixIcon: Icon(icon),
       ),
@@ -136,7 +136,7 @@ class _SignupPageState extends State<SignupPage> {
       style: ElevatedButton.styleFrom(
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(vertical: 10),
-        backgroundColor: Colors.green[900],
+        backgroundColor: const Color(0xFF01BF6B),
       ),
       child: const Text(
         "S'inscrire",
@@ -157,9 +157,9 @@ class _SignupPageState extends State<SignupPage> {
               MaterialPageRoute(builder: (context) => const LoginPage()),
             );
           },
-          child: Text(
+          child: const Text(
             "Se connecter",
-            style: TextStyle(color: Colors.green[900]),
+            style: TextStyle(color: Color(0xFF01BF6B)),
           ),
         ),
       ],

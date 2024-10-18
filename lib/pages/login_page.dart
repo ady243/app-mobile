@@ -11,7 +11,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -59,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
-            fillColor: Colors.green.withOpacity(0.1),
+            fillColor: Color(0xFF01BF6B).withOpacity(0.1),
             filled: true,
             prefixIcon: const Icon(Icons.email),
           ),
@@ -73,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
-            fillColor: Colors.green.withOpacity(0.1),
+            fillColor: Color(0xFF01BF6B).withOpacity(0.1),
             filled: true,
             prefixIcon: const Icon(Icons.lock),
           ),
@@ -103,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: Colors.green[900],
+            backgroundColor: Color(0xFF01BF6B),
           ),
           child: const Text(
             "Se connecter",
