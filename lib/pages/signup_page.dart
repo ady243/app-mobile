@@ -92,7 +92,7 @@ class _SignupPageState extends State<SignupPage> {
         ),
         const SizedBox(height: 20),
         Text(
-          "Create your account",
+          "Inscrivez-vous pour accéder à l'application",
           style: TextStyle(fontSize: 15, color: Colors.grey[700]),
         ),
       ],

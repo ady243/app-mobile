@@ -3,9 +3,15 @@ import 'package:teamup/pages/signup_page.dart';
 import '../services/auth.service.dart';
 import 'home_page.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,7 +123,7 @@ class LoginPage extends StatelessWidget {
         _showAlert(context, "Contactez l'administrateur pour réinitialiser votre mot de passe.");
       },
       child: const Text(
-        "Forgot password?",
+        "Mot de passe oublié ?",
         style: TextStyle(color: Colors.green),
       ),
     );
@@ -127,7 +133,7 @@ class LoginPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Don't have an account? "),
+        const Text("Vous n'avez pas de compte ?"),
         TextButton(
           onPressed: () {
             Navigator.push(
@@ -136,7 +142,7 @@ class LoginPage extends StatelessWidget {
             );
           },
           child: const Text(
-            "Sign Up",
+            "S'inscrire",
             style: TextStyle(color: Colors.green),
           ),
         ),
