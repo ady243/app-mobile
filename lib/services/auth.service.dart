@@ -78,6 +78,62 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>?> getUserInfo() async {
+    try {
+      if (await isLoggedIn()) {
+        final response = await _dio.get('http://10.0.2.2:3003/api/userinfo');
+        if (response.statusCode == 200) {
+          return response.data;
+        } else {
+          throw Exception('Erreur lors de la récupération des informations utilisateur.');
+        }
+      } else {
+        throw Exception('Utilisateur non connecté.');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des informations utilisateur: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> updateUser(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(
+        'http://10.0.2.2:3003/api/userUpdate',
+        data: {
+          'username': data['username'],
+          'email': data['email'],
+          'profilePhoto': data['profilePhoto'],
+          'birthDate': data['birthDate'],
+          'role': data['role'],
+          'favoriteSport': data['favoriteSport'],
+          'location': data['location'],
+          'skillLevel': data['skillLevel'],
+          'bio': data['bio'],
+          'pac': data['pac'],
+          'sho': data['sho'],
+          'pas': data['pas'],
+          'dri': data['dri'],
+          'def': data['def'],
+          'phy': data['phy'],
+          'matchesPlayed': data['matchesPlayed'],
+          'matchesWon': data['matchesWon'],
+          'goalsScored': data['goalsScored'],
+          'behaviorScore': data['behaviorScore'],
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Erreur lors de la mise à jour des informations utilisateur.');
+      }
+    } catch (e) {
+      print('Erreur lors de la mise à jour des informations utilisateur: $e');
+      return null;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _storage.delete(key: 'accessToken');
@@ -107,21 +163,6 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>?> getUserInfo() async {
-    try {
-      if (await isLoggedIn()) {
-        final response = await _dio.get('http://10.0.2.2:3003/api/userinfo');
-        if (response.statusCode == 200) {
-          return response.data;
-        } else {
-          throw Exception('Erreur lors de la récupération des informations utilisateur.');
-        }
-      } else {
-        throw Exception('Utilisateur non connecté.');
-      }
-    } catch (e) {
-      print('Erreur lors de la récupération des informations utilisateur: $e');
-      return null;
-    }
-  }
+
+
 }
