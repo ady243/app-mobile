@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:motion_tab_bar_v2/motion-tab-bar.dart';
 
+import '../pages/chats_screen.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
 
@@ -23,20 +24,14 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
           fontWeight: FontWeight.bold,
           color: Colors.deepPurpleAccent,
         ),
+
       ),
+
     ),
     UserProfilePage(),
     CreateMatchPage(),
-    Center(
-      child: Text(
-        'Messages',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.teal,
-        ),
-      ),
-    ),
+    ChatsScreen(),
+
   ];
 
   void _onItemTapped(int index) {
