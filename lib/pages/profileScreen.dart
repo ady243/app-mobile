@@ -9,14 +9,13 @@ class Number {
 
   Number(this.value, this.max, this.min);
 
-  // Méthode pour créer un objet Number à partir d'une valeur existante
   static Number fromValue(int value) {
     return Number(value.clamp(0, 99), 99, 0);
   }
 }
 
 class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({Key? key}) : super(key: key);
+  const UserProfilePage({super.key});
   static String routeName = 'profile';
 
   @override
@@ -67,6 +66,45 @@ class _UserProfilePageState extends State<UserProfilePage> {
     });
   }
 
+  Future<void> _updateUser() async {
+    final data = {
+      'username': _username,
+      'email': _email,
+      'matchesPlayed': _matches_played.value,
+      'matchesWon': _matchWon.value,
+      'goalsScored': _goals_scored.value,
+      'behaviorScore': _behavior_score.value,
+      'pac': _pac.value,
+      'sho': _sho?.value,
+      'pas': _pas?.value,
+      'dri': _dri?.value,
+      'def': _def?.value,
+      'phy': _phy?.value,
+    };
+
+    try {
+      final updatedUser = await AuthService().updateUser(data);
+      if (updatedUser != null) {
+        setState(() {
+          _username = updatedUser['username'];
+          _email = updatedUser['email'];
+          _matches_played = Number(updatedUser['matchesPlayed'], 99, 0);
+          _matchWon = Number(updatedUser['matchesWon'], 99, 0);
+          _goals_scored = Number(updatedUser['goalsScored'], 99, 0);
+          _behavior_score = Number(updatedUser['behaviorScore'], 99, 0);
+          _pac = Number(updatedUser['pac'], 99, 0);
+          _sho = Number(updatedUser['sho'], 99, 0);
+          _pas = Number(updatedUser['pas'], 99, 0);
+          _dri = Number(updatedUser['dri'], 99, 0);
+          _def = Number(updatedUser['def'], 99, 0);
+          _phy = Number(updatedUser['phy'], 99, 0);
+        });
+      }
+    } catch (e) {
+      print('Erreur lors de la mise à jour des informations utilisateur: $e');
+    }
+  }
+
   // Fonction pour ouvrir un panneau modal depuis le bas
   void _openBottomSheet(BuildContext context, String field, TextEditingController controller, Function onSave) {
     showModalBottomSheet(
@@ -92,12 +130,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 onPressed: () {
                   onSave();
                   Navigator.of(context).pop();
+                  _updateUser(); // Call updateUser after saving
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF01BF6B),
                 ),
                 child: const Text('Sauvegarder',style: (
-                  TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
+                    TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
                 ),),
               ),
             ],

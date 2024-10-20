@@ -3,6 +3,8 @@ import 'package:teamup/components/info_card.dart';
 import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/services/auth.service.dart';
 
+import '../pages/profileScreen.dart';
+
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
 
@@ -40,6 +42,7 @@ class _SideMenuState extends State<SideMenu> {
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     }
+
   }
 
   @override
@@ -51,7 +54,15 @@ class _SideMenuState extends State<SideMenu> {
         child: SafeArea(
           child: Column(
             children: [
-              const InfoCard(),
+              InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserProfilePage()),
+                  );
+                },
+                child: const InfoCard(),
+              ),
               if (_username != null)
               const SizedBox(height: 20, width: double.infinity,),
               _buildMenuItem(Icons.sports_soccer_rounded, 'Matches', 0),
