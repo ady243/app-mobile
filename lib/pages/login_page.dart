@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/pages/signup_page.dart';
+import 'package:toastification/toastification.dart';
+import '../components/ToastComponent.dart';
 import '../services/auth.service.dart';
 import 'home_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
             _inputFields(context),
             _forgotPassword(context),
             _signup(context),
+            _buildGoogleSignInButton(),
           ],
         ),
       ),
@@ -91,12 +95,12 @@ class _LoginPageState extends State<LoginPage> {
                   context,
                   MaterialPageRoute(builder: (context) => const HomePage()),
                 );
+                ToastComponent.showToast(context, "Connexion réussie", ToastificationType.success);
               } catch (e) {
-
-                _showAlert(context, "Erreur lors de la connexion.");
+                ToastComponent.showToast(context, "Erreur lors de la connexion", ToastificationType.error);
               }
             } else {
-              _showAlert(context, "Veuillez remplir tous les champs.");
+              ToastComponent.showToast(context, "Veuillez remplir tous les champs", ToastificationType.error);
             }
           },
           style: ElevatedButton.styleFrom(
@@ -119,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _forgotPassword(BuildContext context) {
     return TextButton(
       onPressed: () {
-        _showAlert(context, "Contactez l'administrateur pour réinitialiser votre mot de passe.");
+        ToastComponent.showToast(context, "Contactez l'administrateur pour réinitialiser votre mot de passe.", ToastificationType.info);
       },
       child: const Text(
         "Mot de passe oublié ?",
@@ -149,23 +153,18 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _showAlert(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Erreur'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
+  Widget _buildGoogleSignInButton() {return Container(
+    child: Center(
+      child: CircleAvatar(
+        radius: 30,
+        backgroundColor:  Color(0xFF01BF6B) ,
+        child: IconButton(
+          icon: const Icon(Icons.g_mobiledata, size: 40, color: Colors.black),
+          onPressed: () {
+          },
+        ),
+      ),
+    ),
+  );
   }
 }
