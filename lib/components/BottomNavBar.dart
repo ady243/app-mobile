@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:motion_tab_bar_v2/motion-tab-bar.dart';
 
+import '../pages/accueil_page.dart';
 import '../pages/chats_screen.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
@@ -16,18 +17,8 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    Center(
-      child: Text(
-        'Accueil',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.deepPurpleAccent,
-        ),
 
-      ),
-
-    ),
+    AccueilPage(),
     UserProfilePage(),
     CreateMatchPage(),
     ChatsScreen(),

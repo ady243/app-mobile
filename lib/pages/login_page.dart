@@ -157,12 +157,9 @@ class _LoginPageState extends State<LoginPage> {
     child: Center(
       child: CircleAvatar(
         radius: 30,
-        backgroundColor:  Color(0xFF01BF6B) ,
-        child: IconButton(
-          icon: const Icon(Icons.g_mobiledata, size: 40, color: Colors.black),
-          onPressed: () {
-          },
-        ),
+        backgroundColor: Colors.grey[200],
+        child: Image.asset(
+            'assets/logos/google_light.png', height: 30),
       ),
     ),
   );

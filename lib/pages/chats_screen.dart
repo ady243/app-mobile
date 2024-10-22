@@ -28,7 +28,7 @@ class _ChatsScreenState extends State<ChatsScreen> {
         centerTitle: true,
         backgroundColor: const Color(0xFF01BF6B),
       ),
-      body: Body(),
+      body: const Body(),
     );
   }
 }

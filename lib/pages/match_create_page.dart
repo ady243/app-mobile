@@ -17,17 +17,16 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   final TextEditingController _scoreTeam1Controller = TextEditingController();
   final TextEditingController _scoreTeam2Controller = TextEditingController();
 
-  // Fonction pour ouvrir le panneau modal depuis le bas
   void _openBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Permet au bottom sheet de s'ajuster
+      isScrollControlled: true,
       builder: (BuildContext context) {
-        return SingleChildScrollView( // Ajout du SingleChildScrollView
+        return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
-              mainAxisSize: MainAxisSize.min, // Pour que le popup s'adapte à son contenu
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
                   'Créer un match',
