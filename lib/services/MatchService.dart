@@ -33,8 +33,8 @@ class MatchService {
 
   Future<Map<String, dynamic>> getMatchWithPlayers(String matchId) async {
     try {
-      final response = await _dio.get('$apiUrl/01JARHPZR5C5Y0ZWG1HRGTVADH');
-      print(response.data);
+      final response = await _dio.get('$apiUrl/01JBFQAS1JKZ8R7P3KSKY3FM9Z');
+      print(response.data.formations);
       if (response.statusCode == 200) {
         return response.data;
       } else {

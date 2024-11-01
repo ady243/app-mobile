@@ -63,6 +63,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/images/football.jpg
+    - assets/images/terrain.png
     - assets/logos/google_light.png
 
 
