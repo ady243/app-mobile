@@ -5,22 +5,24 @@ class MatchCard extends StatelessWidget {
   final String matchDate;
   final String matchTime;
   final String address;
+  final String status;
   final int numberOfPlayers;
+  final bool isJoined;
   final VoidCallback onTap;
+  final VoidCallback onJoin;
 
   const MatchCard({
     Key? key,
-    required String? description,
-    required String? matchDate,
-    required String? matchTime,
-    required String? address,
+    required this.description,
+    required this.matchDate,
+    required this.matchTime,
+    required this.address,
+    required this.status,
     required this.numberOfPlayers,
+    required this.isJoined,
     required this.onTap,
-  })  : description = description ?? '',
-        matchDate = matchDate ?? '',
-        matchTime = matchTime ?? '',
-        address = address ?? '',
-        super(key: key);
+    required this.onJoin,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -108,24 +110,43 @@ class MatchCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  Text(
-                    'Nombre des joueurs: $numberOfPlayers',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.person, color: Colors.white),
+                      const SizedBox(width: 5),
+                      Text(
+                        numberOfPlayers.toString(),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.info, color: Colors.white),
+                      const SizedBox(width: 5),
+                      Text(
+                        status,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
                     child: ElevatedButton(
-                      onPressed: onTap,
+                      onPressed: isJoined ? null : onJoin,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: isJoined ? Colors.grey : Colors.green,
                       ),
-                      child: const Text(
-                        'Réjoindre le match',
-                        style: TextStyle(
+                      child: Text(
+                        isJoined ? 'Vous avez rejoint' : 'Réjoindre le match',
+                        style: const TextStyle(
                           color: Colors.white,
                         ),
                       ),

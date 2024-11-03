@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-
-
 class AuthService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
@@ -79,57 +77,55 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>?> getUserInfo() async {
-    try {
-      if (await isLoggedIn()) {
-        final response = await _dio.get('http://10.0.2.2:3003/api/userinfo');
-        if (response.statusCode == 200) {
-          return response.data;
+    const int maxRetries = 3;
+    int retryCount = 0;
+    int delay = 1;
+
+    while (retryCount < maxRetries) {
+      try {
+        if (await isLoggedIn()) {
+          final response = await _dio.get('http://10.0.2.2:3003/api/userinfo');
+
+          if (response.statusCode == 200) {
+            return response.data;
+          } else if (response.statusCode == 429) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+              print('Rate limit exceeded. Retrying in $delay seconds...');
+              await Future.delayed(Duration(seconds: delay));
+              delay *= 2;
+            } else {
+              print('Max retries reached. Rate limit exceeded.');
+              throw Exception('Rate limit exceeded. Please try again later.');
+            }
+          } else {
+            throw Exception('Error retrieving user info: ${response.statusCode}');
+          }
         } else {
-          throw Exception('Erreur lors de la récupération des informations utilisateur.');
+          throw Exception('User not logged in.');
         }
-      } else {
-        throw Exception('Utilisateur non connecté.');
+      } catch (e) {
+        print('Error retrieving user info: $e');
+        return null;
       }
-    } catch (e) {
-      print('Erreur lors de la récupération des informations utilisateur: $e');
-      return null;
     }
+    return null;
   }
+
 
   Future<Map<String, dynamic>?> updateUser(Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(
         'http://10.0.2.2:3003/api/userUpdate',
-        data: {
-          'username': data['username'],
-          'email': data['email'],
-          'profilePhoto': data['profilePhoto'],
-          'birthDate': data['birthDate'],
-          'role': data['role'],
-          'favoriteSport': data['favoriteSport'],
-          'location': data['location'],
-          'skillLevel': data['skillLevel'],
-          'bio': data['bio'],
-          'pac': data['pac'],
-          'sho': data['sho'],
-          'pas': data['pas'],
-          'dri': data['dri'],
-          'def': data['def'],
-          'phy': data['phy'],
-          'matchesPlayed': data['matchesPlayed'],
-          'matchesWon': data['matchesWon'],
-          'goalsScored': data['goalsScored'],
-          'behaviorScore': data['behaviorScore'],
-        },
+        data: data,
       );
 
       if (response.statusCode == 200) {
         return response.data;
       } else {
-        throw Exception('Erreur lors de la mise à jour des informations utilisateur.');
+        throw Exception('Erreur lors de la mise à jour des informations utilisateur: ${response.statusCode}');
       }
     } catch (e) {
-      print('Erreur lors de la mise à jour des informations utilisateur: $e');
       return null;
     }
   }
@@ -162,7 +158,4 @@ class AuthService {
       return null;
     }
   }
-
-
-
 }
