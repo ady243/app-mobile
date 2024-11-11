@@ -41,7 +41,7 @@ class _HomePageState extends State<HomePage> {
             ),
             child: const Scaffold(
               body: Center(
-                child: Text("Welcome to Home Page!"),
+                child: Text("Welcome to Home Page!!!"),
               ),
               bottomNavigationBar: BottomNavBar(),
             ),

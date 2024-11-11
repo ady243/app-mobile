@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:motion_tab_bar_v2/motion-tab-bar.dart';
 
 import '../pages/profileScreen.dart';
+import '../pages/welcome.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -14,7 +15,7 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    Center(
+  /* Center(
       child: Text(
         'Accueil',
         style: TextStyle(
@@ -23,7 +24,8 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
           color: Colors.deepPurpleAccent,
         ),
       ),
-    ),
+    ),*/
+    WelcomePage(),
     UserProfilePage(),
     Center(
       child: Text(

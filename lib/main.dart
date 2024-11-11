@@ -5,14 +5,16 @@ import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/pages/signup_page.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:device_preview/device_preview.dart';
+import '../pages/welcome.dart';
+
 
 void main() {
   runApp(
-   // DevicePreview(
-     // enabled: !kReleaseMode,
-     // builder: (context) => const MyApp(),
-    //),
-    const MyApp(),
+    DevicePreview(
+      enabled: !kReleaseMode,
+     builder: (context) => const MyApp(),
+    ),
+   // const MyApp()
   );
 }
 
@@ -53,6 +55,7 @@ class _MyAppState extends State<MyApp> {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
         '/home': (context) => const EntryPoint(),
+        '/welcome': (context) => const WelcomePage(),
       },
     );
   }
