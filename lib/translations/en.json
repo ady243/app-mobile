@@ -1,0 +1,15 @@
+{
+  "welcome_back": "Welcome back!",
+  "login_instructions": "Log in to continue",
+  "email": "Email",
+  "password": "Password",
+  "login": "Login",
+  "login_success": "Login successful",
+  "login_error": "Login error",
+  "fill_fields": "Please fill all fields",
+  "login_button": "Log in",
+  "forgot_password": "Forgot password?",
+  "reset_password_info": "Contact the administrator to reset your password.",
+  "no_account": "Don't have an account?",
+  "sign_up": "Sign up"
+}

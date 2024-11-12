@@ -30,6 +30,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  intl: 0.19.0
+  easy_localization: ^3.0.0
+
+
+
   motion_tab_bar_v2: ^0.3.0
 
 
@@ -41,10 +46,16 @@ dependencies:
   device_preview: ^1.2.0
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
+  google_fonts: ^6.2.1
+  toastification: ^2.3.0
+  fluttertoast: ^8.2.8
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  shared_preferences: ^2.0.8
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -58,6 +69,16 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/images/football.jpg
+    - assets/images/terrain.png
+    - assets/logos/google_light.png
+    - assets/images/stade.jpeg
+    - assets/images/stadium.jpg
+    - assets/images/terrainn.jpg
+    - assets/lang/en-US.json
+    - assets/lang/fr-FR.json
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

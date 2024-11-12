@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:toastification/toastification.dart';
+import '../components/ToastComponent.dart';
 import '../services/auth.service.dart';
 import 'login_page.dart';
 
@@ -12,6 +14,7 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   final AuthService _authService = AuthService();
@@ -19,43 +22,45 @@ class _SignupPageState extends State<SignupPage> {
   void _register() async {
     final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
+    final location = _locationController.text.trim();
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (password != confirmPassword) {
-      _showSnackBar("Les mots de passe ne correspondent pas");
+      ToastComponent.showToast(context, "Les mots de passe ne correspondent pas", ToastificationType.error);
       return;
     }
 
     if (!_isEmailValid(email)) {
-      _showSnackBar("Adresse email non valide");
+      ToastComponent.showToast(context, "Adresse email non valide", ToastificationType.error);
       return;
     }
 
     if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      _showSnackBar("Veuillez remplir tous les champs");
+      ToastComponent.showToast(context, "Veuillez remplir tous les champs", ToastificationType.error);
+      return;
+    }
+
+    if (location.isEmpty) {
+      ToastComponent.showToast(context, "Veuillez renseigner votre adresse", ToastificationType.error);
       return;
     }
 
     try {
       await _authService.register(username, email, password);
-      _showSnackBar("Inscription réussie");
+      ToastComponent.showToast(context, "Inscription réussie", ToastificationType.success);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     } catch (e) {
-      _showSnackBar("Erreur lors de l'inscription : ${e.toString()}");
+      ToastComponent.showToast(context, "Erreur lors de l'inscription : ${e.toString()}", ToastificationType.error);
     }
   }
 
   bool _isEmailValid(String email) {
     final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
     return emailRegExp.hasMatch(email);
-  }
-
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -74,7 +79,7 @@ class _SignupPageState extends State<SignupPage> {
               _buildInputFields(),
               _buildRegisterButton(),
               const Center(child: Text("Ou")),
-              _buildLoginOption(),
+              _buildLoginOption(), // Add this line
             ],
           ),
         ),
@@ -92,7 +97,7 @@ class _SignupPageState extends State<SignupPage> {
         ),
         const SizedBox(height: 20),
         Text(
-          "Create your account",
+          "Inscrivez-vous pour accéder à l'application",
           style: TextStyle(fontSize: 15, color: Colors.grey[700]),
         ),
       ],
@@ -105,6 +110,8 @@ class _SignupPageState extends State<SignupPage> {
         _buildTextField(_usernameController, "Nom d'utilisateur", Icons.person),
         const SizedBox(height: 20),
         _buildTextField(_emailController, "Email", Icons.email),
+        const SizedBox(height: 20),
+        _buildTextField(_locationController, "Adresse", Icons.home),
         const SizedBox(height: 20),
         _buildTextField(_passwordController, "Mot de passe", Icons.lock, isPassword: true),
         const SizedBox(height: 20),
@@ -122,7 +129,7 @@ class _SignupPageState extends State<SignupPage> {
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
-        fillColor: Colors.green.withOpacity(0.1),
+        fillColor: Color(0xFF01BF6B).withOpacity(0.1),
         filled: true,
         prefixIcon: Icon(icon),
       ),
@@ -136,7 +143,7 @@ class _SignupPageState extends State<SignupPage> {
       style: ElevatedButton.styleFrom(
         shape: const StadiumBorder(),
         padding: const EdgeInsets.symmetric(vertical: 10),
-        backgroundColor: Colors.green[900],
+        backgroundColor: const Color(0xFF01BF6B),
       ),
       child: const Text(
         "S'inscrire",
@@ -149,7 +156,6 @@ class _SignupPageState extends State<SignupPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Vous avez déjà un compte ?"),
         TextButton(
           onPressed: () {
             Navigator.pushReplacement(
@@ -157,12 +163,13 @@ class _SignupPageState extends State<SignupPage> {
               MaterialPageRoute(builder: (context) => const LoginPage()),
             );
           },
-          child: Text(
+          child: const Text(
             "Se connecter",
-            style: TextStyle(color: Colors.green[900]),
+            style: TextStyle(color: Color(0xFF01BF6B)),
           ),
         ),
       ],
     );
   }
+
 }

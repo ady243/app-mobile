@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: isSideBarClosed ? Colors.white : Colors.green,
+      backgroundColor: isSideBarClosed ? Colors.white : Color(0xFF01BF6B),
       resizeToAvoidBottomInset: false,
       extendBody: true,
       body: Stack(
@@ -25,8 +25,8 @@ class _HomePageState extends State<HomePage> {
           AnimatedPositioned(
             duration: const Duration(milliseconds: 900),
             curve: Curves.fastOutSlowIn,
-            width: 200,
-            left: isSideBarClosed ? -258 : 0,
+            width: 300,
+            left: isSideBarClosed ? -200 : 0,
             height: MediaQuery.of(context).size.height,
             child: const SideMenu(),
           ),
@@ -36,7 +36,7 @@ class _HomePageState extends State<HomePage> {
             transform: Matrix4.translationValues(isSideBarClosed ? 0 : 288, 0, 0),
             decoration: BoxDecoration(
               borderRadius: isSideBarClosed
-                  ? const BorderRadius.all(Radius.circular(24))
+                  ? const BorderRadius.all(Radius.circular(50))
                   : BorderRadius.zero,
             ),
             child: const Scaffold(

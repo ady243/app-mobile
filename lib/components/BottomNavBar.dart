@@ -3,6 +3,9 @@ import 'package:motion_tab_bar_v2/motion-tab-bar.dart';
 
 import '../pages/profileScreen.dart';
 import '../pages/welcome.dart';
+import '../pages/accueil_page.dart';
+import '../pages/match_create_page.dart';
+import '../pages/chats_screen.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -27,26 +30,9 @@ class _BottomNavBarState extends State<BottomNavBar> with SingleTickerProviderSt
     ),*/
     WelcomePage(),
     UserProfilePage(),
-    Center(
-      child: Text(
-        'Créer une session sport',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 24,
-          color: Colors.blue,
-        ),
-      ),
-    ),
-    Center(
-      child: Text(
-        'Messages',
-        style: TextStyle(
-          fontSize: 24,
-          fontWeight: FontWeight.bold,
-          color: Colors.teal,
-        ),
-      ),
-    ),
+    CreateMatchPage(),
+    ChatsScreen(),
+
   ];
 
   void _onItemTapped(int index) {

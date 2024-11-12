@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/pages/signup_page.dart';
+import 'package:toastification/toastification.dart';
+import '../components/ToastComponent.dart';
 import '../services/auth.service.dart';
 import 'home_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -18,21 +26,27 @@ class LoginPage extends StatelessWidget {
             _inputFields(context),
             _forgotPassword(context),
             _signup(context),
+            _buildGoogleSignInButton(),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showLanguageDialog(context),
+        child: Icon(Icons.language),
+        backgroundColor: Colors.green,
       ),
     );
   }
 
   Widget _header() {
-    return const Column(
+    return Column(
       children: [
         Text(
-          "Ha vous revoilà!",
-          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+          "welcome_back".tr(),
+          style: const TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: 10),
-        Text("Connectez-vous pour continuer"),
+        const SizedBox(height: 10),
+        Text("login_instructions".tr()),
       ],
     );
   }
@@ -48,12 +62,12 @@ class LoginPage extends StatelessWidget {
         TextField(
           controller: _emailController,
           decoration: InputDecoration(
-            hintText: "Email",
-            border: OutlineInputBorder(
+            hintText: "email".tr(),
+            border:  OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
-            fillColor: Colors.green.withOpacity(0.1),
+            fillColor: const Color(0xFF01BF6B).withOpacity(0.1),
             filled: true,
             prefixIcon: const Icon(Icons.email),
           ),
@@ -62,12 +76,12 @@ class LoginPage extends StatelessWidget {
         TextField(
           controller: _passwordController,
           decoration: InputDecoration(
-            hintText: "Mot de passe",
-            border: OutlineInputBorder(
+            hintText: "password".tr(),
+            border:  OutlineInputBorder(
               borderRadius: BorderRadius.circular(18),
               borderSide: BorderSide.none,
             ),
-            fillColor: Colors.green.withOpacity(0.1),
+            fillColor: const Color(0xFF01BF6B).withOpacity(0.1),
             filled: true,
             prefixIcon: const Icon(Icons.lock),
           ),
@@ -86,22 +100,22 @@ class LoginPage extends StatelessWidget {
                   context,
                   MaterialPageRoute(builder: (context) => const HomePage()),
                 );
+                ToastComponent.showToast(context, "login_success".tr(), ToastificationType.success);
               } catch (e) {
-
-                _showAlert(context, "Erreur lors de la connexion.");
+                ToastComponent.showToast(context, "login_error".tr(), ToastificationType.error);
               }
             } else {
-              _showAlert(context, "Veuillez remplir tous les champs.");
+              ToastComponent.showToast(context, "fill_fields".tr(), ToastificationType.error);
             }
           },
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: Colors.green[900],
+            backgroundColor: const Color(0xFF01BF6B),
           ),
-          child: const Text(
-            "Se connecter",
-            style: TextStyle(
+          child: Text(
+            "login_button".tr(),
+            style: const TextStyle(
               fontSize: 20,
               color: Colors.white,
             ),
@@ -114,11 +128,11 @@ class LoginPage extends StatelessWidget {
   Widget _forgotPassword(BuildContext context) {
     return TextButton(
       onPressed: () {
-        _showAlert(context, "Contactez l'administrateur pour réinitialiser votre mot de passe.");
+        ToastComponent.showToast(context, "reset_password_info".tr(), ToastificationType.info);
       },
-      child: const Text(
-        "Forgot password?",
-        style: TextStyle(color: Colors.green),
+      child: Text(
+        "forgot_password".tr(),
+        style: const TextStyle(color: Colors.green),
       ),
     );
   }
@@ -127,7 +141,7 @@ class LoginPage extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text("Don't have an account? "),
+        Text("no_account".tr()),
         TextButton(
           onPressed: () {
             Navigator.push(
@@ -135,30 +149,55 @@ class LoginPage extends StatelessWidget {
               MaterialPageRoute(builder: (context) => const SignupPage()),
             );
           },
-          child: const Text(
-            "Sign Up",
-            style: TextStyle(color: Colors.green),
+          child: Text(
+            "sign_up".tr(),
+            style: const TextStyle(color: Colors.green),
           ),
         ),
       ],
     );
   }
 
-  void _showAlert(BuildContext context, String message) {
+  Widget _buildGoogleSignInButton() {
+    return Container(
+      child: Center(
+        child: CircleAvatar(
+          radius: 30,
+          backgroundColor: Colors.grey[200],
+          child: Image.asset(
+              'assets/logos/google_light.png', height: 30),
+        ),
+      ),
+    );
+  }
+
+  // Fonction pour afficher un dialogue permettant à l'utilisateur de changer de langue
+  void _showLanguageDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Erreur'),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('OK'),
-            ),
-          ],
+          title: Text('choose_language'.tr()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('English'),
+                onTap: () {
+                  context.setLocale(Locale('en', 'US'));
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text('Français'),
+                onTap: () {
+                  context.setLocale(Locale('fr', 'FR'));
+                  Navigator.pop(context);
+                },
+              ),
+              // Ajouter d'autres langues ici si nécessaire
+            ],
+          ),
         );
       },
     );
