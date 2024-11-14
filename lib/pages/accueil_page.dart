@@ -16,6 +16,7 @@ class _AccueilPageState extends State<AccueilPage> {
   final MatchService _matchService = MatchService();
   final AuthService _authService = AuthService();
   List<Map<String, dynamic>> _matches = [];
+  List<Map<String, dynamic>> _nearbyMatches = [];
   final Set<String> _joinedMatches = {};
   bool _isLoading = true;
 
@@ -51,6 +52,20 @@ class _AccueilPageState extends State<AccueilPage> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  void _showNearbyMatches() async {
+    setState(() => _isLoading = true);
+    try {
+      final nearbyMatches = await _matchService.getNearbyMatches();
+      setState(() {
+        _nearbyMatches = nearbyMatches;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching nearby matches: $e');
+      setState(() => _isLoading = false);
     }
   }
 
@@ -107,31 +122,47 @@ class _AccueilPageState extends State<AccueilPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        itemCount: _matches.length,
-        itemBuilder: (context, index) {
-          final match = _matches[index];
-          print('Match Data: $match');
-          String description = match['description'] ?? 'No Description';
-          String matchDate = match['match_date'] ?? 'No Date';
-          String matchTime = match['match_time'] ?? 'No Time';
-          String status = match['status'] ?? 'No Status';
-          String address = match['address'] ?? 'No Address';
-          int numberOfPlayers = match['number_of_players'] ?? 0;
-          String matchId = match['id']?.toString() ?? '';
+          : Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              onPressed: _showNearbyMatches,
+              child: const Text('Autour de moi'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: (_nearbyMatches.isNotEmpty ? _nearbyMatches : _matches).length,
+              itemBuilder: (context, index) {
+                final match = (_nearbyMatches.isNotEmpty ? _nearbyMatches : _matches)[index];
+                print('Match Data: $match');
+                String description = match['description'] ?? 'No Description';
+                String matchDate = match['match_date'] ?? 'No Date';
+                String matchTime = match['match_time'] ?? 'No Time';
+                String status = match['status'] ?? 'No Status';
+                String address = match['address'] ?? 'No Address';
+                int numberOfPlayers = match['number_of_players'] ?? 0;
+                String matchId = match['id']?.toString() ?? '';
 
-          return MatchCard(
-            description: description,
-            matchDate: matchDate,
-            matchTime: matchTime,
-            status: status,
-            address: address,
-            numberOfPlayers: numberOfPlayers,
-            isJoined: _joinedMatches.contains(matchId),
-            onJoin: () => _joinMatch(matchId),
-            onTap: () => _navigateToMatchDetails(matchId),
-          );
-        },
+                return MatchCard(
+                  description: description,
+                  matchDate: matchDate,
+                  matchTime: matchTime,
+                  status: status,
+                  address: address,
+                  numberOfPlayers: numberOfPlayers,
+                  isJoined: _joinedMatches.contains(matchId),
+                  onJoin: () => _joinMatch(matchId),
+                  onTap: () => _navigateToMatchDetails(matchId),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

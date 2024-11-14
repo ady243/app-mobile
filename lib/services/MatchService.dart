@@ -141,4 +141,24 @@ class MatchService {
       return false;
     }
   }
+
+  Future<List<Map<String, dynamic>>> getNearbyMatches() async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$apiUrl/matches/nearby',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Échec de la récupération des matchs proches: ${response.data}');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des matchs proches: $e');
+      throw Exception('Échec de la récupération des matchs proches');
+    }
+  }
 }
