@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/services/auth.service.dart';
-
 import '../services/ChatService.dart';
-
 
 class ChatPage extends StatefulWidget {
   final String matchId;

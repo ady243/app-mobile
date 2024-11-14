@@ -14,6 +14,7 @@ class AuthService {
       error: true,
     ));
 
+
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final accessToken = await _storage.read(key: 'accessToken');
@@ -30,7 +31,6 @@ class AuthService {
       },
     ));
   }
-
   Future<void> login(String email, String password) async {
     try {
       final response = await _dio.post(

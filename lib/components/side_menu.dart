@@ -35,14 +35,13 @@ class _SideMenuState extends State<SideMenu> {
       _activeIndex = index;
     });
 
-    if (index == 5) {
+    if (index == 3) {
       logout();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
     }
-
   }
 
   @override
@@ -50,7 +49,7 @@ class _SideMenuState extends State<SideMenu> {
     return Scaffold(
       body: Container(
         width: 1000,
-        color:  Color(0xFF01BF6B),
+        color: Color(0xFF01BF6B),
         child: SafeArea(
           child: Column(
             children: [
@@ -64,14 +63,11 @@ class _SideMenuState extends State<SideMenu> {
                 child: const InfoCard(),
               ),
               if (_username != null)
-              const SizedBox(height: 20, width: double.infinity,),
+                const SizedBox(height: 20, width: double.infinity),
               _buildMenuItem(Icons.sports_soccer_rounded, 'Matches', 0),
-              _buildMenuItem(Icons.favorite, 'Favoris', 1),
-              _buildMenuItem(Icons.link, "Inviter", 2),
-              _buildMenuItem(Icons.person_search, 'chercher', 3),
+              _buildMenuItem(Icons.link, "Inviter", 1),
               const Spacer(),
-              _buildMenuItem(Icons.settings, 'Paramètres', 4),
-              _buildMenuItem(Icons.exit_to_app, 'Déconnexion', 5),
+              _buildMenuItem(Icons.exit_to_app, 'Déconnexion', 3),
             ],
           ),
         ),
@@ -84,23 +80,23 @@ class _SideMenuState extends State<SideMenu> {
 
     return InkWell(
       onTap: () => _onMenuItemTap(index),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-        child: Row(
-          children: [
-            Icon(icon, color: isActive ? Colors.white : Colors.white70),
-            const SizedBox(width: 10),
-            Text(
-              title,
-              style: TextStyle(
-                color: isActive ? Colors.white : Colors.white70,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+      child: Ink(
+        color: isActive ? Colors.black26 : Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+          child: Row(
+            children: [
+              Icon(icon, color: isActive ? Colors.white : Colors.white70),
+              const SizedBox(width: 10),
+              Text(
+                title,
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.white70,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
