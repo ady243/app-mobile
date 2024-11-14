@@ -73,29 +73,35 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 16),
-              FormationField(
+              matchDetails!['formations'] != null && matchDetails!['formations'].isNotEmpty
+                  ? FormationField(
                 formationData: matchDetails!['formations'][0] ?? '',
                 players: matchDetails!['players'] ?? [],
-              ),
+              )
+                  : const Text('Aucune formation disponible'),
               const SizedBox(height: 16),
               Text(
                 'Participants',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 16),
-              ...matchDetails!['players'].map<Widget>((player) {
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: Text(
-                      player['username'] != null ? player['username'][0].toUpperCase() : '',
-                      style: const TextStyle(color: Colors.white),
+              matchDetails!['players'] != null
+                  ? Column(
+                children: matchDetails!['players'].map<Widget>((player) {
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.blue,
+                      child: Text(
+                        player['username'] != null ? player['username'][0].toUpperCase() : '',
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
-                  ),
-                  title: Text(player['username'] ?? ''),
-                  subtitle: Text('Position: ${player['position'] ?? ''}'),
-                );
-              }).toList(),
+                    title: Text(player['username'] ?? ''),
+                    subtitle: Text('Position: ${player['position'] ?? ''}'),
+                  );
+                }).toList(),
+              )
+                  : const Text('Aucun participant disponible'),
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerRight,

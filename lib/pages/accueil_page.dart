@@ -22,21 +22,29 @@ class _AccueilPageState extends State<AccueilPage> {
   @override
   void initState() {
     super.initState();
-    _loadJoinedMatches();
-    _fetchMatches();
+    _fetchUserAndMatches();
   }
 
-  void _loadJoinedMatches() async {
+  void _fetchUserAndMatches() async {
+    final userInfo = await _authService.getUserInfo();
+    if (userInfo != null && userInfo.containsKey('id')) {
+      final userId = userInfo['id'];
+      _loadJoinedMatches(userId);
+      _fetchMatches();
+    }
+  }
+
+  void _loadJoinedMatches(String userId) async {
     final prefs = await SharedPreferences.getInstance();
-    final joinedMatches = prefs.getStringList('joinedMatches') ?? [];
+    final joinedMatches = prefs.getStringList('joinedMatches_$userId') ?? [];
     setState(() {
       _joinedMatches.addAll(joinedMatches);
     });
   }
 
-  void _saveJoinedMatches() async {
+  void _saveJoinedMatches(String userId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('joinedMatches', _joinedMatches.toList());
+    await prefs.setStringList('joinedMatches_$userId', _joinedMatches.toList());
   }
 
   void _fetchMatches() async {
@@ -77,7 +85,7 @@ class _AccueilPageState extends State<AccueilPage> {
       setState(() {
         _joinedMatches.add(matchId);
       });
-      _saveJoinedMatches();
+      _saveJoinedMatches(playerId);
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Vous avez rejoint le match !')),
