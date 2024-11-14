@@ -4,6 +4,7 @@ import 'package:teamup/services/auth.service.dart';
 import '../components/MatchCard.dart';
 import '../services/MatchService.dart';
 import 'MatchDetailsPage.dart';
+import 'package:intl/intl.dart';
 
 class AccueilPage extends StatefulWidget {
   const AccueilPage({super.key});
@@ -149,12 +150,33 @@ class _AccueilPageState extends State<AccueilPage> {
                 final match = (_nearbyMatches.isNotEmpty ? _nearbyMatches : _matches)[index];
                 print('Match Data: $match');
                 String description = match['description'] ?? 'No Description';
-                String matchDate = match['match_date'] ?? 'No Date';
-                String matchTime = match['match_time'] ?? 'No Time';
                 String status = match['status'] ?? 'No Status';
                 String address = match['address'] ?? 'No Address';
                 int numberOfPlayers = match['number_of_players'] ?? 0;
                 String matchId = match['id']?.toString() ?? '';
+
+                String matchDate;
+                String matchTime;
+
+                try {
+                  if (match['date'] != null) {
+                    DateTime date = DateTime.parse(match['date']);
+                    matchDate = DateFormat('dd-MM-yyyy').format(date);
+                  } else {
+                    matchDate = 'No Date';
+                  }
+
+                  if (match['time'] != null) {
+                    DateTime time = DateTime.parse(match['time']);
+                    matchTime = DateFormat('HH:mm').format(time);
+                  } else {
+                    matchTime = 'No Time';
+                  }
+                } catch (e) {
+                  print('Erreur de formatage de la date ou de l\'heure: $e');
+                  matchDate = 'Invalid Date';
+                  matchTime = 'Invalid Time';
+                }
 
                 return MatchCard(
                   description: description,
