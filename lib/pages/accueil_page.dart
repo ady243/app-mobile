@@ -101,17 +101,23 @@ class _AccueilPageState extends State<AccueilPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Team Up',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80.0),
+        child: AppBar(
+          title: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 30.0),
+              child: Image.asset(
+                'assets/logos/grey_logo.png',
+                height: 100,
+                width: 100,
+                color: Colors.white,
+              ),
+            ),
           ),
+          centerTitle: true,
+          backgroundColor: const Color(0xFF01BF6B),
         ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -137,7 +143,9 @@ class _AccueilPageState extends State<AccueilPage> {
             numberOfPlayers: numberOfPlayers,
             isJoined: _joinedMatches.contains(matchId),
             onJoin: () => _joinMatch(matchId),
-            onTap: () => _navigateToMatchDetails(matchId),
+            onTap: _joinedMatches.contains(matchId)
+                ? () => _navigateToMatchDetails(matchId)
+                : null, // Correct handling of nullable onTap
           );
         },
       ),

@@ -96,7 +96,7 @@ class MatchService {
         data: json.encode({'match_id': matchId, 'player_id': playerId}),
       );
 
-      print('Réponse du serveur: ${response.data}'); // Ajoutez ce log pour vérifier la réponse du serveur
+      print('Réponse du serveur: ${response.data}');
 
       if (response.statusCode != 201) {
         throw Exception('Échec de la tentative de rejoindre le match: ${response.data}');
@@ -115,6 +115,24 @@ class MatchService {
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Échec de la récupération des détails du match avec joueurs');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des détails du match: $e');
+      throw Exception('Échec de la récupération des détails du match');
+    }
+  }
+
+  Future<Map<String, dynamic>> isAi(String matchId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$apiUrl/openai/formation/$matchId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
       if (response.statusCode == 200) {
         return response.data;
       } else {

@@ -28,11 +28,7 @@ class MenuBtn extends StatelessWidget {
               )
             ],
           ),
-          child: const Icon(
-            Icons.menu,
-            color: Colors.white,
-            size: 30.0,
-          ),
+
         ),
       ),
     );

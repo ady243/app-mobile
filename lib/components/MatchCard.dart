@@ -8,7 +8,7 @@ class MatchCard extends StatelessWidget {
   final String status;
   final int numberOfPlayers;
   final bool isJoined;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final VoidCallback onJoin;
 
   const MatchCard({
@@ -20,7 +20,7 @@ class MatchCard extends StatelessWidget {
     required this.status,
     required this.numberOfPlayers,
     required this.isJoined,
-    required this.onTap,
+    this.onTap,
     required this.onJoin,
   }) : super(key: key);
 

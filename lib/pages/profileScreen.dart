@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import '../services/auth.service.dart';
 
 class Number {
@@ -53,6 +52,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() {
       _username = userInfo?['username'];
       _email = userInfo?['email'];
+
       _matches_played = Number(userInfo?['matches_played'], 99, 0);
       _matchWon = Number(userInfo?['matches_won'], 99, 0);
       _goals_scored = Number(userInfo?['goals_scored'], 99, 0);
@@ -105,10 +105,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
   }
 
-  // Fonction pour ouvrir un panneau modal depuis le bas
   void _openBottomSheet(BuildContext context, String field, TextEditingController controller, Function onSave) {
     showModalBottomSheet(
       context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
       builder: (BuildContext context) {
         return Padding(
           padding: const EdgeInsets.all(16.0),
@@ -130,14 +132,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 onPressed: () {
                   onSave();
                   Navigator.of(context).pop();
-                  _updateUser(); // Call updateUser after saving
+                  _updateUser();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF01BF6B),
                 ),
-                child: const Text('Sauvegarder',style: (
-                    TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)
-                ),),
+                child: const Text('Sauvegarder',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -164,109 +165,79 @@ class _UserProfilePageState extends State<UserProfilePage> {
         color: Colors.white,
         child: Column(
           children: [
-            Container(
-              width: double.infinity,
-              height: isTablet(context) ? 190 : 150,
-              decoration: const BoxDecoration(
-                color: Color(0xFF01BF6B),
+            Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: CircleAvatar(
-                      radius: isTablet(context) ? 60 : 65,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        Icons.person,
-                        size: isTablet(context) ? 60.0 : 65.0,
-                      ),
-                    ),
+              margin: const EdgeInsets.all(16),
+              color: Color(0xFF01BF6B).withOpacity(0.1),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.person,
+                    size: 40.0,
+                    color: Colors.grey,
                   ),
-                  const SizedBox(width: 16.0),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          _username ?? 'User',
-                          style: Theme.of(context).textTheme.titleMedium,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        _email ?? 'chargement ...',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ],
-                  ),
-                ],
+                ),
+                title: Text(
+                  _username ?? 'User',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  _email ?? 'chargement ...',
+                  style: TextStyle(fontSize: 16),
+                ),
               ),
             ),
             const SizedBox(height: 16),
-
             Expanded(
-                child: ListView(
-                  children: [
-                    _buildStaticTile(Icons.stadium_rounded, 'Match joué', _matches_played.value),
-                    _buildStaticTile(Icons.sports, 'Match gagné', _matchWon.value),
-
-                    _buildStaticTile(Icons.sports_soccer_sharp, 'Nombre de buts', _goals_scored.value),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: const Border.symmetric(
-                          horizontal: BorderSide(
-                            color: Colors.grey,
-                            width: 0.5,
-                          ),
-                        ),
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Text(
-                          'Compétences',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+              child: ListView(
+                padding: const EdgeInsets.all(8.0),
+                children: [
+                  _buildStaticTile(Icons.stadium_rounded, 'Match joué', _matches_played.value),
+                  _buildStaticTile(Icons.sports, 'Match gagné', _matchWon.value),
+                  _buildStaticTile(Icons.sports_soccer_sharp, 'Nombre de buts', _goals_scored.value),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
                     ),
-                    _buildEditableTile(Icons.sports_soccer, 'Tir', _sho?.value ?? 0, _shoController, () {
-                      setState(() {
-                        _sho = Number.fromValue(int.parse(_shoController.text));
-                      });
-                    }),
-                    const Divider(),
-                    _buildEditableTile(Icons.sports_soccer, 'Passe', _pas?.value ?? 0, _pasController, () {
-                      setState(() {
-                        _pas = Number.fromValue(int.parse(_pasController.text));
-                      });
-                    }),
-                    const Divider(),
-                    _buildEditableTile(Icons.sports_soccer, 'Dribble', _dri?.value ?? 0, _driController, () {
-                      setState(() {
-                        _dri = Number.fromValue(int.parse(_driController.text));
-                      });
-                    }),
-                    const Divider(),
-                    _buildEditableTile(Icons.sports_soccer, 'Défense', _def?.value ?? 0, _defController, () {
-                      setState(() {
-                        _def = Number.fromValue(int.parse(_defController.text));
-                      });
-                    }),
-                    const Divider(),
-                    _buildEditableTile(Icons.accessibility_new_sharp, 'Physique', _phy?.value ?? 0, _phyController, () {
-                      setState(() {
-                        _phy = Number.fromValue(int.parse(_phyController.text));
-                      });
-                    }),
-                    const Divider(),
-                  ],
-                )
+                    child: const Text(
+                      'Compétences',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  _buildEditableTile(Icons.sports_soccer, 'Tir', _sho?.value ?? 0, _shoController, () {
+                    setState(() {
+                      _sho = Number.fromValue(int.parse(_shoController.text));
+                    });
+                  }),
+                  _buildEditableTile(Icons.sports_soccer, 'Passe', _pas?.value ?? 0, _pasController, () {
+                    setState(() {
+                      _pas = Number.fromValue(int.parse(_pasController.text));
+                    });
+                  }),
+                  _buildEditableTile(Icons.sports_soccer, 'Dribble', _dri?.value ?? 0, _driController, () {
+                    setState(() {
+                      _dri = Number.fromValue(int.parse(_driController.text));
+                    });
+                  }),
+                  _buildEditableTile(Icons.sports_soccer, 'Défense', _def?.value ?? 0, _defController, () {
+                    setState(() {
+                      _def = Number.fromValue(int.parse(_defController.text));
+                    });
+                  }),
+                  _buildEditableTile(Icons.accessibility_new_sharp, 'Physique', _phy?.value ?? 0, _phyController, () {
+                    setState(() {
+                      _phy = Number.fromValue(int.parse(_phyController.text));
+                    });
+                  }),
+                ],
+              ),
             ),
           ],
         ),
@@ -275,29 +246,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Widget _buildStaticTile(IconData icon, String title, int value) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text('$title : $value'),
-    );
-  }
-
-  Widget _buildEditableTile(IconData icon, String title, int value, TextEditingController controller, Function onSave) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text('$title : $value'),
-      trailing: IconButton(
-        icon: const Icon(Icons.edit),
-        onPressed: () {
-          controller.text = value.toString();
-          _openBottomSheet(context, title, controller, onSave);
-        },
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blueGrey),
+        title: Text('$title : $value'),
       ),
     );
   }
 
-  bool isTablet(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final diagonal = sqrt((size.width * size.width) + (size.height * size.height));
-    return diagonal > 1100.0;
+  Widget _buildEditableTile(IconData icon, String title, int value, TextEditingController controller, Function onSave) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.blueAccent),
+        title: Text('$title : $value'),
+        trailing: IconButton(
+          icon: const Icon(Icons.edit),
+          onPressed: () {
+            controller.text = value.toString();
+            _openBottomSheet(context, title, controller, onSave);
+          },
+        ),
+      ),
+    );
   }
 }

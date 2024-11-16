@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:teamup/services/auth.service.dart';
 import '../services/ChatService.dart';
+import '../services/auth.service.dart';
 
-class ChatPage extends StatefulWidget {
+class ChatTab extends StatefulWidget {
   final String matchId;
 
-  const ChatPage({super.key, required this.matchId});
+  const ChatTab({super.key, required this.matchId});
 
   @override
-  _ChatPageState createState() => _ChatPageState();
+  _ChatTabState createState() => _ChatTabState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatTabState extends State<ChatTab> {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
   List<Map<String, dynamic>> _messages = [];
@@ -93,64 +93,54 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Chat',
-          style: TextStyle(color: Colors.white, fontSize: 20),
+    return Column(
+      children: [
+        Expanded(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : ListView.builder(
+            itemCount: _messages.length,
+            itemBuilder: (context, index) {
+              final message = _messages[index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.blue,
+                  child: Text(
+                    message['username'][0].toUpperCase(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                title: Text(message['username']),
+                subtitle: Text(message['message']),
+                trailing: Text(
+                  message['timestamp'],
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+              );
+            },
+          ),
         ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: Text(
-                      message['username'][0].toUpperCase(),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                  title: Text(message['username']),
-                  subtitle: Text(message['message']),
-                  trailing: Text(
-                    message['timestamp'],
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Entrez votre message...',
-                      border: OutlineInputBorder(),
-                    ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _messageController,
+                  decoration: const InputDecoration(
+                    hintText: 'Entrez votre message...',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: _sendMessage,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
