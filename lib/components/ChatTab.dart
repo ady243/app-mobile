@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/ChatService.dart';
 import '../services/auth.service.dart';
+import 'package:intl/intl.dart';
 
 class ChatTab extends StatefulWidget {
   final String matchId;
@@ -16,31 +17,22 @@ class _ChatTabState extends State<ChatTab> {
   final AuthService _authService = AuthService();
   List<Map<String, dynamic>> _messages = [];
   final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _isLoading = true;
-  bool _isPlayerInMatch = false;
+  String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
-    _checkPlayerInMatch();
     _fetchMessages();
+    _getCurrentUserId();
   }
 
-  void _checkPlayerInMatch() async {
-    try {
-      final userInfo = await _authService.getUserInfo();
-      if (userInfo == null || !userInfo.containsKey('id')) {
-        throw Exception('Impossible de récupérer l\'ID utilisateur');
-      }
-      final userId = userInfo['id'];
-      final isPlayerInMatch = await _chatService.isPlayerInMatch(widget.matchId, userId);
+  void _getCurrentUserId() async {
+    final userInfo = await _authService.getUserInfo();
+    if (userInfo != null && userInfo.containsKey('id')) {
       setState(() {
-        _isPlayerInMatch = isPlayerInMatch;
-      });
-    } catch (e) {
-      print('Error checking player in match: $e');
-      setState(() {
-        _isPlayerInMatch = false;
+        _currentUserId = userInfo['id'];
       });
     }
   }
@@ -52,6 +44,7 @@ class _ChatTabState extends State<ChatTab> {
         _messages = messages;
         _isLoading = false;
       });
+      _scrollToBottom();
     } catch (e) {
       print('Error fetching messages: $e');
       setState(() {
@@ -61,26 +54,21 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   void _sendMessage() async {
-    final userInfo = await _authService.getUserInfo();
-    if (userInfo == null || !userInfo.containsKey('id')) {
-      throw Exception('Impossible de récupérer l\'ID utilisateur');
+    if (_currentUserId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Impossible de récupérer l\'ID utilisateur')),
+      );
+      return;
     }
-    final userId = userInfo['id'];
+
     final message = _messageController.text;
 
     if (message.isEmpty) {
       return;
     }
 
-    if (!_isPlayerInMatch) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous devez rejoindre le match pour envoyer des messages.')),
-      );
-      return;
-    }
-
     try {
-      await _chatService.sendMessage(widget.matchId, userId, message);
+      await _chatService.sendMessage(widget.matchId, _currentUserId!, message);
       _messageController.clear();
       _fetchMessages();
     } catch (e) {
@@ -91,6 +79,18 @@ class _ChatTabState extends State<ChatTab> {
     }
   }
 
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -99,48 +99,119 @@ class _ChatTabState extends State<ChatTab> {
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : ListView.builder(
+            controller: _scrollController,
             itemCount: _messages.length,
             itemBuilder: (context, index) {
               final message = _messages[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  child: Text(
-                    message['username'][0].toUpperCase(),
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-                title: Text(message['username']),
-                subtitle: Text(message['message']),
-                trailing: Text(
-                  message['timestamp'],
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                ),
-              );
+              final isCurrentUser = message['userId'] == _currentUserId;
+              return _buildMessageBubble(message, isCurrentUser);
             },
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _messageController,
-                  decoration: const InputDecoration(
-                    hintText: 'Entrez votre message...',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: _sendMessage,
-              ),
-            ],
-          ),
-        ),
+        _buildMessageInput(),
       ],
     );
+  }
+
+  Widget _buildMessageBubble(Map<String, dynamic> message, bool isCurrentUser) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+      child: Row(
+        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!isCurrentUser) _buildAvatar(message['username']),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              decoration: BoxDecoration(
+                color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isCurrentUser ? 20 : 0),
+                  bottomRight: Radius.circular(isCurrentUser ? 0 : 20),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message['message'],
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTimestamp(message['timestamp']),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          if (isCurrentUser) _buildAvatar(message['username']),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(String username) {
+    return CircleAvatar(
+      backgroundColor: Colors.blue,
+      child: Text(
+        username[0].toUpperCase(),
+        style: const TextStyle(color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildMessageInput() {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              decoration: InputDecoration(
+                hintText: 'Entrez votre message...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Colors.grey[200],
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          FloatingActionButton(
+            onPressed: _sendMessage,
+            child: const Icon(Icons.send),
+            mini: true,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatTimestamp(String timestamp) {
+    final dateTime = DateTime.parse(timestamp);
+    final formatter = DateFormat('HH:mm');
+    return formatter.format(dateTime);
   }
 }

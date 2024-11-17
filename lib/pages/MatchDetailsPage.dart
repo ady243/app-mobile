@@ -4,6 +4,7 @@ import '../components/MatchInfoTab.dart';
 import '../components/ChatTab.dart';
 import '../components/AiSuggestionOverlay.dart';
 import '../services/MatchService.dart';
+import '../services/ChatService.dart';
 
 class MatchDetailsPage extends StatefulWidget {
   final String matchId;
@@ -20,6 +21,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   String _aiResponse = 'Laisse moi te proposer une formation ... ...';
   late AnimationController _controller;
   late Animation<Offset> _offsetAnimation;
+  bool _hasNewMessages = false;
+  final ChatService _chatService = ChatService();
 
   @override
   void initState() {
@@ -35,6 +38,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
       parent: _controller,
       curve: Curves.easeInOut,
     ));
+    _checkForNewMessages();
   }
 
   @override
@@ -43,15 +47,25 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
     super.dispose();
   }
 
+  void _checkForNewMessages() async {
+    bool hasNew = await _chatService.hasNewMessages(widget.matchId);
+    setState(() {
+      _hasNewMessages = hasNew;
+    });
+  }
+
   void _onTabSelected(int index) {
     setState(() {
       _currentTabIndex = index;
+      if (index == 1) {
+        _hasNewMessages = false;
+        _chatService.markMessagesAsRead(widget.matchId);
+      }
     });
   }
 
   Future<void> _fetchAndShowAiResponse() async {
     try {
-
       final matchService = MatchService();
       final aiData = await matchService.isAi(widget.matchId);
       if (aiData.containsKey('message')) {
@@ -64,7 +78,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
         throw Exception("Pas de message AI trouvé dans la réponse.");
       }
     } catch (e) {
-      print("Erreur lors de la récupération des données AI : $e");
+      print("Erreur lors de la récupération des données AI : $e");
       setState(() {
         _aiResponse = "Erreur lors de la récupération de la suggestion d'IA.";
         _showAiResponse = true;
@@ -96,6 +110,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
               TopBar(
                 currentIndex: _currentTabIndex,
                 onTabSelected: _onTabSelected,
+                hasNewMessages: _hasNewMessages,
               ),
               Expanded(
                 child: IndexedStack(

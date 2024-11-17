@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'auth.service.dart';
 
 class ChatService {
@@ -86,6 +87,47 @@ class ChatService {
     } catch (e) {
       print('Erreur lors de la vérification de l\'adhésion du joueur: $e');
       return false;
+    }
+  }
+  Future<bool> hasNewMessages(String matchId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$apiUrl/chat/$matchId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> messages = response.data;
+        if (messages.isEmpty) return false;
+
+        String lastMessageTimestamp = messages.last['timestamp'];
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String? lastReadTimestamp = prefs.getString('lastReadTimestamp_$matchId');
+
+        if (lastReadTimestamp == null || lastMessageTimestamp.compareTo(lastReadTimestamp) > 0) {
+          return true;
+        }
+        return false;
+      } else {
+        throw Exception('Échec de la vérification des nouveaux messages: ${response.data}');
+      }
+    } catch (e) {
+      print('Erreur lors de la vérification des nouveaux messages: $e');
+      return false;
+    }
+  }
+
+  Future<void> markMessagesAsRead(String matchId) async {
+    try {
+      List<Map<String, dynamic>> messages = await getMessages(matchId);
+      if (messages.isNotEmpty) {
+        String lastMessageTimestamp = messages.last['timestamp'];
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setString('lastReadTimestamp_$matchId', lastMessageTimestamp);
+      }
+    } catch (e) {
+      print('Erreur lors du marquage des messages comme lus: $e');
     }
   }
 }
