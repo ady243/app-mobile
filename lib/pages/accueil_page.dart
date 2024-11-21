@@ -21,6 +21,8 @@ class _AccueilPageState extends State<AccueilPage> {
   final Set<String> _joinedMatches = {};
   bool _isLoading = true;
 
+  final PageController _pageController = PageController(initialPage: 0);
+
   @override
   void initState() {
     super.initState();
@@ -64,7 +66,7 @@ class _AccueilPageState extends State<AccueilPage> {
     }
   }
 
-  void _showNearbyMatches() async {
+  void _fetchNearbyMatches() async {
     setState(() => _isLoading = true);
     try {
       final nearbyMatches = await _matchService.getNearbyMatches();
@@ -79,7 +81,6 @@ class _AccueilPageState extends State<AccueilPage> {
   }
 
   void _navigateToMatchDetails(String matchId) {
-    print('Navigating to match details for ID: $matchId');
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -95,7 +96,6 @@ class _AccueilPageState extends State<AccueilPage> {
         throw Exception('Impossible de récupérer l\'ID utilisateur');
       }
       final playerId = userInfo['id'];
-      print('Données envoyées pour rejoindre le match: {match_id: $matchId, player_id: $playerId}');
 
       await _matchService.joinMatch(matchId, playerId);
       setState(() {
@@ -129,71 +129,103 @@ class _AccueilPageState extends State<AccueilPage> {
         centerTitle: true,
         backgroundColor: const Color(0xFF01BF6B),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
+      body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: _showNearbyMatches,
-              child: const Text('Autour de moi'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-              ),
+          Container(
+            color: Colors.white,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () => _pageController.jumpToPage(0),
+                  child: const Text(
+                    'Tous les matchs',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF01BF6B),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                TextButton(
+                  onPressed: () {
+                    _fetchNearbyMatches();
+                    _pageController.jumpToPage(1);
+                  },
+                  child: const Text(
+                    'Autour de moi',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF01BF6B),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: (_nearbyMatches.isNotEmpty ? _nearbyMatches : _matches).length,
-              itemBuilder: (context, index) {
-                final match = (_nearbyMatches.isNotEmpty ? _nearbyMatches : _matches)[index];
-                print('Match Data: $match');
-                String description = match['description'] ?? 'No Description';
-                String status = match['status'] ?? 'No Status';
-                String address = match['address'] ?? 'No Address';
-                int numberOfPlayers = match['number_of_players'] ?? 0;
-                String matchId = match['id']?.toString() ?? '';
-
-                String matchDate;
-                String matchTime;
-
-                try {
-                  if (match['date'] != null) {
-                    DateTime date = DateTime.parse(match['date']);
-                    matchDate = DateFormat('dd-MM-yyyy').format(date);
-                  } else {
-                    matchDate = 'No Date';
-                  }
-
-                  if (match['time'] != null) {
-                    DateTime time = DateTime.parse(match['time']);
-                    matchTime = DateFormat('HH:mm').format(time);
-                  } else {
-                    matchTime = 'No Time';
-                  }
-                } catch (e) {
-                  print('Erreur de formatage de la date ou de l\'heure: $e');
-                  matchDate = 'Invalid Date';
-                  matchTime = 'Invalid Time';
-                }
-
-                return MatchCard(
-                  description: description,
-                  matchDate: matchDate,
-                  matchTime: matchTime,
-                  status: status,
-                  address: address,
-                  numberOfPlayers: numberOfPlayers,
-                  isJoined: _joinedMatches.contains(matchId),
-                  onJoin: () => _joinMatch(matchId),
-                  onTap: () => _navigateToMatchDetails(matchId),
-                );
-              },
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : PageView(
+              controller: _pageController,
+              children: [
+                _buildMatchList(_matches),
+                _buildMatchList(_nearbyMatches),
+              ],
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMatchList(List<Map<String, dynamic>> matches) {
+    return ListView.builder(
+      itemCount: matches.length,
+      itemBuilder: (context, index) {
+        final match = matches[index];
+        String description = match['description'] ?? 'No Description';
+        String status = match['status'] ?? 'No Status';
+        String address = match['address'] ?? 'No Address';
+        int numberOfPlayers = match['number_of_players'] ?? 0;
+        String matchId = match['id']?.toString() ?? '';
+
+        String matchDate;
+        String matchTime;
+
+        try {
+          if (match['date'] != null) {
+            DateTime date = DateTime.parse(match['date']);
+            matchDate = DateFormat('dd-MM-yyyy').format(date);
+          } else {
+            matchDate = 'No Date';
+          }
+
+          if (match['time'] != null) {
+            DateTime time = DateTime.parse(match['time']);
+            matchTime = DateFormat('HH:mm').format(time);
+          } else {
+            matchTime = 'No Time';
+          }
+        } catch (e) {
+          matchDate = 'Invalid Date';
+          matchTime = 'Invalid Time';
+        }
+
+        return MatchCard(
+          description: description,
+          matchDate: matchDate,
+          matchTime: matchTime,
+          status: status,
+          address: address,
+          numberOfPlayers: numberOfPlayers,
+          isJoined: _joinedMatches.contains(matchId),
+          onJoin: () => _joinMatch(matchId),
+          onTap: () => _navigateToMatchDetails(matchId),
+        );
+      },
     );
   }
 }
