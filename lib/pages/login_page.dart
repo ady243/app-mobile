@@ -101,24 +101,23 @@ class _LoginPageState extends State<LoginPage> {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () async {
-            if (_emailController.text.isNotEmpty &&
-                _passwordController.text.isNotEmpty) {
-              try {
-                await _authService.login(
-                    _emailController.text, _passwordController.text);
-
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomePage()),
-                );
-                ToastComponent.showToast(context, "Connexion réussie", ToastificationType.success);
-              } catch (e) {
-                ToastComponent.showToast(context, "Erreur lors de la connexion", ToastificationType.error);
-              }
-            } else {
-              ToastComponent.showToast(context, "Veuillez remplir tous les champs", ToastificationType.error);
+          if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+            try {
+              await _authService.login(
+                  _emailController.text, _passwordController.text
+              );
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePage()),
+              );
+              ToastComponent.showToast(context, "Connexion réussie", ToastificationType.success);
+            } catch (e) {
+              ToastComponent.showToast(context, "Erreur lors de la connexion", ToastificationType.error);
             }
-          },
+          } else {
+            ToastComponent.showToast(context, "Veuillez remplir tous les champs", ToastificationType.error);
+          }
+        },
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 16),

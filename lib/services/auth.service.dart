@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/basUrl.dart';
+
 
 class AuthService {
   final Dio _dio = Dio();
@@ -13,7 +15,6 @@ class AuthService {
       responseHeader: false,
       error: true,
     ));
-
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -31,15 +32,18 @@ class AuthService {
       },
     ));
   }
+
   Future<void> login(String email, String password) async {
     try {
       final response = await _dio.post(
-        'http://10.0.2.2:3003/api/login',
+        '$baseUrl/login',
         data: {
           'email': email,
           'password': password,
         },
       );
+
+      print('Réponse de l\'API: ${response.data}');
 
       if (response.statusCode == 200 && response.data['accessToken'] != null) {
         await _storage.write(key: 'accessToken', value: response.data['accessToken']);
@@ -48,7 +52,7 @@ class AuthService {
       }
     } catch (e) {
       if (e is DioError) {
-        print('Erreur de connexion: ${e.response?.data}');
+        print('Erreur de connexion: ${e.response?.statusCode} - ${e.response?.data}');
       } else {
         print('Erreur inattendue: $e');
       }
@@ -59,7 +63,7 @@ class AuthService {
   Future<void> register(String username, String email, String password) async {
     try {
       final response = await _dio.post(
-        'http://10.0.2.2:3003/api/register',
+        '$baseUrl/register',
         data: {
           'username': username,
           'email': email,
@@ -84,7 +88,7 @@ class AuthService {
     while (retryCount < maxRetries) {
       try {
         if (await isLoggedIn()) {
-          final response = await _dio.get('http://10.0.2.2:3003/api/userinfo');
+          final response = await _dio.get('$baseUrl/userinfo');
 
           if (response.statusCode == 200) {
             return response.data;
@@ -112,11 +116,10 @@ class AuthService {
     return null;
   }
 
-
   Future<Map<String, dynamic>?> updateUser(Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(
-        'http://10.0.2.2:3003/api/userUpdate',
+        '$baseUrl/userUpdate',
         data: data,
       );
 
