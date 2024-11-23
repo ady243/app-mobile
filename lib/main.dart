@@ -9,10 +9,6 @@ import 'package:device_preview/device_preview.dart';
 
 void main() {
   runApp(
-    // DevicePreview(
-    //   enabled: !kReleaseMode,
-    //   builder: (context) => const MyApp(),
-    // ),
     const MyApp(),
   );
 }
@@ -52,17 +48,27 @@ class _MyAppState extends State<MyApp> {
     try {
       _sub = uriLinkStream.listen((Uri? uri) {
         if (uri != null) {
-          Navigator.pushNamed(context, '/login', arguments: uri.queryParameters);
+          _handleDeepLink(uri);
         }
       }, onError: (err) {
-      print('Failed to get the initial link: $err');
+        print('Failed to get the initial link: $err');
       });
     } catch (e) {
       print('Failed to get the initial link: $e');
     }
     final initialUri = await getInitialUri();
     if (initialUri != null) {
-      Navigator.pushNamed(context, '/login', arguments: initialUri.queryParameters);
+      _handleDeepLink(initialUri);
+    }
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (uri.path == '/api/confirm_email') {
+      final token = uri.queryParameters['token'];
+      if (token != null) {
+        print('Email confirmed with token: $token');
+        Navigator.pushNamed(context, '/home');
+      }
     }
   }
 

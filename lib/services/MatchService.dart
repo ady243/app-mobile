@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import '../utils/basUrl.dart';
 import 'auth.service.dart';
 
 class MatchService {
   final Dio _dio;
   final AuthService _authService;
-  final String apiUrl = 'http://10.0.2.2:3003/api';
 
   MatchService({
     Dio? dio,
@@ -28,7 +28,7 @@ class MatchService {
 
         final accessToken = await _authService.getToken();
         final response = await _dio.post(
-          '$apiUrl/matches',
+          '$baseUrl/matches',
           options: Options(
             headers: {
               'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/matches',
+        '$baseUrl/matches',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
@@ -91,7 +91,7 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.post(
-        '$apiUrl/matchesPlayers',
+        '$baseUrl/matchesPlayers',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
         data: json.encode({'match_id': matchId, 'player_id': playerId}),
       );
@@ -111,7 +111,7 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/matches/$matchId',
+        '$baseUrl/matches/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
@@ -130,7 +130,7 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/openai/formation/$matchId',
+        '$baseUrl/openai/formation/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       if (response.statusCode == 200) {

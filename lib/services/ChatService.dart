@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/basUrl.dart';
 import 'auth.service.dart';
 
 class ChatService {
   final Dio _dio;
   final AuthService _authService;
-  final String apiUrl = 'http://10.0.2.2:3003/api';
+
 
   ChatService({
     Dio? dio,
@@ -23,7 +24,7 @@ class ChatService {
       try {
         final accessToken = await _authService.getToken();
         final response = await _dio.post(
-          '$apiUrl/chat/send',
+          '$baseUrl/chat/send',
           options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
           data: json.encode({'match_id': matchId, 'user_id': userId, 'message': message}),
         );
@@ -55,7 +56,7 @@ class ChatService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/chat/$matchId',
+        '$baseUrl/chat/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
@@ -75,7 +76,7 @@ class ChatService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/matchesPlayers/$matchId/$userId',
+        '$baseUrl/matchesPlayers/$matchId/$userId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
@@ -93,7 +94,7 @@ class ChatService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/chat/$matchId',
+        '$baseUrl/chat/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
