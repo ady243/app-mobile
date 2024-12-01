@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_places_flutter/model/prediction.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
 import '../services/MatchService.dart';
+import 'my_match.dart';
 
 class CreateMatchPage extends StatefulWidget {
   const CreateMatchPage({Key? key}) : super(key: key);
@@ -73,8 +73,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     }
   }
 
-  Future<List<Prediction>> getSuggestions(String query) async {
-    if (query.isEmpty) return [];
+  Future<void> _autoCompleteAddress(String query) async {
+    if (query.isEmpty) return;
 
     final String url =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_googleApiKey&components=country:fr';
@@ -83,15 +83,20 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
-        if (data['status'] == 'OK') {
-          final List<dynamic> predictions = data['predictions'];
-          return predictions.map((json) => Prediction.fromJson(json)).toList();
+        if (data['status'] == 'OK' && data['predictions'].isNotEmpty) {
+          final String suggestion = data['predictions'][0]['description'];
+          setState(() {
+            _addressController.value = TextEditingValue(
+              text: suggestion,
+              selection: TextSelection.fromPosition(
+                TextPosition(offset: query.length),
+              ),
+            );
+          });
         }
       }
-      return [];
     } catch (error) {
       print('Erreur lors de la récupération des suggestions : $error');
-      return [];
     }
   }
 
@@ -181,57 +186,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                   decoration: InputDecoration(
                     labelText: 'Adresse',
                     border: OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () {
-                        if (_addressController.text.length >= 5) {
-                          setState(() {
-                            _addressQuery = _addressController.text;
-                          });
-                        }
-                      },
-                    ),
                   ),
                   onChanged: (query) {
                     if (_debounce?.isActive ?? false) _debounce!.cancel();
-                    _debounce = Timer(const Duration(milliseconds: 800), () {
-                      setState(() {
-                        _addressQuery = query;
-                      });
+                    _debounce = Timer(const Duration(seconds: 6), () {
+                      _autoCompleteAddress(query);
                     });
                   },
                 ),
-                if (_addressQuery.isNotEmpty)
-                  FutureBuilder<List<Prediction>>(
-                    future: getSuggestions(_addressQuery),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      } else if (snapshot.hasError) {
-                        return const Text('Erreur de chargement des suggestions');
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Text('Aucune suggestion trouvée');
-                      } else {
-                        final suggestions = snapshot.data!;
-                        return ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: suggestions.length,
-                          itemBuilder: (context, index) {
-                            final prediction = suggestions[index];
-                            return ListTile(
-                              title: Text(prediction.description ?? ''),
-                              onTap: () {
-                                setState(() {
-                                  _addressController.text = prediction.description ?? '';
-                                  _addressQuery = '';
-                                });
-                              },
-                            );
-                          },
-                        );
-                      }
-                    },
-                  ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _numberOfPlayersController,
@@ -264,31 +226,71 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(80.0),
-        child: AppBar(
-          title: const Text(
-            'Créer un match',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Mes Matchs',
+            style: TextStyle(color: Colors.white, fontSize: 20),
+          ),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Mes matches créés'),
+              Tab(text: 'Créer un match'),
+            ],
           ),
           centerTitle: true,
           backgroundColor: const Color(0xFF01BF6B),
         ),
-      ),
-      body: Center(
-        child: FloatingActionButton(
-          onPressed: () {
-            _openBottomSheet(context);
-          },
-          child: const Icon(Icons.add),
-          backgroundColor: const Color(0xFF01BF6B),
-          tooltip: 'Créer un match',
+        body: TabBarView(
+          children: [
+            const MyCreatedMatchesPage(),
+            CreateMatchPageContent(
+              descriptionController: _descriptionController,
+              matchDate: _matchDate,
+              matchTime: _matchTime,
+              addressController: _addressController,
+              numberOfPlayersController: _numberOfPlayersController,
+              createMatch: _createMatch,
+              openBottomSheet: _openBottomSheet,
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class CreateMatchPageContent extends StatelessWidget {
+  final TextEditingController descriptionController;
+  final DateTime? matchDate;
+  final TimeOfDay? matchTime;
+  final TextEditingController addressController;
+  final TextEditingController numberOfPlayersController;
+  final Future<void> Function() createMatch;
+  final void Function(BuildContext) openBottomSheet;
+
+  const CreateMatchPageContent({
+    Key? key,
+    required this.descriptionController,
+    required this.matchDate,
+    required this.matchTime,
+    required this.addressController,
+    required this.numberOfPlayersController,
+    required this.createMatch,
+    required this.openBottomSheet,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FloatingActionButton(
+        onPressed: () {
+          openBottomSheet(context);
+        },
+        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF01BF6B),
+        tooltip: 'Créer un match',
       ),
     );
   }

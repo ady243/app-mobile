@@ -1,8 +1,8 @@
-// lib/components/BottomNavBar.dart
 import 'package:flutter/material.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
+import '../pages/setting_page.dart';
 import 'SideNav.dart';
 
 class BottomNavBar extends StatefulWidget {
@@ -13,26 +13,30 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0;
+  int _selectedIndex = 0; // Index initial
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const List<Widget> _widgetOptions = <Widget>[
     AccueilPage(),
     CreateMatchPage(),
-    UserProfilePage(),
+    UserProfilePage(), // Ajouté pour la navigation via SideNav
+    SettingPage(), // Ajouté pour la navigation via SideNav
   ];
 
   void _onItemTapped(int index) {
-    if (index < _widgetOptions.length) {
-      setState(() {
+    print('Tapped index: $index'); // Debugging log
+    setState(() {
+      if (index == 2) {
+        // Ouvre le SideNav
+        _scaffoldKey.currentState?.openEndDrawer();
+      } else {
         _selectedIndex = index;
-      });
-    } else if (index == 3) {
-      _scaffoldKey.currentState?.openEndDrawer();
-    }
+      }
+    });
   }
 
   void _onSideNavItemSelected(int index) {
+    print('SideNav selected index: $index'); // Debugging log
     setState(() {
       _selectedIndex = index;
     });
@@ -42,7 +46,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: _widgetOptions[_selectedIndex],
       endDrawer: SideNav(onItemSelected: _onSideNavItemSelected),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
@@ -55,16 +59,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
             label: 'Créer',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Profil',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.menu_rounded),
             label: 'Menu',
-          )
+          ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF01BF6B),
+        currentIndex: _selectedIndex < 2 ? _selectedIndex : 0,
+        selectedItemColor: const Color(0xFF01BF6B),
         unselectedItemColor: Colors.black,
         onTap: _onItemTapped,
       ),

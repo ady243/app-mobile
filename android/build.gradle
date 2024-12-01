@@ -6,13 +6,36 @@ allprojects {
 }
 
 rootProject.buildDir = "../build"
+
+// Configurer les sous-projets
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Configuration des versions Kotlin et Gradle
+buildscript {
+    ext {
+        // Spécifie la version de Gradle et Kotlin que tu utilises
+        kotlin_version = '1.8.0' // Assure-toi que cette version est compatible avec ta configuration
+        gradle_version = '7.6'   // Vérifie que Gradle est compatible avec Java 11 et Kotlin 1.8
+    }
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "com.android.tools.build:gradle:7.4.1" // Assure-toi que la version de Gradle est compatible
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version" // Plugin Kotlin
+    }
+}
+
+// Tâche pour nettoyer le projet
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

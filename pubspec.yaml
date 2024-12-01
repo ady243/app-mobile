@@ -48,6 +48,8 @@ dependencies:
   icons_plus: ^5.0.0
   shared_preferences: ^2.3.3
   uni_links: ^0.5.1
+  app_links: ^6.3.2
+  settings_ui: ^2.0.2
 
 
 

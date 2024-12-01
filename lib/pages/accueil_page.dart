@@ -55,7 +55,6 @@ class _AccueilPageState extends State<AccueilPage> {
         _isLoading = false;
       });
     } catch (e) {
-      print('Error fetching matches: $e');
       setState(() {
         _isLoading = false;
       });
@@ -63,7 +62,6 @@ class _AccueilPageState extends State<AccueilPage> {
   }
 
   void _navigateToMatchDetails(String matchId) {
-    print('Navigating to match details for ID: $matchId');
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -79,7 +77,6 @@ class _AccueilPageState extends State<AccueilPage> {
         throw Exception('Impossible de récupérer l\'ID utilisateur');
       }
       final playerId = userInfo['id'];
-      print('Données envoyées pour rejoindre le match: {match_id: $matchId, player_id: $playerId}');
 
       await _matchService.joinMatch(matchId, playerId);
       setState(() {
@@ -88,12 +85,11 @@ class _AccueilPageState extends State<AccueilPage> {
       _saveJoinedMatches(playerId);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Vous avez rejoint le match !')),
+        const SnackBar(content: Text('Vous avez rejoint le match !')),
       );
     } catch (e) {
-      print('Error joining match: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la tentative de rejoindre le match.')),
+        const SnackBar(content: Text('Erreur lors de la tentative de rejoindre le match.')),
       );
     }
   }
@@ -125,7 +121,6 @@ class _AccueilPageState extends State<AccueilPage> {
         itemCount: _matches.length,
         itemBuilder: (context, index) {
           final match = _matches[index];
-          print('Match Data: $match');
           String description = match['description'] ?? 'No Description';
           String matchDate = match['match_date'] ?? 'No Date';
           String matchTime = match['match_time'] ?? 'No Time';
@@ -145,7 +140,7 @@ class _AccueilPageState extends State<AccueilPage> {
             onJoin: () => _joinMatch(matchId),
             onTap: _joinedMatches.contains(matchId)
                 ? () => _navigateToMatchDetails(matchId)
-                : null, // Correct handling of nullable onTap
+                : null,
           );
         },
       ),
