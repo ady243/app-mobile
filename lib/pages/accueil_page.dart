@@ -67,7 +67,10 @@ class _AccueilPageState extends State<AccueilPage> {
   }
 
   void _fetchNearbyMatches() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _nearbyMatches.clear();
+    });
     try {
       final nearbyMatches = await _matchService.getNearbyMatches();
       setState(() {
@@ -149,17 +152,16 @@ class _AccueilPageState extends State<AccueilPage> {
                 ),
                 const SizedBox(width: 20),
                 TextButton(
-                  onPressed: () {
+                  onPressed: _isLoading ? null : () {
                     _fetchNearbyMatches();
                     _pageController.jumpToPage(1);
                   },
                   child: const Text(
                     'Autour de moi',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF01BF6B),
-                    ),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF01BF6B)),
                   ),
                 ),
               ],
