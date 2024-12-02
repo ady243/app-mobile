@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/auth.service.dart';
 
 class SideNav extends StatefulWidget {
@@ -60,21 +61,21 @@ class _SideNavState extends State<SideNav> {
           Expanded(
             child: ListView(
               children: [
-                _buildListTile(Icons.maps_home_work_rounded, 'Accueil', () => _onItemTap(0)),
-                _buildListTile(Icons.create, 'Créer', () => _onItemTap(1)),
-                _buildListTile(Icons.account_circle, 'Profil', () => _onItemTap(2)),
-                _buildListTile(Icons.notifications, 'Notifications', () {
+                _buildListTile(FontAwesomeIcons.home, 'Accueil', Colors.blue, () => _onItemTap(0)),
+                _buildListTile(FontAwesomeIcons.plusCircle, 'Créer', Colors.green, () => _onItemTap(1)),
+                _buildListTile(FontAwesomeIcons.user, 'Profil', Colors.orange, () => _onItemTap(2)),
+                _buildListTile(FontAwesomeIcons.bell, 'Notifications', Colors.red, () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Notifications en cours de développement')),
                   );
                 }),
-                _buildListTile(Icons.settings, 'Paramètres', () => _onItemTap(3)),
-                _buildListTile(Icons.help, 'Aide', () {
+                _buildListTile(FontAwesomeIcons.cog, 'Paramètres', Colors.purple, () => _onItemTap(3)),
+                _buildListTile(FontAwesomeIcons.questionCircle, 'Aide', Colors.teal, () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Aide en cours de développement')),
                   );
                 }),
-                _buildListTile(Icons.logout, 'Se déconnecter', () {
+                _buildListTile(FontAwesomeIcons.signOutAlt, 'Se déconnecter', Colors.brown, () {
                   AuthService().logout();
                   Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
                 }),
@@ -86,9 +87,9 @@ class _SideNavState extends State<SideNav> {
     );
   }
 
-  ListTile _buildListTile(IconData icon, String title, VoidCallback onTap) {
+  ListTile _buildListTile(IconData icon, String title, Color iconColor, VoidCallback onTap) {
     return ListTile(
-      leading: Icon(icon),
+      leading: Icon(icon, color: iconColor),
       title: Text(title),
       onTap: onTap,
     );

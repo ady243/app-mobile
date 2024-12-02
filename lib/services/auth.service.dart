@@ -1,7 +1,7 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../utils/basUrl.dart';
-
 
 class AuthService {
   final Dio _dio = Dio();
@@ -26,11 +26,40 @@ class AuthService {
       },
       onError: (DioError error, handler) async {
         if (error.response?.statusCode == 401) {
-          await logout();
+          await _refreshToken();
+          handler.resolve(await _retry(error.requestOptions));
+        } else {
+          return handler.next(error);
         }
-        return handler.next(error);
       },
     ));
+  }
+
+  Future<void> _refreshToken() async {
+    try {
+      final response = await _dio.post('$baseUrl/refresh');
+      if (response.statusCode == 200 && response.data['accessToken'] != null) {
+        await _storage.write(key: 'accessToken', value: response.data['accessToken']);
+      } else {
+        throw Exception('Erreur lors du rafraîchissement du token.');
+      }
+    } catch (e) {
+      print('Erreur lors du rafraîchissement du token: $e');
+      await logout();
+    }
+  }
+
+  Future<Response> _retry(RequestOptions requestOptions) async {
+    final options = Options(
+      method: requestOptions.method,
+      headers: requestOptions.headers,
+    );
+    return _dio.request(
+      requestOptions.path,
+      options: options,
+      data: requestOptions.data,
+      queryParameters: requestOptions.queryParameters,
+    );
   }
 
   Future<void> login(String email, String password) async {
@@ -88,7 +117,7 @@ class AuthService {
     while (retryCount < maxRetries) {
       try {
         if (await isLoggedIn()) {
-          final response = await _dio.get('$baseUrl/userinfo');
+          final response = await _dio.get('$baseUrl/userInfo');
 
           if (response.statusCode == 200) {
             return response.data;
@@ -114,6 +143,25 @@ class AuthService {
       }
     }
     return null;
+  }
+
+  Future<Map<String, dynamic>?> getUserInfoById(String userId) async {
+    try {
+      final accessToken = await _storage.read(key: 'accessToken');
+      final response = await _dio.get(
+        '$baseUrl/users/$userId/public',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Erreur lors de la récupération des détails de l\'utilisateur');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des détails de l\'utilisateur: $e');
+      return null;
+    }
   }
 
   Future<Map<String, dynamic>?> updateUser(Map<String, dynamic> data) async {

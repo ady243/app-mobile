@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
@@ -13,21 +14,20 @@ class BottomNavBar extends StatefulWidget {
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0; // Index initial
+  int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const List<Widget> _widgetOptions = <Widget>[
     AccueilPage(),
     CreateMatchPage(),
-    UserProfilePage(), // Ajouté pour la navigation via SideNav
-    SettingPage(), // Ajouté pour la navigation via SideNav
+    UserProfilePage(),
+    SettingPage(),
   ];
 
   void _onItemTapped(int index) {
-    print('Tapped index: $index'); // Debugging log
+    print('Tapped index: $index');
     setState(() {
       if (index == 2) {
-        // Ouvre le SideNav
         _scaffoldKey.currentState?.openEndDrawer();
       } else {
         _selectedIndex = index;
@@ -36,7 +36,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
   }
 
   void _onSideNavItemSelected(int index) {
-    print('SideNav selected index: $index'); // Debugging log
     setState(() {
       _selectedIndex = index;
     });
@@ -51,15 +50,15 @@ class _BottomNavBarState extends State<BottomNavBar> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.maps_home_work_rounded),
+            icon: FaIcon(FontAwesomeIcons.home),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.create),
+            icon: FaIcon(FontAwesomeIcons.plusCircle),
             label: 'Créer',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.menu_rounded),
+            icon: FaIcon(FontAwesomeIcons.bars),
             label: 'Menu',
           ),
         ],

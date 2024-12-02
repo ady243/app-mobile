@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:teamup/pages/user_profile.dart';
 import '../services/ChatService.dart';
 import '../services/auth.service.dart';
 import 'package:intl/intl.dart';
@@ -91,6 +92,31 @@ class _ChatTabState extends State<ChatTab> {
     });
   }
 
+  void _navigateToUserProfile(String userId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => UserProfilePages(userId: userId),
+      ),
+    );
+  }
+
+  Color _getUserColor(String userId) {
+    final colors = [
+      Colors.red[100],
+      Colors.green[100],
+      Colors.blue[100],
+      Colors.yellow[100],
+      Colors.purple[100],
+      Colors.orange[100],
+      Colors.teal[100],
+      Colors.pink[100],
+      Colors.brown[100],
+    ];
+    final index = userId.hashCode % colors.length;
+    return colors[index]!;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -114,19 +140,24 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   Widget _buildMessageBubble(Map<String, dynamic> message, bool isCurrentUser) {
+    final username = message['username'] ?? 'Utilisateur';
+    final userId = message['userId'] ?? '';
+    final messageText = message['message'] ?? '';
+    final timestamp = message['timestamp'] ?? '';
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
         mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (!isCurrentUser) _buildAvatar(message['username']),
+          if (!isCurrentUser) _buildAvatar(userId, username),
           const SizedBox(width: 8),
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               decoration: BoxDecoration(
-                color: isCurrentUser ? Colors.blue[100] : Colors.grey[200],
+                color: isCurrentUser ? Colors.blue[100] : _getUserColor(userId),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -137,13 +168,18 @@ class _ChatTabState extends State<ChatTab> {
               child: Column(
                 crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
+                  if (!isCurrentUser)
+                    Text(
+                      username,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   Text(
-                    message['message'],
+                    messageText,
                     style: const TextStyle(fontSize: 16),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _formatTimestamp(message['timestamp']),
+                    _formatTimestamp(timestamp),
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
@@ -151,18 +187,21 @@ class _ChatTabState extends State<ChatTab> {
             ),
           ),
           const SizedBox(width: 8),
-          if (isCurrentUser) _buildAvatar(message['username']),
+          if (isCurrentUser) _buildAvatar(userId, username),
         ],
       ),
     );
   }
 
-  Widget _buildAvatar(String username) {
-    return CircleAvatar(
-      backgroundColor: Colors.blue,
-      child: Text(
-        username[0].toUpperCase(),
-        style: const TextStyle(color: Colors.white),
+  Widget _buildAvatar(String userId, String username) {
+    return GestureDetector(
+      onTap: () => _navigateToUserProfile(userId),
+      child: CircleAvatar(
+        backgroundColor: const Color(0xFF01BF6B),
+        child: Text(
+          username[0].toUpperCase(),
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
@@ -189,7 +228,7 @@ class _ChatTabState extends State<ChatTab> {
               decoration: InputDecoration(
                 hintText: 'Entrez votre message...',
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
+                  borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
@@ -201,8 +240,9 @@ class _ChatTabState extends State<ChatTab> {
           const SizedBox(width: 8),
           FloatingActionButton(
             onPressed: _sendMessage,
-            child: const Icon(Icons.send),
             mini: true,
+            backgroundColor: Colors.green,
+            child: const Icon(Icons.send, color: Colors.white),
           ),
         ],
       ),
@@ -210,6 +250,7 @@ class _ChatTabState extends State<ChatTab> {
   }
 
   String _formatTimestamp(String timestamp) {
+    if (timestamp.isEmpty) return '';
     final dateTime = DateTime.parse(timestamp);
     final formatter = DateFormat('HH:mm');
     return formatter.format(dateTime);

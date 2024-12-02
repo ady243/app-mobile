@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/auth.service.dart';
 
 class Number {
@@ -24,6 +25,9 @@ class UserProfilePage extends StatefulWidget {
 class _UserProfilePageState extends State<UserProfilePage> {
   String? _username;
   String? _email;
+  String? _bio;
+  String? _location;
+  String? _favoriteSport;
   late Number _matches_played = Number(0, 99, 0);
   late Number _matchWon = Number(0, 99, 0);
   late Number _goals_scored = Number(0, 99, 0);
@@ -52,6 +56,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
     setState(() {
       _username = userInfo?['username'];
       _email = userInfo?['email'];
+      _bio = userInfo?['bio'];
+      _location = userInfo?['location'];
+      _favoriteSport = userInfo?['favorite_sport'];
 
       _matches_played = Number(userInfo?['matches_played'], 99, 0);
       _matchWon = Number(userInfo?['matches_won'], 99, 0);
@@ -66,82 +73,32 @@ class _UserProfilePageState extends State<UserProfilePage> {
     });
   }
 
-  Future<void> _updateUser() async {
-    final data = {
-      'username': _username,
-      'email': _email,
-      'matchesPlayed': _matches_played.value,
-      'matchesWon': _matchWon.value,
-      'goalsScored': _goals_scored.value,
-      'behaviorScore': _behavior_score.value,
-      'pac': _pac.value,
-      'sho': _sho?.value,
-      'pas': _pas?.value,
-      'dri': _dri?.value,
-      'def': _def?.value,
-      'phy': _phy?.value,
-    };
-
-    try {
-      final updatedUser = await AuthService().updateUser(data);
-      if (updatedUser != null) {
-        setState(() {
-          _username = updatedUser['username'];
-          _email = updatedUser['email'];
-          _matches_played = Number(updatedUser['matchesPlayed'], 99, 0);
-          _matchWon = Number(updatedUser['matchesWon'], 99, 0);
-          _goals_scored = Number(updatedUser['goalsScored'], 99, 0);
-          _behavior_score = Number(updatedUser['behaviorScore'], 99, 0);
-          _pac = Number(updatedUser['pac'], 99, 0);
-          _sho = Number(updatedUser['sho'], 99, 0);
-          _pas = Number(updatedUser['pas'], 99, 0);
-          _dri = Number(updatedUser['dri'], 99, 0);
-          _def = Number(updatedUser['def'], 99, 0);
-          _phy = Number(updatedUser['phy'], 99, 0);
-        });
-      }
-    } catch (e) {
-      print('Erreur lors de la mise à jour des informations utilisateur: $e');
-    }
-  }
-
-  void _openBottomSheet(BuildContext context, String field, TextEditingController controller, Function onSave) {
-    showModalBottomSheet(
+  void _openEditDialog(String title, TextEditingController controller, Function onSave) {
+    showDialog(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      builder: (BuildContext context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Modifier $field',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 50),
-              TextField(
-                controller: controller,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(hintText: 'Entrez une nouvelle valeur pour $field'),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  onSave();
-                  Navigator.of(context).pop();
-                  _updateUser();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF01BF6B),
-                ),
-                child: const Text('Sauvegarder',
-                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-            ],
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Modifier $title'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(hintText: 'Entrez une nouvelle valeur pour $title'),
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              onPressed: () {
+                onSave();
+                Navigator.of(context).pop();
+              },
+              child: const Text('Sauvegarder'),
+            ),
+          ],
         );
       },
     );
@@ -165,45 +122,71 @@ class _UserProfilePageState extends State<UserProfilePage> {
         color: Colors.white,
         child: Column(
           children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              margin: const EdgeInsets.all(16),
-              color: Color(0xFF01BF6B).withOpacity(0.1),
-              child: ListTile(
-                leading: const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.white,
-                  child: Icon(
-                    Icons.person,
-                    size: 40.0,
-                    color: Colors.grey,
+            Stack(
+              children: [
+                Container(
+                  height: 150,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage(
+                        'assets/images/football.jpg',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-                title: Text(
-                  _username ?? 'User',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                const Positioned(
+                  top: 50,
+                  left: 16,
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      Icons.person,
+                      size: 40.0,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
-                subtitle: Text(
-                  _email ?? 'chargement ...',
-                  style: TextStyle(fontSize: 16),
+                Positioned(
+                  top: 60,
+                  left: 100,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _username ?? 'User',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        _email ?? 'chargement ...',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(8.0),
                 children: [
-                  _buildStaticTile(Icons.stadium_rounded, 'Match joué', _matches_played.value),
-                  _buildStaticTile(Icons.sports, 'Match gagné', _matchWon.value),
-                  _buildStaticTile(Icons.sports_soccer_sharp, 'Nombre de buts', _goals_scored.value),
+                  _buildInfoTile(FontAwesomeIcons.user, 'Bio', _bio ?? 'Non spécifié', Colors.purple),
+                  _buildInfoTile(FontAwesomeIcons.mapMarkerAlt, 'Localisation', _location ?? 'Non spécifié', Colors.red),
+                  _buildInfoTile(FontAwesomeIcons.footballBall, 'Sport préféré', _favoriteSport ?? 'Non spécifié', Colors.green),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey),
+                      color: const Color(0xFF01BF6B).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: const Text(
@@ -211,31 +194,60 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  _buildEditableTile(Icons.sports_soccer, 'Tir', _sho?.value ?? 0, _shoController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.bullseye, 'Tir', _sho?.value ?? 0, Colors.orange, _shoController, () {
                     setState(() {
                       _sho = Number.fromValue(int.parse(_shoController.text));
                     });
                   }),
-                  _buildEditableTile(Icons.sports_soccer, 'Passe', _pas?.value ?? 0, _pasController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.handshake, 'Passe', _pas?.value ?? 0, Colors.blue, _pasController, () {
                     setState(() {
                       _pas = Number.fromValue(int.parse(_pasController.text));
                     });
                   }),
-                  _buildEditableTile(Icons.sports_soccer, 'Dribble', _dri?.value ?? 0, _driController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.running, 'Dribble', _dri?.value ?? 0, Colors.pink, _driController, () {
                     setState(() {
                       _dri = Number.fromValue(int.parse(_driController.text));
                     });
                   }),
-                  _buildEditableTile(Icons.sports_soccer, 'Défense', _def?.value ?? 0, _defController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.shieldAlt, 'Défense', _def?.value ?? 0, Colors.teal, _defController, () {
                     setState(() {
                       _def = Number.fromValue(int.parse(_defController.text));
                     });
                   }),
-                  _buildEditableTile(Icons.accessibility_new_sharp, 'Physique', _phy?.value ?? 0, _phyController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.dumbbell, 'Physique', _phy?.value ?? 0, Colors.brown, _phyController, () {
                     setState(() {
                       _phy = Number.fromValue(int.parse(_phyController.text));
                     });
                   }),
+                  const SizedBox(height: 16.0),
+                  const Text(
+                    'Statistiques',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatCard('Matches Joués', _matches_played.value, Colors.blue),
+                      _buildStatCard('Matches Gagnés', _matchWon.value, Colors.green),
+                      _buildStatCard('Buts Marqués', _goals_scored.value, Colors.red),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatCard('PAC', _pac.value, Colors.purple),
+                      _buildStatCard('SHO', _sho?.value ?? 0, Colors.orange),
+                      _buildStatCard('PAS', _pas?.value ?? 0, Colors.blue),
+                      _buildStatCard('DRI', _dri?.value ?? 0, Colors.pink),
+                      _buildStatCard('DEF', _def?.value ?? 0, Colors.teal),
+                      _buildStatCard('PHY', _phy?.value ?? 0, Colors.brown),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -245,27 +257,50 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildStaticTile(IconData icon, String title, int value) {
+  Widget _buildInfoTile(IconData icon, String title, String value, Color iconColor) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueGrey),
+        leading: Icon(icon, color: iconColor),
         title: Text('$title : $value'),
       ),
     );
   }
 
-  Widget _buildEditableTile(IconData icon, String title, int value, TextEditingController controller, Function onSave) {
+  Widget _buildStatCard(String title, int value, Color color) {
+    return Column(
+      children: [
+        Text(
+          value.toString(),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4.0),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.grey,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditableStatCard(IconData icon, String title, int value, Color color, TextEditingController controller, Function onSave) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueAccent),
+        leading: Icon(icon, color: color),
         title: Text('$title : $value'),
         trailing: IconButton(
           icon: const Icon(Icons.edit),
           onPressed: () {
             controller.text = value.toString();
-            _openBottomSheet(context, title, controller, onSave);
+            _openEditDialog(title, controller, onSave);
           },
         ),
       ),

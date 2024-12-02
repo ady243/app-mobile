@@ -183,7 +183,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: _addressController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'Adresse',
                     border: OutlineInputBorder(),
                   ),
@@ -230,18 +230,27 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Mes Matchs',
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Mes matches créés'),
-              Tab(text: 'Créer un match'),
-            ],
-          ),
-          centerTitle: true,
-          backgroundColor: const Color(0xFF01BF6B),
+        title: const Text('Mes Matchs',
+          style: TextStyle(color: Colors.white, fontSize: 20),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(kToolbarHeight),
+          child: Container(
+            color: Colors.white,
+            child: const TabBar(
+              tabs: [
+                Tab(text: 'Mes matches créés'),
+                Tab(text: 'Créer un match'),
+              ],
+              indicatorColor: Colors.green,
+              labelColor: const Color(0xFF01BF6B),
+              unselectedLabelColor: const Color(0xFF01BF6B),
+            ),
+          ),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color(0xFF01BF6B),
+      ),
         body: TabBarView(
           children: [
             const MyCreatedMatchesPage(),
@@ -271,7 +280,7 @@ class CreateMatchPageContent extends StatelessWidget {
   final void Function(BuildContext) openBottomSheet;
 
   const CreateMatchPageContent({
-    Key? key,
+    super.key,
     required this.descriptionController,
     required this.matchDate,
     required this.matchTime,
@@ -279,7 +288,7 @@ class CreateMatchPageContent extends StatelessWidget {
     required this.numberOfPlayersController,
     required this.createMatch,
     required this.openBottomSheet,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -288,9 +297,9 @@ class CreateMatchPageContent extends StatelessWidget {
         onPressed: () {
           openBottomSheet(context);
         },
-        child: const Icon(Icons.add),
         backgroundColor: const Color(0xFF01BF6B),
         tooltip: 'Créer un match',
+        child: const Icon(Icons.add),
       ),
     );
   }

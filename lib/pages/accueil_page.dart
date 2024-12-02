@@ -117,6 +117,8 @@ class _AccueilPageState extends State<AccueilPage> {
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
+          : _matches.isEmpty
+          ? _buildEmptyState()
           : ListView.builder(
         itemCount: _matches.length,
         itemBuilder: (context, index) {
@@ -143,6 +145,31 @@ class _AccueilPageState extends State<AccueilPage> {
                 : null,
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/image_empty.png',
+            height: 200,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Aucun match disponible pour le moment',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Revenez plus tard ou créez un nouveau match !',
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

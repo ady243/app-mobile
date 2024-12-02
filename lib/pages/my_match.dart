@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/MatchService.dart';
 
 class MyCreatedMatchesPage extends StatefulWidget {
@@ -45,12 +46,12 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
         _matches.removeWhere((match) => match['id'] == matchId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Match supprimé avec succès')),
+        const SnackBar(content: Text('Match supprimé avec succès')),
       );
     } catch (e) {
       print('Erreur lors de la suppression du match: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de la suppression du match')),
+        const SnackBar(content: Text('Erreur lors de la suppression du match')),
       );
     }
   }
@@ -60,16 +61,42 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Supprimer le match'),
-          content: const Text('Êtes-vous sûr de vouloir supprimer ce match ?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: const [
+              FaIcon(FontAwesomeIcons.exclamationTriangle, color: Colors.red),
+              SizedBox(width: 10),
+              Text('Supprimer le match'),
+            ],
+          ),
+          content: const Text(
+            'Êtes-vous sûr de vouloir supprimer ce match ? Cette action est irréversible.',
+            style: TextStyle(fontSize: 16),
+          ),
           actions: <Widget>[
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.grey,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               child: const Text('Annuler'),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
               child: const Text('Supprimer'),
               onPressed: () {
                 Navigator.of(context).pop();
@@ -87,29 +114,46 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
     return Scaffold(
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-        itemCount: _matches.length,
-        itemBuilder: (context, index) {
-          final match = _matches[index];
-          return Dismissible(
-            key: Key(match['id']),
-            direction: DismissDirection.endToStart,
-            confirmDismiss: (direction) async {
-              _showDeleteDialog(match['id']);
-              return false;
-            },
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: const Icon(Icons.delete, color: Colors.white),
+          : Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Glissez vers la gauche pour supprimer un match',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
-            child: ListTile(
-              title: Text(match['description'] ?? 'No Description'),
-              subtitle: Text(match['match_date'] ?? 'No Date'),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _matches.length,
+              itemBuilder: (context, index) {
+                final match = _matches[index];
+                return Dismissible(
+                  key: Key(match['id']),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (direction) async {
+                    _showDeleteDialog(match['id']);
+                    return false;
+                  },
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: const FaIcon(FontAwesomeIcons.trash, color: Colors.white),
+                  ),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: ListTile(
+                      leading: const FaIcon(FontAwesomeIcons.futbol, color: Color(0xFF01BF6B)),
+                      title: Text(match['description'] ?? 'No Description'),
+                      subtitle: Text(match['match_date'] ?? 'No Date'),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
