@@ -194,8 +194,10 @@ class MatchService {
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       if (response.statusCode == 200) {
+        print('Réponse AI: ${response.data}');
         return response.data;
       } else {
+        print('Erreur lors de la récupération des détails du match avec joueurs: ${response.statusCode} - ${response.data}');
         throw Exception('Échec de la récupération des détails du match avec joueurs');
       }
     } catch (e) {

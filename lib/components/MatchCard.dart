@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class MatchCard extends StatelessWidget {
   final String description;
@@ -24,8 +25,21 @@ class MatchCard extends StatelessWidget {
     required this.onJoin,
   }) : super(key: key);
 
+  bool _isMatchInPast() {
+    try {
+      final DateTime now = DateTime.now();
+      final DateTime matchDateTime = DateFormat('yyyy-MM-dd HH:mm').parse('$matchDate $matchTime');
+      return matchDateTime.isBefore(now);
+    } catch (e) {
+      print('Erreur lors de la conversion de la date et de l\'heure: $e');
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isMatchInPast = _isMatchInPast();
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -137,21 +151,22 @@ class MatchCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: isJoined ? null : onJoin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isJoined ? Colors.grey : Colors.green,
-                      ),
-                      child: Text(
-                        isJoined ? 'Vous avez rejoint' : 'Réjoindre le match',
-                        style: const TextStyle(
-                          color: Colors.white,
+                  if (!isMatchInPast)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: isJoined ? null : onJoin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isJoined ? Colors.grey : Colors.green,
+                        ),
+                        child: Text(
+                          isJoined ? 'Vous avez rejoint' : 'Réjoindre le match',
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

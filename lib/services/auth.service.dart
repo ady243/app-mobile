@@ -184,7 +184,6 @@ class AuthService {
   Future<void> logout() async {
     try {
       await _storage.delete(key: 'accessToken');
-      print('Déconnexion réussie.');
     } catch (e) {
       print('Erreur lors de la déconnexion: $e');
       rethrow;

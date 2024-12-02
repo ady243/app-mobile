@@ -64,18 +64,22 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
     });
   }
 
+  String _cleanAiResponse(String response) {
+    return response.replaceAll('*', '').replaceAll('###', '').replaceAll('####', '');
+  }
+
   Future<void> _fetchAndShowAiResponse() async {
     try {
       final matchService = MatchService();
       final aiData = await matchService.isAi(widget.matchId);
-      if (aiData.containsKey('message')) {
+      if (aiData.containsKey('formation')) {
         setState(() {
-          _aiResponse = aiData['message'];
+          _aiResponse = _cleanAiResponse(aiData['formation'].join('\n'));
           _showAiResponse = true;
         });
         _controller.forward();
       } else {
-        throw Exception("Pas de message AI trouvé dans la réponse.");
+        throw Exception("Pas de formation AI trouvée dans la réponse.");
       }
     } catch (e) {
       print("Erreur lors de la récupération des données AI : $e");

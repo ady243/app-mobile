@@ -62,8 +62,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       'number_of_players': numberOfPlayers,
     };
 
-    print('Données envoyées : $matchData');
-
     try {
       await _matchService.createMatch(matchData);
       Fluttertoast.showToast(msg: 'Match créé avec succès !');

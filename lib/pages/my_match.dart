@@ -24,7 +24,6 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
     try {
       print('Tentative de récupération des matchs créés par l\'organisateur...');
       final matches = await _matchService.getMatchesByOrganizer();
-      print('Matchs récupérés: $matches');
       setState(() {
         _matches = matches;
         _isLoading = false;
@@ -39,9 +38,7 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
 
   Future<void> _deleteMatch(String matchId) async {
     try {
-      print('Tentative de suppression du match avec ID: $matchId');
       await _matchService.deleteMatch(matchId);
-      print('Match supprimé avec succès');
       setState(() {
         _matches.removeWhere((match) => match['id'] == matchId);
       });

@@ -32,9 +32,8 @@ class _SideNavState extends State<SideNav> {
   }
 
   void _onItemTap(int index) {
-    print('SideNav item tapped: $index'); // Debugging log
     widget.onItemSelected(index);
-    Navigator.pop(context);  // Close the side nav after selection
+    Navigator.pop(context);
   }
 
   @override
