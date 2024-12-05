@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import '../utils/basUrl.dart';
 import 'auth.service.dart';
 
 class MatchService {
   final Dio _dio;
   final AuthService _authService;
-  final String apiUrl = 'http://10.0.2.2:3003/api';
 
   MatchService({
     Dio? dio,
@@ -28,7 +28,7 @@ class MatchService {
 
         final accessToken = await _authService.getToken();
         final response = await _dio.post(
-          '$apiUrl/matches',
+          '$baseUrl/matches',
           options: Options(
             headers: {
               'Content-Type': 'application/json',
@@ -71,12 +71,13 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/matches',
+        '$baseUrl/matches',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
+        print('Matches fetched: $data'); // Log des informations des matchs
         return List<Map<String, dynamic>>.from(data);
       } else {
         throw Exception('Échec de la récupération des matches: ${response.data}');
@@ -87,23 +88,68 @@ class MatchService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getMatchesNearBy() async {
+  Future<Map<String, dynamic>> getMatchDetails(String matchId) async {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/matches/nearby',
+        '$baseUrl/matches/$matchId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        print('Match details fetched: ${response.data}'); // Log des détails du match
+        return response.data;
+      } else {
+        throw Exception('Échec de la récupération des détails du match');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des détails du match: $e');
+      throw Exception('Échec de la récupération des détails du match');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMatchPlayers(String matchId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$baseUrl/matchesPlayers/$matchId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        if (response.data is Map && response.data.containsKey('players')) {
+          print('Match players fetched: ${response.data['players']}'); // Log des joueurs du match
+          return List<Map<String, dynamic>>.from(response.data['players']);
+        } else {
+          throw Exception('La réponse de l\'API n\'est pas valide');
+        }
+      } else {
+        throw Exception('Échec de la récupération des participants du match');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des participants du match: $e');
+      throw Exception('Échec de la récupération des participants du match');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMatchesByOrganizer() async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$baseUrl/matches/organizer/matches',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
+        print('Matches by organizer fetched: $data'); // Log des matches de l'organisateur
         return List<Map<String, dynamic>>.from(data);
       } else {
-        throw Exception('Échec de la récupération des matches: ${response.data}');
+        throw Exception('Échec de la récupération des matches de l\'organisateur: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des matches: $e');
-      throw Exception('Échec de la récupération des matches');
+      print('Erreur lors de la récupération des matches de l\'organisateur: $e');
+      throw Exception('Échec de la récupération des matches de l\'organisateur');
     }
   }
 
@@ -111,12 +157,12 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.post(
-        '$apiUrl/matchesPlayers',
+        '$baseUrl/matchesPlayers',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
         data: json.encode({'match_id': matchId, 'player_id': playerId}),
       );
 
-      print('Réponse du serveur: ${response.data}'); // Ajoutez ce log pour vérifier la réponse du serveur
+      print('Réponse du serveur: ${response.data}');
 
       if (response.statusCode != 201) {
         throw Exception('Échec de la tentative de rejoindre le match: ${response.data}');
@@ -131,13 +177,34 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$apiUrl/matches/$matchId',
+        '$baseUrl/matches/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
       if (response.statusCode == 200) {
+        print('Match with players fetched: ${response.data}'); // Log des détails du match avec joueurs
         return response.data;
       } else {
+        throw Exception('Échec de la récupération des détails du match avec joueurs');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des détails du match: $e');
+      throw Exception('Échec de la récupération des détails du match');
+    }
+  }
+
+  Future<Map<String, dynamic>> isAi(String matchId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$baseUrl/openai/formation/$matchId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      if (response.statusCode == 200) {
+        print('Réponse AI: ${response.data}');
+        return response.data;
+      } else {
+        print('Erreur lors de la récupération des détails du match avec joueurs: ${response.statusCode} - ${response.data}');
         throw Exception('Échec de la récupération des détails du match avec joueurs');
       }
     } catch (e) {
@@ -162,23 +229,54 @@ class MatchService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getNearbyMatches() async {
+  Future<void> deleteMatch(String matchId) async {
     try {
       final accessToken = await _authService.getToken();
-      final response = await _dio.get(
-        '$apiUrl/matches/nearby',
+      print('Tentative de suppression du match avec ID: $matchId');
+      final response = await _dio.delete(
+        '$baseUrl/matches/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
-      if (response.statusCode == 200) {
-        List<dynamic> data = response.data;
-        return List<Map<String, dynamic>>.from(data);
+      if (response.statusCode == 204) {
+        print('Match supprimé avec succès');
       } else {
-        throw Exception('Échec de la récupération des matchs proches: ${response.data}');
+        print('Échec de la suppression du match: ${response.statusCode} - ${response.data}');
+        throw Exception('Échec de la suppression du match: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des matchs proches: $e');
-      throw Exception('Échec de la récupération des matchs proches');
+      print('Erreur lors de la suppression du match: $e');
+      throw Exception('Échec de la suppression du match');
+    }
+  }
+
+  Future<Map<String, dynamic>> getCoordinates(String address) async {
+    try {
+      final response = await _dio.get(
+        'https://maps.googleapis.com/maps/api/geocode/json',
+        queryParameters: {
+          'address': address,
+          'key': 'AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final results = response.data['results'];
+        if (results.isNotEmpty) {
+          final location = results[0]['geometry']['location'];
+          return {
+            'latitude': location['lat'],
+            'longitude': location['lng'],
+          };
+        } else {
+          throw Exception('Aucune coordonnée trouvée pour l\'adresse: $address');
+        }
+      } else {
+        throw Exception('Échec de la récupération des coordonnées: ${response.data}');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des coordonnées: $e');
+      throw Exception('Échec de la récupération des coordonnées');
     }
   }
 }

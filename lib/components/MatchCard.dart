@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class MatchCard extends StatelessWidget {
   final String description;
@@ -8,11 +9,11 @@ class MatchCard extends StatelessWidget {
   final String status;
   final int numberOfPlayers;
   final bool isJoined;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final VoidCallback onJoin;
 
   const MatchCard({
-    Key? key,
+    super.key,
     required this.description,
     required this.matchDate,
     required this.matchTime,
@@ -20,12 +21,47 @@ class MatchCard extends StatelessWidget {
     required this.status,
     required this.numberOfPlayers,
     required this.isJoined,
-    required this.onTap,
+    this.onTap,
     required this.onJoin,
-  }) : super(key: key);
+  });
+
+  bool _isMatchInPast() {
+    try {
+      final DateTime now = DateTime.now();
+      final DateTime matchDateTime = DateFormat('yyyy-MM-dd HH:mm').parse('$matchDate $matchTime');
+      return matchDateTime.isBefore(now);
+    } catch (e) {
+      print('Erreur lors de la conversion de la date et de l\'heure: $e');
+      return false;
+    }
+  }
+
+  String _formatDate(String date) {
+    try {
+      final DateTime dateTime = DateFormat('yyyy-MM-dd').parse(date);
+      return DateFormat('dd MMM yyyy').format(dateTime);
+    } catch (e) {
+      print('Erreur lors du formatage de la date: $e');
+      return date;
+    }
+  }
+
+  String _formatTime(String time) {
+    try {
+      final DateTime dateTime = DateFormat('HH:mm:ss').parse(time);
+      return DateFormat('HH:mm').format(dateTime);
+    } catch (e) {
+      print('Erreur lors du formatage de l\'heure: $e');
+      return time;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final bool isMatchInPast = _isMatchInPast();
+    final String formattedDate = _formatDate(matchDate);
+    final String formattedTime = _formatTime(matchTime);
+
     return GestureDetector(
       onTap: onTap,
       child: Card(
@@ -76,7 +112,7 @@ class MatchCard extends StatelessWidget {
                       const Icon(Icons.calendar_today, color: Colors.white),
                       const SizedBox(width: 5),
                       Text(
-                        matchDate,
+                        formattedDate,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
@@ -89,7 +125,7 @@ class MatchCard extends StatelessWidget {
                       const Icon(Icons.access_time, color: Colors.white),
                       const SizedBox(width: 5),
                       Text(
-                        matchTime,
+                        formattedTime,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
@@ -137,21 +173,22 @@ class MatchCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: ElevatedButton(
-                      onPressed: isJoined ? null : onJoin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isJoined ? Colors.grey : Colors.green,
-                      ),
-                      child: Text(
-                        isJoined ? 'Vous avez rejoint' : 'Réjoindre le match',
-                        style: const TextStyle(
-                          color: Colors.white,
+                  if (!isMatchInPast)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: ElevatedButton(
+                        onPressed: isJoined ? null : onJoin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isJoined ? Colors.grey : Colors.green,
+                        ),
+                        child: Text(
+                          isJoined ? 'Vous avez rejoint' : 'Réjoindre le match',
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

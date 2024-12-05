@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/basUrl.dart';
 
 class AuthService {
   final Dio _dio = Dio();
@@ -14,7 +16,6 @@ class AuthService {
       error: true,
     ));
 
-
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final accessToken = await _storage.read(key: 'accessToken');
@@ -23,23 +24,55 @@ class AuthService {
         }
         return handler.next(options);
       },
-      onError: (DioError error, handler) async {
+      onError: (DioException error, handler) async {
         if (error.response?.statusCode == 401) {
-          await logout();
+          await _refreshToken();
+          handler.resolve(await _retry(error.requestOptions));
+        } else {
+          return handler.next(error);
         }
-        return handler.next(error);
       },
     ));
   }
+
+  Future<void> _refreshToken() async {
+    try {
+      final response = await _dio.post('$baseUrl/refresh');
+      if (response.statusCode == 200 && response.data['accessToken'] != null) {
+        await _storage.write(key: 'accessToken', value: response.data['accessToken']);
+      } else {
+        throw Exception('Erreur lors du rafraîchissement du token.');
+      }
+    } catch (e) {
+      print('Erreur lors du rafraîchissement du token: $e');
+      await logout();
+    }
+  }
+
+  Future<Response> _retry(RequestOptions requestOptions) async {
+    final options = Options(
+      method: requestOptions.method,
+      headers: requestOptions.headers,
+    );
+    return _dio.request(
+      requestOptions.path,
+      options: options,
+      data: requestOptions.data,
+      queryParameters: requestOptions.queryParameters,
+    );
+  }
+
   Future<void> login(String email, String password) async {
     try {
       final response = await _dio.post(
-        'http://10.0.2.2:3003/api/login',
+        '$baseUrl/login',
         data: {
           'email': email,
           'password': password,
         },
       );
+
+      print('Réponse de l\'API: ${response.data}');
 
       if (response.statusCode == 200 && response.data['accessToken'] != null) {
         await _storage.write(key: 'accessToken', value: response.data['accessToken']);
@@ -47,8 +80,8 @@ class AuthService {
         throw Exception('Erreur lors de la connexion : token non fourni.');
       }
     } catch (e) {
-      if (e is DioError) {
-        print('Erreur de connexion: ${e.response?.data}');
+      if (e is DioException) {
+        print('Erreur de connexion: ${e.response?.statusCode} - ${e.response?.data}');
       } else {
         print('Erreur inattendue: $e');
       }
@@ -59,7 +92,7 @@ class AuthService {
   Future<void> register(String username, String email, String password) async {
     try {
       final response = await _dio.post(
-        'http://10.0.2.2:3003/api/register',
+        '$baseUrl/register',
         data: {
           'username': username,
           'email': email,
@@ -84,7 +117,7 @@ class AuthService {
     while (retryCount < maxRetries) {
       try {
         if (await isLoggedIn()) {
-          final response = await _dio.get('http://10.0.2.2:3003/api/userinfo');
+          final response = await _dio.get('$baseUrl/userInfo');
 
           if (response.statusCode == 200) {
             return response.data;
@@ -112,11 +145,29 @@ class AuthService {
     return null;
   }
 
+  Future<Map<String, dynamic>?> getUserInfoById(String userId) async {
+    try {
+      final accessToken = await _storage.read(key: 'accessToken');
+      final response = await _dio.get(
+        '$baseUrl/users/$userId/public',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Erreur lors de la récupération des détails de l\'utilisateur');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des détails de l\'utilisateur: $e');
+      return null;
+    }
+  }
 
   Future<Map<String, dynamic>?> updateUser(Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(
-        'http://10.0.2.2:3003/api/userUpdate',
+        '$baseUrl/userUpdate',
         data: data,
       );
 
@@ -133,7 +184,6 @@ class AuthService {
   Future<void> logout() async {
     try {
       await _storage.delete(key: 'accessToken');
-      print('Déconnexion réussie.');
     } catch (e) {
       print('Erreur lors de la déconnexion: $e');
       rethrow;
@@ -156,6 +206,21 @@ class AuthService {
     } catch (e) {
       print('Erreur lors de la récupération du token: $e');
       return null;
+    }
+  }
+
+  //delete my account
+  Future<void> deleteAccount() async {
+    try {
+      final response = await _dio.delete('$baseUrl/deleteMyAccount');
+      if (response.statusCode == 200) {
+        await logout();
+      } else {
+        throw Exception('Erreur lors de la suppression du compte utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la suppression du compte utilisateur: $e');
+      rethrow;
     }
   }
 }

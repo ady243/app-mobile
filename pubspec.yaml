@@ -28,14 +28,9 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-
   flutter:
     sdk: flutter
   motion_tab_bar_v2: ^0.3.0
-
-
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   rive: ^0.13.13
   hive: ^2.0.0
@@ -47,12 +42,21 @@ dependencies:
   google_fonts: ^6.2.1
   toastification: ^2.3.0
   fluttertoast: ^8.2.8
+  flutter_google_maps_webservices: ^1.1.1
+  google_places_flutter: ^2.0.9
   intl: ^0.19.0
+  icons_plus: ^5.0.0
+  shared_preferences: ^2.3.3
+  uni_links: ^0.5.1
+  app_links: ^6.3.2
+  settings_ui: ^2.0.2
+  font_awesome_flutter: ^10.8.0
+  google_maps_flutter: ^2.10.0
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  shared_preferences: ^2.0.8
 
 
   # The "flutter_lints" package below contains a set of recommended lints to
@@ -71,6 +75,12 @@ flutter:
     - assets/images/football.jpg
     - assets/images/terrain.png
     - assets/logos/google_light.png
+    - assets/logos/logo_green.png
+    - assets/logos/grey_logo.png
+    - assets/images/ia.png
+    - assets/images/image_empty.png
+    - assets/images/marker.png
+    - assets/map_style_dark.json
 
 
   # The following line ensures that the Material Icons font is

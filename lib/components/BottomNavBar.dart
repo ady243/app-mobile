@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
-
+import '../pages/setting_page.dart';
+import 'SideNav.dart';
+import '../components/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -13,14 +17,27 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const List<Widget> _widgetOptions = <Widget>[
     AccueilPage(),
     CreateMatchPage(),
     UserProfilePage(),
+    SettingPage(),
   ];
 
   void _onItemTapped(int index) {
+    print('Tapped index: $index');
+    setState(() {
+      if (index == 2) {
+        _scaffoldKey.currentState?.openEndDrawer();
+      } else {
+        _selectedIndex = index;
+      }
+    });
+  }
+
+  void _onSideNavItemSelected(int index) {
     setState(() {
       _selectedIndex = index;
     });
@@ -28,25 +45,28 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
-      body: _widgetOptions.elementAt(_selectedIndex),
+      key: _scaffoldKey,
+      body: _widgetOptions[_selectedIndex],
+      endDrawer: SideNav(onItemSelected: _onSideNavItemSelected),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
+            icon: FaIcon(FontAwesomeIcons.home, color: themeProvider.iconColor),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.create),
+            icon: FaIcon(FontAwesomeIcons.plusCircle, color: themeProvider.iconColor),
             label: 'Créer',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_circle),
-            label: 'Profil',
+            icon: FaIcon(FontAwesomeIcons.bars, color: themeProvider.iconColor),
+            label: 'Menu',
           ),
         ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF01BF6B),
+        currentIndex: _selectedIndex < 2 ? _selectedIndex : 0,
+        selectedItemColor: const Color(0xFF01BF6B),
         unselectedItemColor: Colors.black,
         onTap: _onItemTapped,
       ),

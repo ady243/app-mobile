@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
 import '../services/MatchService.dart';
+import 'my_match.dart';
+import 'package:provider/provider.dart';
+import '../components/theme_provider.dart';
 
 class CreateMatchPage extends StatefulWidget {
-  const CreateMatchPage({Key? key}) : super(key: key);
+  const CreateMatchPage({super.key});
 
   @override
   State<CreateMatchPage> createState() => _CreateMatchPageState();
@@ -17,9 +23,13 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _numberOfPlayersController = TextEditingController();
   final MatchService _matchService = MatchService();
+  final String _googleApiKey = 'AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg';
+
+  Timer? _debounce;
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _descriptionController.dispose();
     _addressController.dispose();
     _numberOfPlayersController.dispose();
@@ -43,8 +53,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       return;
     }
 
-    // Formatez l'heure correctement
-    final String matchTime = _matchTime!.hour.toString().padLeft(2, '0') + ':' + _matchTime!.minute.toString().padLeft(2, '0');
+    final String matchTime = '${_matchTime!.hour.toString().padLeft(2, '0')}:${_matchTime!.minute.toString().padLeft(2, '0')}';
 
     Map<String, dynamic> matchData = {
       'description': _descriptionController.text,
@@ -53,8 +62,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       'address': _addressController.text,
       'number_of_players': numberOfPlayers,
     };
-
-    print('Données envoyées : $matchData'); // Ajoutez ce log pour vérifier les données envoyées
 
     try {
       await _matchService.createMatch(matchData);
@@ -65,31 +72,35 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Créer un Match',
-          style: TextStyle(color: Colors.white, fontSize: 20),
-        ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
-      ),
-      body: Center(
-        child: FloatingActionButton(
-          onPressed: () {
-            _openBottomSheet(context);
-          },
-          child: const Icon(Icons.add),
-          backgroundColor: const Color(0xFF01BF6B),
-          tooltip: 'Créer un match',
-        ),
-      ),
-    );
+  Future<void> _autoCompleteAddress(String query) async {
+    if (query.isEmpty) return;
+
+    final String url =
+        'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$query&key=$_googleApiKey&components=country:fr';
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['status'] == 'OK' && data['predictions'].isNotEmpty) {
+          final String suggestion = data['predictions'][0]['description'];
+          setState(() {
+            _addressController.value = TextEditingValue(
+              text: suggestion,
+              selection: TextSelection.fromPosition(
+                TextPosition(offset: query.length),
+              ),
+            );
+          });
+        }
+      }
+    } catch (error) {
+      print('Erreur lors de la récupération des suggestions : $error');
+    }
   }
 
   void _openBottomSheet(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -176,6 +187,12 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                     labelText: 'Adresse',
                     border: OutlineInputBorder(),
                   ),
+                  onChanged: (query) {
+                    if (_debounce?.isActive ?? false) _debounce!.cancel();
+                    _debounce = Timer(const Duration(seconds: 6), () {
+                      _autoCompleteAddress(query);
+                    });
+                  },
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -192,7 +209,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                     await _createMatch();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF01BF6B),
+                    backgroundColor: themeProvider.primaryColor,
                   ),
                   child: const Text(
                     'Créer le match',
@@ -204,6 +221,91 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
           ),
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(120.0),
+          child: AppBar(
+            title: const Text(
+              'Mes Matchs',
+              style: TextStyle(color: Colors.white, fontSize: 20),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              child: Container(
+                color: Colors.white,
+                child: TabBar(
+                  tabs: const [
+                    Tab(text: 'Mes matches créés'),
+                    Tab(text: 'Créer un match'),
+                  ],
+                  indicatorColor: Colors.green,
+                  labelColor: const Color(0xFF01BF6B),
+                  unselectedLabelColor: themeProvider.primaryColor,
+                ),
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: themeProvider.primaryColor,
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            const MyCreatedMatchesPage(),
+            CreateMatchPageContent(
+              descriptionController: _descriptionController,
+              matchDate: _matchDate,
+              matchTime: _matchTime,
+              addressController: _addressController,
+              numberOfPlayersController: _numberOfPlayersController,
+              createMatch: _createMatch,
+              openBottomSheet: _openBottomSheet,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class CreateMatchPageContent extends StatelessWidget {
+  final TextEditingController descriptionController;
+  final DateTime? matchDate;
+  final TimeOfDay? matchTime;
+  final TextEditingController addressController;
+  final TextEditingController numberOfPlayersController;
+  final Future<void> Function() createMatch;
+  final void Function(BuildContext) openBottomSheet;
+
+  const CreateMatchPageContent({
+    super.key,
+    required this.descriptionController,
+    required this.matchDate,
+    required this.matchTime,
+    required this.addressController,
+    required this.numberOfPlayersController,
+    required this.createMatch,
+    required this.openBottomSheet,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FloatingActionButton(
+        onPressed: () {
+          openBottomSheet(context);
+        },
+        backgroundColor: const Color(0xFF01BF6B),
+        tooltip: 'Créer un match',
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import '../components/FormationField.dart';
+import '../components/TopBar.dart';
+import '../components/MatchInfoTab.dart';
+import '../components/ChatTab.dart';
+import '../components/AiSuggestionOverlay.dart';
 import '../services/MatchService.dart';
-import 'ChatPage.dart';
+import '../services/ChatService.dart';
+import '../components/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class MatchDetailsPage extends StatefulWidget {
   final String matchId;
@@ -12,43 +17,89 @@ class MatchDetailsPage extends StatefulWidget {
   _MatchDetailsPageState createState() => _MatchDetailsPageState();
 }
 
-class _MatchDetailsPageState extends State<MatchDetailsPage> {
-  final MatchService _matchService = MatchService();
-  Map<String, dynamic>? matchDetails;
-  bool _isLoading = true;
+class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerProviderStateMixin {
+  int _currentTabIndex = 0;
+  bool _showAiResponse = false;
+  String _aiResponse = 'Laisse moi te proposer une formation ... ...';
+  late AnimationController _controller;
+  late Animation<Offset> _offsetAnimation;
+  bool _hasNewMessages = false;
+  final ChatService _chatService = ChatService();
 
   @override
   void initState() {
     super.initState();
-    _fetchMatchDetails();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+    _checkForNewMessages();
   }
 
-  void _fetchMatchDetails() async {
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _checkForNewMessages() async {
+    bool hasNew = await _chatService.hasNewMessages(widget.matchId);
+    setState(() {
+      _hasNewMessages = hasNew;
+    });
+  }
+
+  void _onTabSelected(int index) {
+    setState(() {
+      _currentTabIndex = index;
+      if (index == 1) {
+        _hasNewMessages = false;
+        _chatService.markMessagesAsRead(widget.matchId);
+      }
+    });
+  }
+
+  String _cleanAiResponse(String response) {
+    return response.replaceAll('*', '').replaceAll('###', '').replaceAll('####', '').replaceAll('#', '');
+  }
+
+  Future<void> _fetchAndShowAiResponse() async {
     try {
-      final details = await _matchService.getMatchWithPlayers(widget.matchId);
-      setState(() {
-        matchDetails = details;
-        _isLoading = false;
-      });
+      final matchService = MatchService();
+      final aiData = await matchService.isAi(widget.matchId);
+      if (aiData.containsKey('formation')) {
+        setState(() {
+          _aiResponse = _cleanAiResponse(aiData['formation'].join('\n'));
+          _showAiResponse = true;
+        });
+        _controller.forward();
+      } else {
+        throw Exception("Pas de formation AI trouvée dans la réponse.");
+      }
     } catch (e) {
-      print('Error fetching match details: $e');
       setState(() {
-        _isLoading = false;
+        _aiResponse = "Erreur lors de la récupération de la suggestion d'IA.";
+        _showAiResponse = true;
       });
+      _controller.forward();
     }
   }
 
-  void _navigateToChat() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChatPage(matchId: widget.matchId),
-      ),
-    );
+  void _closeAiResponse() {
+    setState(() => _showAiResponse = false);
+    _controller.reverse();
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -56,72 +107,43 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
           style: TextStyle(color: Colors.white, fontSize: 20),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
+        backgroundColor: themeProvider.primaryColor,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : matchDetails == null
-          ? const Center(child: Text('Aucun détail disponible'))
-          : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: Stack(
+        children: [
+          Column(
             children: [
-              Text(
-                'Formation',
-                style: Theme.of(context).textTheme.headlineSmall,
+              TopBar(
+                currentIndex: _currentTabIndex,
+                onTabSelected: _onTabSelected,
+                hasNewMessages: _hasNewMessages,
               ),
-              const SizedBox(height: 16),
-              matchDetails!['formations'] != null && matchDetails!['formations'].isNotEmpty
-                  ? FormationField(
-                formationData: matchDetails!['formations'][0] ?? '',
-                players: matchDetails!['players'] ?? [],
-              )
-                  : const Text('Aucune formation disponible'),
-              const SizedBox(height: 16),
-              Text(
-                'Participants',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 16),
-              matchDetails!['players'] != null
-                  ? Column(
-                children: matchDetails!['players'].map<Widget>((player) {
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blue,
-                      child: Text(
-                        player['username'] != null ? player['username'][0].toUpperCase() : '',
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    title: Text(player['username'] ?? ''),
-                    subtitle: Text('Position: ${player['position'] ?? ''}'),
-                  );
-                }).toList(),
-              )
-                  : const Text('Aucun participant disponible'),
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerRight,
-                child: ElevatedButton(
-                  onPressed: _navigateToChat,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                  ),
-                  child: const Text(
-                    'Chat',
-                    style: TextStyle(
-                      color: Colors.white,
-                    ),
-                  ),
+              Expanded(
+                child: IndexedStack(
+                  index: _currentTabIndex,
+                  children: [
+                    MatchInfoTab(matchId: widget.matchId),
+                    ChatTab(matchId: widget.matchId),
+                  ],
                 ),
               ),
             ],
           ),
-        ),
+          if (_showAiResponse)
+            AiSuggestionOverlay(
+              aiResponse: _aiResponse,
+              onClose: _closeAiResponse,
+              offsetAnimation: _offsetAnimation,
+            ),
+        ],
       ),
+      floatingActionButton: _currentTabIndex == 0
+          ? FloatingActionButton(
+        onPressed: _fetchAndShowAiResponse,
+        backgroundColor: const Color(0xFFFFFFFF),
+        child: Image.asset('assets/images/ia.png'),
+      )
+          : null,
     );
   }
 }

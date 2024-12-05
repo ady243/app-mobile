@@ -48,11 +48,39 @@ class _SignupPageState extends State<SignupPage> {
 
     try {
       await _authService.register(username, email, password);
-      ToastComponent.showToast(context, "Inscription réussie", ToastificationType.success);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
+
+      // Affichage du pop-up de confirmation après une inscription réussie
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Text(
+            'Compte créé avec succès!',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            'Un email de validation a été envoyé. Veuillez confirmer votre compte pour commencer.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+              child: const Text(
+                'Se connecter',
+                style: TextStyle(color: Color(0xFF01BF6B)),
+              ),
+            ),
+          ],
+        ),
       );
+
     } catch (e) {
       ToastComponent.showToast(context, "Erreur lors de l'inscription : ${e.toString()}", ToastificationType.error);
     }
@@ -129,7 +157,7 @@ class _SignupPageState extends State<SignupPage> {
           borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
-        fillColor: Color(0xFF01BF6B).withOpacity(0.1),
+        fillColor: const Color(0xFF01BF6B).withOpacity(0.1),
         filled: true,
         prefixIcon: Icon(icon),
       ),
