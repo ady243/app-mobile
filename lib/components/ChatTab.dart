@@ -3,6 +3,8 @@ import 'package:teamup/pages/user_profile.dart';
 import '../services/ChatService.dart';
 import '../services/auth.service.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../components/theme_provider.dart';
 
 class ChatTab extends StatefulWidget {
   final String matchId;
@@ -119,27 +121,32 @@ class _ChatTabState extends State<ChatTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.builder(
-            controller: _scrollController,
-            itemCount: _messages.length,
-            itemBuilder: (context, index) {
-              final message = _messages[index];
-              final isCurrentUser = message['userId'] == _currentUserId;
-              return _buildMessageBubble(message, isCurrentUser);
-            },
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+              controller: _scrollController,
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                final isCurrentUser = message['userId'] == _currentUserId;
+                return _buildMessageBubble(message, isCurrentUser, themeProvider);
+              },
+            ),
           ),
-        ),
-        _buildMessageInput(),
-      ],
+          _buildMessageInput(theme, themeProvider),
+        ],
+      ),
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> message, bool isCurrentUser) {
+  Widget _buildMessageBubble(Map<String, dynamic> message, bool isCurrentUser, ThemeProvider themeProvider) {
     final username = message['username'] ?? 'Utilisateur';
     final userId = message['userId'] ?? '';
     final messageText = message['message'] ?? '';
@@ -157,7 +164,7 @@ class _ChatTabState extends State<ChatTab> {
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
               decoration: BoxDecoration(
-                color: isCurrentUser ? Colors.blue[100] : _getUserColor(userId),
+                color: isCurrentUser ? Colors.blue : Colors.black,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -171,16 +178,17 @@ class _ChatTabState extends State<ChatTab> {
                   if (!isCurrentUser)
                     Text(
                       username,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
                     ),
+                  const SizedBox(height: 4),
                   Text(
                     messageText,
-                    style: const TextStyle(fontSize: 16),
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _formatTimestamp(timestamp),
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[300]),
                   ),
                 ],
               ),
@@ -206,11 +214,11 @@ class _ChatTabState extends State<ChatTab> {
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(ThemeData theme, ThemeProvider themeProvider) {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.5),
@@ -223,26 +231,28 @@ class _ChatTabState extends State<ChatTab> {
       child: Row(
         children: [
           Expanded(
-            child: TextField(
-              controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Entrez votre message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.inputDecorationTheme.fillColor,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: 'Entrez votre message...',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
-                filled: true,
-                fillColor: Colors.grey[200],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               ),
             ),
           ),
           const SizedBox(width: 8),
-          FloatingActionButton(
-            onPressed: _sendMessage,
-            mini: true,
-            backgroundColor: Colors.green,
-            child: const Icon(Icons.send, color: Colors.white),
+          CircleAvatar(
+            backgroundColor: themeProvider.primaryColor,
+            child: IconButton(
+              icon: const Icon(Icons.send, color: Colors.white),
+              onPressed: _sendMessage,
+            ),
           ),
         ],
       ),

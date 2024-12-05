@@ -77,6 +77,7 @@ class MatchService {
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
+        print('Matches fetched: $data'); // Log des informations des matchs
         return List<Map<String, dynamic>>.from(data);
       } else {
         throw Exception('Échec de la récupération des matches: ${response.data}');
@@ -96,12 +97,14 @@ class MatchService {
       );
 
       if (response.statusCode == 200) {
+        print('Match details fetched: ${response.data}'); // Log des détails du match
         return response.data;
       } else {
         throw Exception('Échec de la récupération des détails du match');
       }
     } catch (e) {
-      throw Exception('Erreur lors de la récupération des détails du match: $e');
+      print('Erreur lors de la récupération des détails du match: $e');
+      throw Exception('Échec de la récupération des détails du match');
     }
   }
 
@@ -115,6 +118,7 @@ class MatchService {
 
       if (response.statusCode == 200) {
         if (response.data is Map && response.data.containsKey('players')) {
+          print('Match players fetched: ${response.data['players']}'); // Log des joueurs du match
           return List<Map<String, dynamic>>.from(response.data['players']);
         } else {
           throw Exception('La réponse de l\'API n\'est pas valide');
@@ -123,7 +127,8 @@ class MatchService {
         throw Exception('Échec de la récupération des participants du match');
       }
     } catch (e) {
-      throw Exception('Erreur lors de la récupération des participants du match: $e');
+      print('Erreur lors de la récupération des participants du match: $e');
+      throw Exception('Échec de la récupération des participants du match');
     }
   }
 
@@ -137,6 +142,7 @@ class MatchService {
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
+        print('Matches by organizer fetched: $data'); // Log des matches de l'organisateur
         return List<Map<String, dynamic>>.from(data);
       } else {
         throw Exception('Échec de la récupération des matches de l\'organisateur: ${response.data}');
@@ -176,6 +182,7 @@ class MatchService {
       );
 
       if (response.statusCode == 200) {
+        print('Match with players fetched: ${response.data}'); // Log des détails du match avec joueurs
         return response.data;
       } else {
         throw Exception('Échec de la récupération des détails du match avec joueurs');
@@ -240,6 +247,36 @@ class MatchService {
     } catch (e) {
       print('Erreur lors de la suppression du match: $e');
       throw Exception('Échec de la suppression du match');
+    }
+  }
+
+  Future<Map<String, dynamic>> getCoordinates(String address) async {
+    try {
+      final response = await _dio.get(
+        'https://maps.googleapis.com/maps/api/geocode/json',
+        queryParameters: {
+          'address': address,
+          'key': 'AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final results = response.data['results'];
+        if (results.isNotEmpty) {
+          final location = results[0]['geometry']['location'];
+          return {
+            'latitude': location['lat'],
+            'longitude': location['lng'],
+          };
+        } else {
+          throw Exception('Aucune coordonnée trouvée pour l\'adresse: $address');
+        }
+      } else {
+        throw Exception('Échec de la récupération des coordonnées: ${response.data}');
+      }
+    } catch (e) {
+      print('Erreur lors de la récupération des coordonnées: $e');
+      throw Exception('Échec de la récupération des coordonnées');
     }
   }
 }

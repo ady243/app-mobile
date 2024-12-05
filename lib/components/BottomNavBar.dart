@@ -5,6 +5,8 @@ import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
 import 'SideNav.dart';
+import '../components/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -43,22 +45,23 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       key: _scaffoldKey,
       body: _widgetOptions[_selectedIndex],
       endDrawer: SideNav(onItemSelected: _onSideNavItemSelected),
       bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.home),
+            icon: FaIcon(FontAwesomeIcons.home, color: themeProvider.iconColor),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.plusCircle),
+            icon: FaIcon(FontAwesomeIcons.plusCircle, color: themeProvider.iconColor),
             label: 'Créer',
           ),
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.bars),
+            icon: FaIcon(FontAwesomeIcons.bars, color: themeProvider.iconColor),
             label: 'Menu',
           ),
         ],

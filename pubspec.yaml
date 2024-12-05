@@ -51,7 +51,7 @@ dependencies:
   app_links: ^6.3.2
   settings_ui: ^2.0.2
   font_awesome_flutter: ^10.8.0
-
+  google_maps_flutter: ^2.10.0
 
 
 dev_dependencies:
@@ -79,6 +79,8 @@ flutter:
     - assets/logos/grey_logo.png
     - assets/images/ia.png
     - assets/images/image_empty.png
+    - assets/images/marker.png
+    - assets/map_style_dark.json
 
 
   # The following line ensures that the Material Icons font is

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/auth.service.dart';
+import 'package:provider/provider.dart';
+import '../components/theme_provider.dart';
 
 class SideNav extends StatefulWidget {
   final Function(int) onItemSelected;
@@ -38,23 +40,24 @@ class _SideNavState extends State<SideNav> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Drawer(
       child: Column(
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(_username ?? "Nom d'utilisateur"),
-            accountEmail: Text(_email ?? "Email"),
+            accountName: Text(_username ?? ""),
+            accountEmail: Text(_email ?? ""),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white,
               child: Text(
                 (_username != null && _username!.length >= 2)
                     ? _username!.substring(0, 2)
-                    : 'U',
+                    : '',
                 style: const TextStyle(fontSize: 40.0),
               ),
             ),
-            decoration: const BoxDecoration(
-              color: Color(0xFF01BF6B),
+            decoration: BoxDecoration(
+              color: themeProvider.primaryColor,
             ),
           ),
           Expanded(

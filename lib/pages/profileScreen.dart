@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../components/theme_provider.dart';
 import '../services/auth.service.dart';
+import 'package:provider/provider.dart';
 
 class Number {
   final int value;
@@ -106,6 +108,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -116,10 +121,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
+        backgroundColor: themeProvider.primaryColor,
       ),
       body: Container(
-        color: Colors.white,
+        color: theme.scaffoldBackgroundColor,
         child: Column(
           children: [
             Stack(
@@ -186,7 +191,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Container(
                     padding: const EdgeInsets.all(16.0),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF01BF6B).withOpacity(0.1),
+                      color: themeProvider.primaryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: const Text(

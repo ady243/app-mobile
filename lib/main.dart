@@ -6,10 +6,15 @@ import 'package:teamup/pages/signup_page.dart';
 import 'package:teamup/entry/entry_point.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:provider/provider.dart';
+import 'components/theme_provider.dart';
 
 void main() {
   runApp(
-    const MyApp(),
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
   );
 }
 
@@ -74,11 +79,14 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,
+      theme: themeProvider.isDarkTheme ? ThemeData.dark() : ThemeData.light(),
       initialRoute: _isLoggedIn ? '/home' : '/login',
       routes: {
         '/login': (context) => const LoginPage(),

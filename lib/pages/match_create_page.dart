@@ -6,6 +6,8 @@ import 'dart:convert';
 import 'dart:async';
 import '../services/MatchService.dart';
 import 'my_match.dart';
+import 'package:provider/provider.dart';
+import '../components/theme_provider.dart';
 
 class CreateMatchPage extends StatefulWidget {
   const CreateMatchPage({Key? key}) : super(key: key);
@@ -23,7 +25,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   final MatchService _matchService = MatchService();
   final String _googleApiKey = 'AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg';
 
-  String _addressQuery = '';
   Timer? _debounce;
 
   @override
@@ -99,6 +100,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   }
 
   void _openBottomSheet(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -207,7 +209,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                     await _createMatch();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF01BF6B),
+                    backgroundColor: themeProvider.primaryColor,
                   ),
                   child: const Text(
                     'Créer le match',
@@ -224,31 +226,36 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-        title: const Text('Mes Matchs',
-          style: TextStyle(color: Colors.white, fontSize: 20),
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(kToolbarHeight),
-          child: Container(
-            color: Colors.white,
-            child: const TabBar(
-              tabs: [
-                Tab(text: 'Mes matches créés'),
-                Tab(text: 'Créer un match'),
-              ],
-              indicatorColor: Colors.green,
-              labelColor: const Color(0xFF01BF6B),
-              unselectedLabelColor: const Color(0xFF01BF6B),
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(120.0),
+          child: AppBar(
+            title: const Text(
+              'Mes Matchs',
+              style: TextStyle(color: Colors.white, fontSize: 20),
             ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(kToolbarHeight),
+              child: Container(
+                color: Colors.white,
+                child: TabBar(
+                  tabs: const [
+                    Tab(text: 'Mes matches créés'),
+                    Tab(text: 'Créer un match'),
+                  ],
+                  indicatorColor: Colors.green,
+                  labelColor: const Color(0xFF01BF6B),
+                  unselectedLabelColor: themeProvider.primaryColor,
+                ),
+              ),
+            ),
+            centerTitle: true,
+            backgroundColor: themeProvider.primaryColor,
           ),
         ),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
-      ),
         body: TabBarView(
           children: [
             const MyCreatedMatchesPage(),

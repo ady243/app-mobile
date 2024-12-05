@@ -69,7 +69,7 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                   children: [
                     const Icon(Icons.description, color: Colors.blue),
                     const SizedBox(width: 8.0),
-                    Expanded(child: Text('Description: $description')),
+                    Expanded(child: Text('Titre: $description')),
                   ],
                 ),
                 const SizedBox(height: 8.0),

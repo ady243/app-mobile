@@ -36,9 +36,31 @@ class MatchCard extends StatelessWidget {
     }
   }
 
+  String _formatDate(String date) {
+    try {
+      final DateTime dateTime = DateFormat('yyyy-MM-dd').parse(date);
+      return DateFormat('dd MMM yyyy').format(dateTime);
+    } catch (e) {
+      print('Erreur lors du formatage de la date: $e');
+      return date;
+    }
+  }
+
+  String _formatTime(String time) {
+    try {
+      final DateTime dateTime = DateFormat('HH:mm:ss').parse(time);
+      return DateFormat('HH:mm').format(dateTime);
+    } catch (e) {
+      print('Erreur lors du formatage de l\'heure: $e');
+      return time;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isMatchInPast = _isMatchInPast();
+    final String formattedDate = _formatDate(matchDate);
+    final String formattedTime = _formatTime(matchTime);
 
     return GestureDetector(
       onTap: onTap,
@@ -90,7 +112,7 @@ class MatchCard extends StatelessWidget {
                       const Icon(Icons.calendar_today, color: Colors.white),
                       const SizedBox(width: 5),
                       Text(
-                        matchDate,
+                        formattedDate,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
@@ -103,7 +125,7 @@ class MatchCard extends StatelessWidget {
                       const Icon(Icons.access_time, color: Colors.white),
                       const SizedBox(width: 5),
                       Text(
-                        matchTime,
+                        formattedTime,
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,

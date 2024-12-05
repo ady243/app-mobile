@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../components/theme_provider.dart';
 import '../services/auth.service.dart';
 
 class SettingPage extends StatefulWidget {
@@ -11,7 +13,6 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  bool _isCustomThemeEnabled = false;
   bool _useFingerprint = false;
   String? _username;
   String? _email;
@@ -35,7 +36,6 @@ class _SettingPageState extends State<SettingPage> {
   void _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isCustomThemeEnabled = prefs.getBool('custom_theme') ?? false;
       _useFingerprint = prefs.getBool('use_fingerprint') ?? false;
     });
   }
@@ -87,12 +87,19 @@ class _SettingPageState extends State<SettingPage> {
     }
   }
 
+  String _truncateText(String? text, int length) {
+    if (text == null) return '';
+    return text.length > length ? '${text.substring(0, length)}...' : text;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Paramètres'),
-        backgroundColor: const Color(0xFF01BF6B),
+        backgroundColor: themeProvider.primaryColor,
       ),
       body: SettingsList(
         sections: [
@@ -109,12 +116,9 @@ class _SettingPageState extends State<SettingPage> {
               ),
               SettingsTile.switchTile(
                 onToggle: (value) {
-                  setState(() {
-                    _isCustomThemeEnabled = value;
-                    _saveSetting('custom_theme', value);
-                  });
+                  themeProvider.toggleTheme();
                 },
-                initialValue: _isCustomThemeEnabled,
+                initialValue: themeProvider.isDarkTheme,
                 leading: const Icon(Icons.format_paint),
                 title: const Text('Activer le thème personnalisé'),
               ),
@@ -126,7 +130,10 @@ class _SettingPageState extends State<SettingPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.person),
                 title: const Text('Nom d\'utilisateur'),
-                value: Text(_username ?? ''),
+                value: Text(
+                  _truncateText(_username, 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onPressed: (context) {
                   _openEditDialog(context, 'Nom d\'utilisateur', _usernameController);
                 },
@@ -134,7 +141,10 @@ class _SettingPageState extends State<SettingPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.email),
                 title: const Text('Adresse e-mail'),
-                value: Text(_email ?? ''),
+                value: Text(
+                  _truncateText(_email, 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onPressed: (context) {
                   _openEditDialog(context, 'Adresse e-mail', _emailController);
                 },
@@ -142,7 +152,10 @@ class _SettingPageState extends State<SettingPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.info),
                 title: const Text('Bio'),
-                value: Text(_bio ?? ''),
+                value: Text(
+                  _truncateText(_bio, 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onPressed: (context) {
                   _openEditDialog(context, 'Bio', _bioController);
                 },
@@ -150,7 +163,10 @@ class _SettingPageState extends State<SettingPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.location_on),
                 title: const Text('Localisation'),
-                value: Text(_location ?? ''),
+                value: Text(
+                  _truncateText(_location, 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onPressed: (context) {
                   _openEditDialog(context, 'Localisation', _locationController);
                 },
@@ -158,7 +174,10 @@ class _SettingPageState extends State<SettingPage> {
               SettingsTile.navigation(
                 leading: const Icon(Icons.sports_soccer),
                 title: const Text('Sport préféré'),
-                value: Text(_favoriteSport ?? ''),
+                value: Text(
+                  _truncateText(_favoriteSport, 10),
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onPressed: (context) {
                   _openEditDialog(context, 'Sport préféré', _favoriteSportController);
                 },
@@ -184,6 +203,49 @@ class _SettingPageState extends State<SettingPage> {
                 title: const Text('Changer le mot de passe'),
                 onPressed: (context) {
                   Navigator.pushNamed(context, '/change-password');
+                },
+              ),
+            ],
+          ),
+          SettingsSection(
+            title: const Text('Actions'),
+            tiles: <SettingsTile>[
+              SettingsTile.navigation(
+                title: const Text('Se déconnecter'),
+                leading: const Icon(Icons.exit_to_app),
+                onPressed: (context) {
+                  AuthService().logout();
+                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                },
+              ),
+              SettingsTile.navigation(
+                title: const Text('Supprimer le compte'),
+                leading: const Icon(Icons.delete),
+                onPressed: (context) {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text('Confirmer la suppression'),
+                        content: const Text('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('Annuler'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              AuthService().deleteAccount();
+                              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                            },
+                            child: const Text('Supprimer'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
                 },
               ),
             ],

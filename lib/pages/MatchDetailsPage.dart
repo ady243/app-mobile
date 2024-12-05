@@ -5,6 +5,8 @@ import '../components/ChatTab.dart';
 import '../components/AiSuggestionOverlay.dart';
 import '../services/MatchService.dart';
 import '../services/ChatService.dart';
+import '../components/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class MatchDetailsPage extends StatefulWidget {
   final String matchId;
@@ -65,7 +67,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   }
 
   String _cleanAiResponse(String response) {
-    return response.replaceAll('*', '').replaceAll('###', '').replaceAll('####', '');
+    return response.replaceAll('*', '').replaceAll('###', '').replaceAll('####', '').replaceAll('#', '');
   }
 
   Future<void> _fetchAndShowAiResponse() async {
@@ -82,7 +84,6 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
         throw Exception("Pas de formation AI trouvée dans la réponse.");
       }
     } catch (e) {
-      print("Erreur lors de la récupération des données AI : $e");
       setState(() {
         _aiResponse = "Erreur lors de la récupération de la suggestion d'IA.";
         _showAiResponse = true;
@@ -98,6 +99,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -105,7 +107,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
           style: TextStyle(color: Colors.white, fontSize: 20),
         ),
         centerTitle: true,
-        backgroundColor: const Color(0xFF01BF6B),
+        backgroundColor: themeProvider.primaryColor,
       ),
       body: Stack(
         children: [

@@ -208,4 +208,19 @@ class AuthService {
       return null;
     }
   }
+
+  //delete my account
+  Future<void> deleteAccount() async {
+    try {
+      final response = await _dio.delete('$baseUrl/deleteMyAccount');
+      if (response.statusCode == 200) {
+        await logout();
+      } else {
+        throw Exception('Erreur lors de la suppression du compte utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la suppression du compte utilisateur: $e');
+      rethrow;
+    }
+  }
 }
