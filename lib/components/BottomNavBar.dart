@@ -6,12 +6,14 @@ import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
 import 'SideNav.dart';
 import '../components/theme_provider.dart';
+// ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _BottomNavBarState createState() => _BottomNavBarState();
 }
 
@@ -27,7 +29,6 @@ class _BottomNavBarState extends State<BottomNavBar> {
   ];
 
   void _onItemTapped(int index) {
-    print('Tapped index: $index');
     setState(() {
       if (index == 2) {
         _scaffoldKey.currentState?.openEndDrawer();
@@ -53,10 +54,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
+            // ignore: deprecated_member_use
             icon: FaIcon(FontAwesomeIcons.home, color: themeProvider.iconColor),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
+            // ignore: deprecated_member_use
             icon: FaIcon(FontAwesomeIcons.plusCircle, color: themeProvider.iconColor),
             label: 'Créer',
           ),
@@ -66,8 +69,14 @@ class _BottomNavBarState extends State<BottomNavBar> {
           ),
         ],
         currentIndex: _selectedIndex < 2 ? _selectedIndex : 0,
-        selectedItemColor: const Color(0xFF01BF6B),
-        unselectedItemColor: Colors.black,
+        selectedItemColor: themeProvider.selectedLabelColor,
+        unselectedItemColor: themeProvider.unselectedLabelColor,
+        selectedLabelStyle: TextStyle(
+          color: themeProvider.selectedLabelColor,
+        ),
+        unselectedLabelStyle: TextStyle(
+          color: themeProvider.unselectedLabelColor,
+        ),
         onTap: _onItemTapped,
       ),
     );

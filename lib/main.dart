@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
 import 'package:uni_links/uni_links.dart';
 import 'dart:async';
@@ -6,6 +8,7 @@ import 'package:teamup/pages/signup_page.dart';
 import 'package:teamup/entry/entry_point.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:device_preview/device_preview.dart';
+// ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
 import 'components/theme_provider.dart';
 
@@ -22,6 +25,7 @@ class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MyAppState createState() => _MyAppState();
 }
 
@@ -83,6 +87,7 @@ class _MyAppState extends State<MyApp> {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      // ignore: deprecated_member_use
       useInheritedMediaQuery: true,
       locale: DevicePreview.locale(context),
       builder: DevicePreview.appBuilder,

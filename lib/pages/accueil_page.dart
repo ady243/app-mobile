@@ -61,14 +61,12 @@ class _AccueilPageState extends State<AccueilPage> {
   void _fetchMatches() async {
     try {
       final matches = await _matchService.getMatches();
-      print('Matches fetched: $matches');
       setState(() {
         _matches = matches;
         _isLoading = false;
         _setMarkers();
       });
     } catch (e) {
-      print('Error fetching matches: $e');
       setState(() {
         _isLoading = false;
       });
@@ -102,8 +100,6 @@ class _AccueilPageState extends State<AccueilPage> {
         final double latitude = coordinates['latitude'];
         final double longitude = coordinates['longitude'];
 
-        print('Adding marker for match: $description at ($latitude, $longitude)');
-
         final marker = Marker(
           markerId: MarkerId(matchId),
           position: LatLng(latitude, longitude),
@@ -117,7 +113,7 @@ class _AccueilPageState extends State<AccueilPage> {
 
         _markers.add(marker);
       } catch (e) {
-        print('Error fetching coordinates for address $address: $e');
+        // Handle error
       }
     }
     setState(() {});
@@ -176,83 +172,94 @@ class _AccueilPageState extends State<AccueilPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(100.0),
+        preferredSize: const Size.fromHeight(21),
         child: AppBar(
-          title: Padding(
-            padding: const EdgeInsets.only(top: 20.0),
-            child: Image.asset(
-              'assets/logos/grey_logo.png',
-              height: 60,
-            ),
-          ),
           centerTitle: true,
           backgroundColor: themeProvider.primaryColor,
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _matches.isEmpty
-          ? _buildEmptyState()
-          : Stack(
+      body: Column(
         children: [
-          GoogleMap(
-            onMapCreated: (controller) {
-              _mapController = controller;
-              _setMapStyle();
-            },
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(48.8566, 2.3522),
-              zoom: 10,
-            ),
-            markers: _markers,
-            mapType: MapType.normal,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: true,
-          ),
-          if (_selectedMatch != null)
-            Positioned(
-              bottom: 16,
-              left: 16,
-              right: 16,
-              child: GestureDetector(
-                onTap: () => _navigateToMatchDetails(_selectedMatch!['id'].toString()),
-                child: Stack(
-                  children: [
-                    MatchCard(
-                      description: _truncateText(_selectedMatch!['description'], 24),
-                      matchDate: _selectedMatch!['date'],
-                      matchTime: _selectedMatch!['time'],
-                      address: _truncateText(_selectedMatch!['address'], 24),
-                      status: _selectedMatch!['status'],
-                      numberOfPlayers: _selectedMatch!['number_of_players'],
-                      isJoined: _joinedMatches.contains(_selectedMatch!['id']),
-                      onJoin: () => _joinMatch(_selectedMatch!['id']),
-                    ),
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedMatch = null;
-                          });
-                        },
-                        child: const CircleAvatar(
-                          radius: 12,
-                          backgroundColor: Colors.blueGrey,
-                          child: Icon(
-                            Icons.close,
-                            size: 16,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+          Container(
+            color: themeProvider.primaryColor,
+             padding: const EdgeInsets.only(top: 20.0),
+            width: double.infinity, height: 90,
+            child: Center(
+              child: Image.asset(
+                'assets/logos/grey_logo.png',
+                height: 100,
+                width: 100,
               ),
             ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _matches.isEmpty
+                ? _buildEmptyState()
+                : Stack(
+              children: [
+                GoogleMap(
+                  onMapCreated: (controller) {
+                    _mapController = controller;
+                    _setMapStyle();
+                  },
+                  initialCameraPosition: const CameraPosition(
+                    target: LatLng(48.8566, 2.3522),
+                    zoom: 10,
+                  ),
+                  markers: _markers,
+                  mapType: MapType.normal,
+                  myLocationEnabled: true,
+                  myLocationButtonEnabled: true,
+                  zoomControlsEnabled: true,
+                ),
+                if (_selectedMatch != null)
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: GestureDetector(
+                      onTap: () => _navigateToMatchDetails(_selectedMatch!['id'].toString()),
+                      child: Stack(
+                        children: [
+                          MatchCard(
+                            description: _truncateText(_selectedMatch!['description'], 24),
+                            matchDate: _selectedMatch!['date'],
+                            matchTime: _selectedMatch!['time'],
+                            address: _truncateText(_selectedMatch!['address'], 24),
+                            status: _selectedMatch!['status'],
+                            numberOfPlayers: _selectedMatch!['number_of_players'],
+                            isJoined: _joinedMatches.contains(_selectedMatch!['id']),
+                            onJoin: () => _joinMatch(_selectedMatch!['id']),
+                          ),
+                          Positioned(
+                            top: 8,
+                            right: 8,
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _selectedMatch = null;
+                                });
+                              },
+                              child: const CircleAvatar(
+                                radius: 12,
+                                backgroundColor: Colors.blueGrey,
+                                child: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ],
       ),
     );
