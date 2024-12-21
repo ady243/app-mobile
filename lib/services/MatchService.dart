@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 import '../utils/basUrl.dart';
 import 'auth.service.dart';
 
 class MatchService {
   final Dio _dio;
   final AuthService _authService;
+  WebSocketChannel? _channel;
 
   MatchService({
     Dio? dio,
@@ -27,6 +29,7 @@ class MatchService {
         matchData['organizer_id'] = userInfo['id'];
 
         final accessToken = await _authService.getToken();
+        print('Sending match data: $matchData'); // Log des données du match
         final response = await _dio.post(
           '$baseUrl/matches',
           options: Options(
@@ -40,26 +43,20 @@ class MatchService {
         );
 
         if (response.statusCode == 201) {
-          print('Match créé avec succès: ${response.data}');
           return;
         } else {
-          print('Échec de la création du match: ${response.statusCode} - ${response.data}');
           throw Exception('Échec de la création du match: ${response.data}');
         }
       } catch (e) {
         if (e is DioException && e.response?.statusCode == 429) {
           retryCount++;
           if (retryCount >= maxRetries) {
-            print('Nombre maximal de tentatives atteint. Erreur: $e');
             throw Exception('Échec de la création du match dû à la limitation de débit: $e');
           }
-          print('Limite de débit dépassée. Nouvelle tentative dans $delay secondes...');
           await Future.delayed(Duration(seconds: delay));
           delay = delay * 2 > 8 ? 8 : delay * 2;
         } else {
           if (e is DioException) {
-            print('Erreur lors de la création du match: ${e.response?.data}');
-            print('Statut de la réponse: ${e.response?.statusCode}');
           }
           throw Exception('Échec de la création du match en raison d\'une erreur: $e');
         }
@@ -83,7 +80,6 @@ class MatchService {
         throw Exception('Échec de la récupération des matches: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des matches: $e');
       throw Exception('Échec de la récupération des matches');
     }
   }
@@ -97,7 +93,7 @@ class MatchService {
       );
 
       if (response.statusCode == 200) {
-        print('Match details fetched: ${response.data}'); // Log des détails du match
+
         return response.data;
       } else {
         throw Exception('Échec de la récupération des détails du match');
@@ -118,7 +114,6 @@ class MatchService {
 
       if (response.statusCode == 200) {
         if (response.data is Map && response.data.containsKey('players')) {
-          print('Match players fetched: ${response.data['players']}'); // Log des joueurs du match
           return List<Map<String, dynamic>>.from(response.data['players']);
         } else {
           throw Exception('La réponse de l\'API n\'est pas valide');
@@ -127,7 +122,6 @@ class MatchService {
         throw Exception('Échec de la récupération des participants du match');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des participants du match: $e');
       throw Exception('Échec de la récupération des participants du match');
     }
   }
@@ -142,13 +136,11 @@ class MatchService {
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
-        print('Matches by organizer fetched: $data'); // Log des matches de l'organisateur
         return List<Map<String, dynamic>>.from(data);
       } else {
         throw Exception('Échec de la récupération des matches de l\'organisateur: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des matches de l\'organisateur: $e');
       throw Exception('Échec de la récupération des matches de l\'organisateur');
     }
   }
@@ -162,13 +154,10 @@ class MatchService {
         data: json.encode({'match_id': matchId, 'player_id': playerId}),
       );
 
-      print('Réponse du serveur: ${response.data}');
-
       if (response.statusCode != 201) {
         throw Exception('Échec de la tentative de rejoindre le match: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la tentative de rejoindre le match: $e');
       throw Exception('Échec de la tentative de rejoindre le match');
     }
   }
@@ -182,13 +171,11 @@ class MatchService {
       );
 
       if (response.statusCode == 200) {
-        print('Match with players fetched: ${response.data}'); // Log des détails du match avec joueurs
         return response.data;
       } else {
         throw Exception('Échec de la récupération des détails du match avec joueurs');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des détails du match: $e');
       throw Exception('Échec de la récupération des détails du match');
     }
   }
@@ -201,14 +188,11 @@ class MatchService {
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
       if (response.statusCode == 200) {
-        print('Réponse AI: ${response.data}');
         return response.data;
       } else {
-        print('Erreur lors de la récupération des détails du match avec joueurs: ${response.statusCode} - ${response.data}');
         throw Exception('Échec de la récupération des détails du match avec joueurs');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des détails du match: $e');
       throw Exception('Échec de la récupération des détails du match');
     }
   }
@@ -224,7 +208,6 @@ class MatchService {
       }
       return false;
     } catch (e) {
-      print('Erreur lors de la vérification de l\'adhésion du joueur: $e');
       return false;
     }
   }
@@ -232,20 +215,15 @@ class MatchService {
   Future<void> deleteMatch(String matchId) async {
     try {
       final accessToken = await _authService.getToken();
-      print('Tentative de suppression du match avec ID: $matchId');
       final response = await _dio.delete(
         '$baseUrl/matches/$matchId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
-      if (response.statusCode == 204) {
-        print('Match supprimé avec succès');
-      } else {
-        print('Échec de la suppression du match: ${response.statusCode} - ${response.data}');
+      if (response.statusCode != 204) {
         throw Exception('Échec de la suppression du match: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la suppression du match: $e');
       throw Exception('Échec de la suppression du match');
     }
   }
@@ -275,8 +253,36 @@ class MatchService {
         throw Exception('Échec de la récupération des coordonnées: ${response.data}');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des coordonnées: $e');
       throw Exception('Échec de la récupération des coordonnées');
     }
+  }
+
+  Future<void> assignReferee(String matchId, String refereeId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.put(
+        '$baseUrl/matches/assignAsAnalyst/$matchId/$refereeId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Échec de l\'attribution de l\'arbitre');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'attribution de l\'arbitre: $e');
+      throw Exception('Échec de l\'attribution de l\'arbitre');
+    }
+  }
+
+  void connectWebSocket(void Function(Map<String, dynamic>) onMessage) {
+    _channel = WebSocketChannel.connect(Uri.parse('$baseUrl/matches/status/updates'));
+    _channel!.stream.listen((message) {
+      final data = jsonDecode(message);
+      onMessage(data);
+    });
+  }
+
+  void closeWebSocket() {
+    _channel?.sink.close();
   }
 }

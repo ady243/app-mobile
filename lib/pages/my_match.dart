@@ -3,7 +3,9 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../services/MatchService.dart';
 
 class MyCreatedMatchesPage extends StatefulWidget {
-  const MyCreatedMatchesPage({super.key});
+  final Future<void> Function(String) onDeleteMatch;
+
+  const MyCreatedMatchesPage({super.key, required this.onDeleteMatch});
 
   @override
   _MyCreatedMatchesPageState createState() => _MyCreatedMatchesPageState();
@@ -28,6 +30,7 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
         _matches = matches;
         _isLoading = false;
       });
+      print('Matchs récupérés: $_matches');
     } catch (e) {
       print('Erreur lors de la récupération des matchs: $e');
       setState(() {
@@ -36,24 +39,8 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
     }
   }
 
-  Future<void> _deleteMatch(String matchId) async {
-    try {
-      await _matchService.deleteMatch(matchId);
-      setState(() {
-        _matches.removeWhere((match) => match['id'] == matchId);
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match supprimé avec succès')),
-      );
-    } catch (e) {
-      print('Erreur lors de la suppression du match: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur lors de la suppression du match')),
-      );
-    }
-  }
-
   void _showDeleteDialog(String matchId) {
+    print('Affichage de la boîte de dialogue de suppression pour le match avec ID: $matchId');
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -83,6 +70,7 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
               ),
               child: const Text('Annuler'),
               onPressed: () {
+                print('Suppression annulée');
                 Navigator.of(context).pop();
               },
             ),
@@ -96,8 +84,9 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
               ),
               child: const Text('Supprimer'),
               onPressed: () {
+                print('Confirmation de la suppression du match avec ID: $matchId');
                 Navigator.of(context).pop();
-                _deleteMatch(matchId);
+                widget.onDeleteMatch(matchId);
               },
             ),
           ],
@@ -129,6 +118,7 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
                   key: Key(match['id']),
                   direction: DismissDirection.endToStart,
                   confirmDismiss: (direction) async {
+                    print('Glissement détecté pour le match avec ID: ${match['id']}');
                     _showDeleteDialog(match['id']);
                     return false;
                   },

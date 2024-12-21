@@ -2,11 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../pages/user_profile.dart';
 import '../services/MatchService.dart';
+import '../services/auth.service.dart';
 
 class MatchInfoTab extends StatefulWidget {
   final String matchId;
+  final String organizerId;
+  final List<Map<String, dynamic>> participants;
+  final String? selectedParticipantId;
+  final ValueChanged<String?> onParticipantSelected;
 
-  const MatchInfoTab({Key? key, required this.matchId}) : super(key: key);
+  const MatchInfoTab({
+    Key? key,
+    required this.matchId,
+    required this.organizerId,
+    required this.participants,
+    required this.selectedParticipantId,
+    required this.onParticipantSelected,
+  }) : super(key: key);
 
   @override
   _MatchInfoTabState createState() => _MatchInfoTabState();
@@ -15,12 +27,27 @@ class MatchInfoTab extends StatefulWidget {
 class _MatchInfoTabState extends State<MatchInfoTab> {
   late Future<Map<String, dynamic>> _matchDetails;
   late Future<List<Map<String, dynamic>>> _matchPlayers;
+  String? _refereeId;
+  bool _isOrganizer = false;
 
   @override
   void initState() {
     super.initState();
     _matchDetails = MatchService().getMatchDetails(widget.matchId);
     _matchPlayers = MatchService().getMatchPlayers(widget.matchId);
+    _checkIfOrganizer();
+  }
+
+  void _checkIfOrganizer() async {
+    final userInfo = await AuthService().getUserInfo();
+    print('User Info: $userInfo');
+    print('Organizer ID: ${widget.organizerId}');
+    if (userInfo != null && userInfo['id'] == widget.organizerId) {
+      setState(() {
+        _isOrganizer = true;
+      });
+    }
+    print('Is Organizer: $_isOrganizer');
   }
 
   String _formatDate(String date) {
@@ -42,8 +69,38 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
     );
   }
 
+  void _assignReferee(String participantId) async {
+    try {
+      print('Assigning referee: matchId=${widget.matchId}, participantId=$participantId');
+      await MatchService().assignReferee(widget.matchId, participantId);
+      setState(() {
+        _refereeId = participantId;
+      });
+    } catch (e) {
+      print('Erreur lors de l\'attribution de l\'arbitre: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de l\'attribution de l\'arbitre',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkTheme = theme.brightness == Brightness.dark;
+    final buttonTextColor = isDarkTheme ? Colors.white : Colors.black;
+    final buttonBorderColor = isDarkTheme ? Colors.white : Colors.black;
+
     return FutureBuilder<Map<String, dynamic>>(
       future: _matchDetails,
       builder: (context, snapshot) {
@@ -59,6 +116,10 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
           final address = matchDetails['address'] ?? 'No Address';
           final matchDate = matchDetails['date'] ?? 'No Date';
           final matchTime = matchDetails['time'] ?? 'No Time';
+          _refereeId = matchDetails['referee_id'];
+
+          print('Match Details: $matchDetails');
+          print('Referee ID: $_refereeId');
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -97,6 +158,9 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                   ],
                 ),
                 const SizedBox(height: 16.0),
+                Text('Organisateur: ${widget.organizerId}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8.0),
+                const SizedBox(height: 16.0),
                 const Text('Participants:', style: TextStyle(fontWeight: FontWeight.bold)),
                 FutureBuilder<List<Map<String, dynamic>>>(
                   future: _matchPlayers,
@@ -114,7 +178,27 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                         children: participants.map<Widget>((participant) {
                           return ListTile(
                             leading: const Icon(Icons.person),
-                            title: Text(participant['username'] ?? 'Unknown'),
+                            title: Row(
+                              children: [
+                                Text(participant['username'] ?? 'Unknown'),
+                                if (participant['id'] == _refereeId)
+                                  const Icon(Icons.star, color: Colors.yellow),
+                              ],
+                            ),
+                            trailing: _isOrganizer
+                                ? ElevatedButton(
+                                    onPressed: () => _assignReferee(participant['id']),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: buttonTextColor,
+                                      side: BorderSide(color: buttonBorderColor),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8.0),
+                                      ),
+                                    ),
+                                    child: const Text('Nommer Arbitre'),
+                                  )
+                                : null,
                             onTap: () => _navigateToUserProfile(participant['id']),
                           );
                         }).toList(),

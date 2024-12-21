@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class TopBar extends StatelessWidget {
+class TopBarDetail extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
   final bool hasNewMessages;
 
-  const TopBar({
+  const TopBarDetail({
     super.key,
     required this.currentIndex,
     required this.onTabSelected,

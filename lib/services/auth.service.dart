@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -223,4 +225,59 @@ class AuthService {
       rethrow;
     }
   }
+
+  Future<void> assignRole(String userId, String role) async {
+    try {
+      final response = await _dio.put(
+        '$baseUrl/assignRole',
+        data: {
+          'userId': userId,
+          'role': role,
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'affectation du rôle utilisateur: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> checkRole(String userId) async {
+    try {
+      final response = await _dio.get(
+        '$baseUrl/CheckAndResetRole',
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Erreur lors de la vérification du rôle utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la vérification du rôle utilisateur: $e');
+      rethrow;
+    }
+  }
+
+  
+Future<void> updateRole(String userId, String role) async {
+  try {
+    final response = await _dio.put(
+      '$baseUrl/updateRole',
+      data: {
+        'userId': userId,
+        'role': role,
+      },
+    );  
+
+    if (response.statusCode != 200) {
+      throw Exception('Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Erreur lors de l\'affectation du rôle utilisateur: $e');
+    rethrow;
+  }
+}
+
 }
