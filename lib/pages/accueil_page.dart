@@ -11,6 +11,7 @@ import 'MatchDetailsPage.dart';
 import '../components/MatchCard.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart' show ByteData, rootBundle;
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AccueilPage extends StatefulWidget {
   const AccueilPage({super.key});
@@ -32,10 +33,12 @@ class _AccueilPageState extends State<AccueilPage> {
   String? _userId;
   Timer? _timer;
   Timer? _socketTimer;
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
+    _initializeNotifications();
     _fetchUserAndMatches();
     _loadCustomMarker();
     _startAutoRefresh();
@@ -47,6 +50,30 @@ class _AccueilPageState extends State<AccueilPage> {
     _timer?.cancel();
     _socketTimer?.cancel();
     super.dispose();
+  }
+
+  void _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('app_icon');
+
+    final DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings();
+
+    final InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS);
+
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: selectNotification);
+  }
+
+  Future<void> onDidReceiveLocalNotification(
+      int id, String? title, String? body, String? payload) async {
+    // handle your actions
+  }
+
+  Future<void> selectNotification(NotificationResponse notificationResponse) async {
+    // handle your actions
   }
 
   void _startAutoRefresh() {
@@ -76,9 +103,46 @@ class _AccueilPageState extends State<AccueilPage> {
         final matchIndex = _matches.indexWhere((match) => match['id'] == matchId);
         if (matchIndex != -1) {
           _matches[matchIndex]['status'] = status;
+          if (_joinedMatches.contains(matchId)) {
+            _showNotification(matchId, status);
+          }
         }
       });
     });
+  }
+
+  void _showNotification(String matchId, String status) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails('your_channel_id', 'your_channel_name',
+            importance: Importance.max,
+            priority: Priority.high,
+            ticker: 'ticker');
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    String title = 'Mise à jour du match';
+    String body = '';
+
+    switch (status) {
+      case 'upcoming':
+        body = 'Le match $matchId est à venir.';
+        break;
+      case 'ongoing':
+        body = 'Le match $matchId a commencé.';
+        break;
+      case 'completed':
+        body = 'Le match $matchId est terminé.';
+        break;
+      case 'expired':
+        body = 'Le match $matchId a expiré.';
+        break;
+      default:
+        body = 'Statut inconnu pour le match $matchId.';
+    }
+
+    await _flutterLocalNotificationsPlugin.show(
+        0, title, body, platformChannelSpecifics,
+        payload: 'item x');
   }
 
   void _fetchUserAndMatches() async {
@@ -297,7 +361,7 @@ class _AccueilPageState extends State<AccueilPage> {
                             },
                             initialCameraPosition: const CameraPosition(
                               target: LatLng(48.8566, 2.3522),
-                              zoom: 10,
+                              zoom: 6,
                             ),
                             markers: _markers,
                             mapType: MapType.normal,
@@ -325,6 +389,7 @@ class _AccueilPageState extends State<AccueilPage> {
                                       isJoined: _joinedMatches.contains(_selectedMatch!['id']),
                                       isOrganizer: _selectedMatch!['organizer_id'] == _userId,
                                       onJoin: () => _joinMatch(_selectedMatch!['id']),
+                                      joinedMatches: _joinedMatches, // Passer la liste des matchs rejoints
                                     ),
                                     Positioned(
                                       top: 8,

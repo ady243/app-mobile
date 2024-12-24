@@ -1,5 +1,11 @@
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'dart:convert';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class MatchCard extends StatefulWidget {
   final String description;
@@ -13,6 +19,7 @@ class MatchCard extends StatefulWidget {
   final bool isOrganizer;
   final VoidCallback? onTap;
   final VoidCallback onJoin;
+  final Set<String> joinedMatches; // Ajout de la liste des matchs rejoints
 
   const MatchCard({
     Key? key,
@@ -27,6 +34,7 @@ class MatchCard extends StatefulWidget {
     required this.isOrganizer,
     this.onTap,
     required this.onJoin,
+    required this.joinedMatches, // Ajout de la liste des matchs rejoints
   }) : super(key: key);
 
   @override
@@ -37,12 +45,16 @@ class _MatchCardState extends State<MatchCard> {
   late DateTime _matchDateTime;
   late DateTime _endDateTime;
   String _status = '';
+  late WebSocketChannel _channel;
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
     _initializeDateTime();
     _status = widget.status;
+    _initializeWebSocket();
+    _initializeNotifications();
   }
 
   void _initializeDateTime() {
@@ -50,12 +62,12 @@ class _MatchCardState extends State<MatchCard> {
       print('Parsing matchDate: ${widget.matchDate}');
       print('Parsing matchTime: ${widget.matchTime}');
       print('Parsing endTime: ${widget.endTime}');
-      
+
       _matchDateTime = DateTime.parse('${widget.matchDate.split('T')[0]}T${widget.matchTime.split('T')[1]}');
       _endDateTime = widget.endTime.isNotEmpty
           ? DateTime.parse('${widget.matchDate.split('T')[0]}T${widget.endTime.split('T')[1]}')
           : _matchDateTime.add(Duration(hours: 1)); // Default to 1 hour after match start if endTime is empty
-      
+
       print('Parsed matchDateTime: $_matchDateTime');
       print('Parsed endDateTime: $_endDateTime');
     } catch (e) {
@@ -63,6 +75,96 @@ class _MatchCardState extends State<MatchCard> {
       _matchDateTime = DateTime.now(); // Valeur par défaut en cas d'erreur
       _endDateTime = DateTime.now(); // Valeur par défaut en cas d'erreur
     }
+  }
+
+  void _initializeWebSocket() {
+    _channel = IOWebSocketChannel.connect('ws://your-websocket-server-url');
+    _channel.stream.listen((message) {
+      print('Received message: $message');
+      _updateStatus(message);
+    });
+  }
+
+  void _initializeNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('app_icon');
+
+    final DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+            requestAlertPermission: false,
+            requestBadgePermission: false,
+            requestSoundPermission: false);
+
+    final InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
+        iOS: initializationSettingsIOS);
+
+    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: selectNotification);
+  }
+
+  Future<void> onDidReceiveLocalNotification(
+      int id, String? title, String? body, String? payload) async {
+    // handle your actions
+  }
+
+  Future<void> selectNotification(NotificationResponse notificationResponse) async {
+    // handle your actions
+  }
+
+  void _updateStatus(String message) {
+    try {
+      // Parse the JSON message
+      final Map<String, dynamic> json = jsonDecode(message);
+
+      // Update the status if the JSON contains a 'status' field
+      if (json.containsKey('status')) {
+        setState(() {
+          _status = json['status'];
+        });
+
+        // Check if the user has joined the match before showing the notification
+        if (widget.joinedMatches.contains(widget.description)) {
+          _showNotification(json['status']);
+        }
+      }
+    } catch (e) {
+      print('Erreur lors de la conversion du message JSON: $e');
+    }
+  }
+
+  void _showNotification(String status) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails('your_channel_id', 'your_channel_name',
+            importance: Importance.max,
+            priority: Priority.high,
+            ticker: 'ticker');
+    const NotificationDetails platformChannelSpecifics =
+        NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    String title = 'Mise à jour du match';
+    String body = '';
+
+    switch (status) {
+      case 'upcoming':
+        body = 'Le match ${widget.description} est à venir.';
+        break;
+      case 'ongoing':
+        body = 'Le match ${widget.description} a commencé.';
+        break;
+      case 'completed':
+        body = 'Le match ${widget.description} est terminé.';
+        break;
+      case 'expired':
+        body = 'Le match ${widget.description} a expiré.';
+        break;
+      default:
+        body = 'Statut inconnu pour le match ${widget.description}.';
+    }
+
+    await _flutterLocalNotificationsPlugin.show(
+        0, title, body, platformChannelSpecifics,
+        payload: 'item x');
   }
 
   IconData _getStatusIcon(String status) {
@@ -108,6 +210,12 @@ class _MatchCardState extends State<MatchCard> {
       default:
         return 'Inconnu';
     }
+  }
+
+  @override
+  void dispose() {
+    _channel.sink.close();
+    super.dispose();
   }
 
   @override
