@@ -33,7 +33,8 @@ class _AccueilPageState extends State<AccueilPage> {
   String? _userId;
   Timer? _timer;
   Timer? _socketTimer;
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -59,9 +60,10 @@ class _AccueilPageState extends State<AccueilPage> {
     final DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings();
 
-    final InitializationSettings initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsIOS);
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS);
 
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: selectNotification);
@@ -72,7 +74,8 @@ class _AccueilPageState extends State<AccueilPage> {
     // handle your actions
   }
 
-  Future<void> selectNotification(NotificationResponse notificationResponse) async {
+  Future<void> selectNotification(
+      NotificationResponse notificationResponse) async {
     // handle your actions
   }
 
@@ -100,7 +103,8 @@ class _AccueilPageState extends State<AccueilPage> {
       final status = data['status'];
 
       setState(() {
-        final matchIndex = _matches.indexWhere((match) => match['id'] == matchId);
+        final matchIndex =
+            _matches.indexWhere((match) => match['id'] == matchId);
         if (matchIndex != -1) {
           _matches[matchIndex]['status'] = status;
           if (_joinedMatches.contains(matchId)) {
@@ -140,9 +144,8 @@ class _AccueilPageState extends State<AccueilPage> {
         body = 'Statut inconnu pour le match $matchId.';
     }
 
-    await _flutterLocalNotificationsPlugin.show(
-        0, title, body, platformChannelSpecifics,
-        payload: 'item x');
+    await _flutterLocalNotificationsPlugin
+        .show(0, title, body, platformChannelSpecifics, payload: 'item x');
   }
 
   void _fetchUserAndMatches() async {
@@ -219,17 +222,21 @@ class _AccueilPageState extends State<AccueilPage> {
     }
   }
 
-  Future<BitmapDescriptor> _resizeImage(String assetPath, int width, int height) async {
+  Future<BitmapDescriptor> _resizeImage(
+      String assetPath, int width, int height) async {
     ByteData data = await rootBundle.load(assetPath);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width, targetHeight: height);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width, targetHeight: height);
     ui.FrameInfo fi = await codec.getNextFrame();
-    ByteData? resizedData = await fi.image.toByteData(format: ui.ImageByteFormat.png);
+    ByteData? resizedData =
+        await fi.image.toByteData(format: ui.ImageByteFormat.png);
     // ignore: deprecated_member_use
     return BitmapDescriptor.fromBytes(resizedData!.buffer.asUint8List());
   }
 
   void _loadCustomMarker() async {
-    final BitmapDescriptor markerIcon = await _resizeImage('assets/logos/grey_logo.png', 200, 200);
+    final BitmapDescriptor markerIcon =
+        await _resizeImage('assets/logos/grey_logo.png', 200, 200);
     setState(() {
       _customMarkerIcon = markerIcon;
     });
@@ -247,7 +254,8 @@ class _AccueilPageState extends State<AccueilPage> {
         final double latitude = coordinates['latitude'];
         final double longitude = coordinates['longitude'];
 
-        print('Match: $description, Latitude: $latitude, Longitude: $longitude');
+        print(
+            'Match: $description, Latitude: $latitude, Longitude: $longitude');
 
         final marker = Marker(
           markerId: MarkerId(matchId),
@@ -290,7 +298,9 @@ class _AccueilPageState extends State<AccueilPage> {
     } catch (e) {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur lors de la tentative de rejoindre le match.')),
+        const SnackBar(
+            content:
+                Text('Erreur lors de la tentative de rejoindre le match.')),
       );
     }
   }
@@ -307,7 +317,9 @@ class _AccueilPageState extends State<AccueilPage> {
   Future<void> _setMapStyle() async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     if (themeProvider.isDarkTheme) {
-      final String style = await rootBundle.loadString('assets/map_style_dark.json');
+      final String style =
+          await rootBundle.loadString('assets/map_style_dark.json');
+
       // ignore: deprecated_member_use
       _mapController.setMapStyle(style);
     } else {
@@ -342,8 +354,6 @@ class _AccueilPageState extends State<AccueilPage> {
             child: Center(
               child: Image.asset(
                 'assets/logos/grey_logo.png',
-                height: 100,
-                width: 100,
               ),
             ),
           ),
@@ -375,21 +385,32 @@ class _AccueilPageState extends State<AccueilPage> {
                               left: 16,
                               right: 16,
                               child: GestureDetector(
-                                onTap: () => _navigateToMatchDetails(_selectedMatch!['id'].toString()),
+                                onTap: () => _navigateToMatchDetails(
+                                    _selectedMatch!['id'].toString()),
                                 child: Stack(
                                   children: [
                                     MatchCard(
-                                      description: _truncateText(_selectedMatch!['description'] ?? '', 24),
+                                      description: _truncateText(
+                                          _selectedMatch!['description'] ?? '',
+                                          24),
                                       matchDate: _selectedMatch!['date'] ?? '',
                                       matchTime: _selectedMatch!['time'] ?? '',
-                                      endTime: _selectedMatch!['end_time'] ?? '',
-                                      address: _truncateText(_selectedMatch!['address'] ?? '', 24),
+                                      endTime:
+                                          _selectedMatch!['end_time'] ?? '',
+                                      address: _truncateText(
+                                          _selectedMatch!['address'] ?? '', 24),
                                       status: _selectedMatch!['status'] ?? '',
-                                      numberOfPlayers: _selectedMatch!['number_of_players'] ?? 0,
-                                      isJoined: _joinedMatches.contains(_selectedMatch!['id']),
-                                      isOrganizer: _selectedMatch!['organizer_id'] == _userId,
-                                      onJoin: () => _joinMatch(_selectedMatch!['id']),
-                                      joinedMatches: _joinedMatches, // Passer la liste des matchs rejoints
+                                      numberOfPlayers: _selectedMatch![
+                                              'number_of_players'] ??
+                                          0,
+                                      isJoined: _joinedMatches
+                                          .contains(_selectedMatch!['id']),
+                                      isOrganizer:
+                                          _selectedMatch!['organizer_id'] ==
+                                              _userId,
+                                      onJoin: () =>
+                                          _joinMatch(_selectedMatch!['id']),
+                                      joinedMatches: _joinedMatches,
                                     ),
                                     Positioned(
                                       top: 8,

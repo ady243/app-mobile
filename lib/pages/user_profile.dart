@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:teamup/components/theme_provider.dart';
 import '../services/auth.service.dart';
 
 class UserProfilePages extends StatelessWidget {
@@ -8,10 +10,11 @@ class UserProfilePages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profil Utilisateur'),
-        backgroundColor: const Color(0xFF01BF6B),
+        backgroundColor: themeProvider.primaryColor,
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
         future: AuthService().getUserInfoById(userId),
@@ -34,7 +37,8 @@ class UserProfilePages extends StatelessWidget {
                       radius: 50,
                       backgroundImage: userDetails['profile_photo'] != null
                           ? NetworkImage(userDetails['profile_photo'])
-                          : AssetImage('assets/images/default_avatar.png') as ImageProvider,
+                          : AssetImage('assets/images/default_avatar.png')
+                              as ImageProvider,
                     ),
                   ),
                   const SizedBox(height: 16.0),
@@ -56,11 +60,14 @@ class UserProfilePages extends StatelessWidget {
                   ),
                   ListTile(
                     leading: const Icon(Icons.star, color: Colors.amber),
-                    title: Text('Niveau de compétence: ${userDetails['skill_level'] ?? 'Non spécifié'}'),
+                    title: Text(
+                        'Niveau de compétence: ${userDetails['skill_level'] ?? 'Non spécifié'}'),
                   ),
                   ListTile(
-                    leading: const Icon(Icons.sports_soccer, color: Colors.green),
-                    title: Text('Sport préféré: ${userDetails['favorite_sport'] ?? 'Non spécifié'}'),
+                    leading:
+                        const Icon(Icons.sports_soccer, color: Colors.green),
+                    title: Text(
+                        'Sport préféré: ${userDetails['favorite_sport'] ?? 'Non spécifié'}'),
                   ),
                   ListTile(
                     leading: const Icon(Icons.info, color: Colors.blue),
@@ -78,9 +85,12 @@ class UserProfilePages extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStatCard('Matches Joués', userDetails['matches_played'] ?? 0),
-                      _buildStatCard('Matches Gagnés', userDetails['matches_won'] ?? 0),
-                      _buildStatCard('Buts Marqués', userDetails['goals_scored'] ?? 0),
+                      _buildStatCard(
+                          'Matches Joués', userDetails['matches_played'] ?? 0),
+                      _buildStatCard(
+                          'Matches Gagnés', userDetails['matches_won'] ?? 0),
+                      _buildStatCard(
+                          'Buts Marqués', userDetails['goals_scored'] ?? 0),
                     ],
                   ),
                   const SizedBox(height: 16.0),

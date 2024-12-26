@@ -13,7 +13,6 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingPageState extends State<SettingPage> {
-  bool _useFingerprint = false;
   String? _username;
   String? _email;
   String? _bio;
@@ -24,20 +23,13 @@ class _SettingPageState extends State<SettingPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _favoriteSportController = TextEditingController();
+  final TextEditingController _favoriteSportController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
     _fetchUserInfo();
-  }
-
-  void _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _useFingerprint = prefs.getBool('use_fingerprint') ?? false;
-    });
   }
 
   void _saveSetting(String key, bool value) async {
@@ -82,9 +74,8 @@ class _SettingPageState extends State<SettingPage> {
           _favoriteSport = updatedUser['favorite_sport'];
         });
       }
-    } catch (e) {
-      print('Erreur lors de la mise à jour des informations utilisateur: $e');
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   String _truncateText(String? text, int length) {
@@ -120,7 +111,7 @@ class _SettingPageState extends State<SettingPage> {
                 },
                 initialValue: themeProvider.isDarkTheme,
                 leading: const Icon(Icons.format_paint),
-                title: const Text('Activer le thème personnalisé'),
+                title: const Text('Changer le thème'),
               ),
             ],
           ),
@@ -135,7 +126,8 @@ class _SettingPageState extends State<SettingPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 onPressed: (context) {
-                  _openEditDialog(context, 'Nom d\'utilisateur', _usernameController);
+                  _openEditDialog(
+                      context, 'Nom d\'utilisateur', _usernameController);
                 },
               ),
               SettingsTile.navigation(
@@ -179,30 +171,8 @@ class _SettingPageState extends State<SettingPage> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 onPressed: (context) {
-                  _openEditDialog(context, 'Sport préféré', _favoriteSportController);
-                },
-              ),
-            ],
-          ),
-          SettingsSection(
-            title: const Text('Sécurité'),
-            tiles: <SettingsTile>[
-              SettingsTile.switchTile(
-                onToggle: (value) {
-                  setState(() {
-                    _useFingerprint = value;
-                    _saveSetting('use_fingerprint', value);
-                  });
-                },
-                initialValue: _useFingerprint,
-                leading: const Icon(Icons.fingerprint),
-                title: const Text('Utiliser l\'empreinte digitale'),
-              ),
-              SettingsTile.navigation(
-                leading: const Icon(Icons.lock),
-                title: const Text('Changer le mot de passe'),
-                onPressed: (context) {
-                  Navigator.pushNamed(context, '/change-password');
+                  _openEditDialog(
+                      context, 'Sport préféré', _favoriteSportController);
                 },
               ),
             ],
@@ -215,7 +185,8 @@ class _SettingPageState extends State<SettingPage> {
                 leading: const Icon(Icons.exit_to_app),
                 onPressed: (context) {
                   AuthService().logout();
-                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/login', (route) => false);
                 },
               ),
               SettingsTile.navigation(
@@ -227,7 +198,8 @@ class _SettingPageState extends State<SettingPage> {
                     builder: (context) {
                       return AlertDialog(
                         title: const Text('Confirmer la suppression'),
-                        content: const Text('Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.'),
+                        content: const Text(
+                            'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.'),
                         actions: [
                           TextButton(
                             onPressed: () {
@@ -238,7 +210,8 @@ class _SettingPageState extends State<SettingPage> {
                           TextButton(
                             onPressed: () {
                               AuthService().deleteAccount();
-                              Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                              Navigator.pushNamedAndRemoveUntil(
+                                  context, '/login', (route) => false);
                             },
                             child: const Text('Supprimer'),
                           ),
@@ -255,7 +228,8 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  void _openEditDialog(BuildContext context, String field, TextEditingController controller) {
+  void _openEditDialog(
+      BuildContext context, String field, TextEditingController controller) {
     showDialog(
       context: context,
       builder: (context) {
@@ -263,7 +237,8 @@ class _SettingPageState extends State<SettingPage> {
           title: Text('Modifier $field'),
           content: TextField(
             controller: controller,
-            decoration: InputDecoration(hintText: 'Entrez une nouvelle valeur pour $field'),
+            decoration: InputDecoration(
+                hintText: 'Entrez une nouvelle valeur pour $field'),
           ),
           actions: [
             TextButton(
@@ -299,7 +274,8 @@ class _SettingPageState extends State<SettingPage> {
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Langue définie sur Français')),
+                    const SnackBar(
+                        content: Text('Langue définie sur Français')),
                   );
                 },
               ),

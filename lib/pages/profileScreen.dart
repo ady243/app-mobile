@@ -72,10 +72,47 @@ class _UserProfilePageState extends State<UserProfilePage> {
       _dri = Number(userInfo?['dri'], 99, 0);
       _def = Number(userInfo?['def'], 99, 0);
       _phy = Number(userInfo?['phy'], 99, 0);
+      _pac = Number(userInfo?['pac'], 99, 0);
     });
   }
 
-  void _openEditDialog(String title, TextEditingController controller, Function onSave) {
+  Future<void> _updateUserStats() async {
+    final data = {
+      'matches_played': _matches_played.value,
+      'matches_won': _matchWon.value,
+      'goals_scored': _goals_scored.value,
+      'behavior_score': _behavior_score.value,
+      'pac': _pac.value,
+      'sho': _sho?.value ?? 0,
+      'pas': _pas?.value ?? 0,
+      'dri': _dri?.value ?? 0,
+      'def': _def?.value ?? 0,
+      'phy': _phy?.value ?? 0,
+    };
+
+    try {
+      final updatedStats = await AuthService().updateUser(data);
+      if (updatedStats != null) {
+        setState(() {
+          _matches_played = Number(updatedStats['matches_played'], 99, 0);
+          _matchWon = Number(updatedStats['matches_won'], 99, 0);
+          _goals_scored = Number(updatedStats['goals_scored'], 99, 0);
+          _behavior_score = Number(updatedStats['behavior_score'], 99, 0);
+          _pac = Number(updatedStats['pac'], 99, 0);
+          _sho = Number(updatedStats['sho'], 99, 0);
+          _pas = Number(updatedStats['pas'], 99, 0);
+          _dri = Number(updatedStats['dri'], 99, 0);
+          _def = Number(updatedStats['def'], 99, 0);
+          _phy = Number(updatedStats['phy'], 99, 0);
+        });
+      }
+    } catch (e) {
+      // Gérez les erreurs ici
+    }
+  }
+
+  void _openEditDialog(
+      String title, TextEditingController controller, Function onSave) {
     showDialog(
       context: context,
       builder: (context) {
@@ -84,7 +121,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            decoration: InputDecoration(hintText: 'Entrez une nouvelle valeur pour $title'),
+            decoration: InputDecoration(
+                hintText: 'Entrez une nouvelle valeur pour $title'),
           ),
           actions: [
             TextButton(
@@ -96,6 +134,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             TextButton(
               onPressed: () {
                 onSave();
+                _updateUserStats();
                 Navigator.of(context).pop();
               },
               child: const Text('Sauvegarder'),
@@ -184,9 +223,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
               child: ListView(
                 padding: const EdgeInsets.all(8.0),
                 children: [
-                  _buildInfoTile(FontAwesomeIcons.user, 'Bio', _bio ?? 'Non spécifié', Colors.purple),
-                  _buildInfoTile(FontAwesomeIcons.mapMarkerAlt, 'Localisation', _location ?? 'Non spécifié', Colors.red),
-                  _buildInfoTile(FontAwesomeIcons.footballBall, 'Sport préféré', _favoriteSport ?? 'Non spécifié', Colors.green),
+                  _buildInfoTile(FontAwesomeIcons.user, 'Bio',
+                      _bio ?? 'Non spécifié', Colors.purple),
+                  _buildInfoTile(FontAwesomeIcons.mapMarkerAlt, 'Localisation',
+                      _location ?? 'Non spécifié', Colors.red),
+                  _buildInfoTile(FontAwesomeIcons.footballBall, 'Sport préféré',
+                      _favoriteSport ?? 'Non spécifié', Colors.green),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(16.0),
@@ -196,32 +238,44 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                     child: const Text(
                       'Compétences',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  _buildEditableStatCard(FontAwesomeIcons.bullseye, 'Tir', _sho?.value ?? 0, Colors.orange, _shoController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.bullseye, 'Tir',
+                      _sho?.value ?? 0, Colors.orange, _shoController, () {
                     setState(() {
                       _sho = Number.fromValue(int.parse(_shoController.text));
                     });
                   }),
-                  _buildEditableStatCard(FontAwesomeIcons.handshake, 'Passe', _pas?.value ?? 0, Colors.blue, _pasController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.handshake, 'Passe',
+                      _pas?.value ?? 0, Colors.blue, _pasController, () {
                     setState(() {
                       _pas = Number.fromValue(int.parse(_pasController.text));
                     });
                   }),
-                  _buildEditableStatCard(FontAwesomeIcons.running, 'Dribble', _dri?.value ?? 0, Colors.pink, _driController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.running, 'Dribble',
+                      _dri?.value ?? 0, Colors.pink, _driController, () {
                     setState(() {
                       _dri = Number.fromValue(int.parse(_driController.text));
                     });
                   }),
-                  _buildEditableStatCard(FontAwesomeIcons.shieldAlt, 'Défense', _def?.value ?? 0, Colors.teal, _defController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.shieldAlt, 'Défense',
+                      _def?.value ?? 0, Colors.teal, _defController, () {
                     setState(() {
                       _def = Number.fromValue(int.parse(_defController.text));
                     });
                   }),
-                  _buildEditableStatCard(FontAwesomeIcons.dumbbell, 'Physique', _phy?.value ?? 0, Colors.brown, _phyController, () {
+                  _buildEditableStatCard(FontAwesomeIcons.dumbbell, 'Physique',
+                      _phy?.value ?? 0, Colors.brown, _phyController, () {
                     setState(() {
                       _phy = Number.fromValue(int.parse(_phyController.text));
+                    });
+                  }),
+                  _buildEditableStatCard(FontAwesomeIcons.tachometer, 'Vitesse',
+                      _pac.value, Colors.purple, _shoController, () {
+                    setState(() {
+                      _pac = Number.fromValue(int.parse(_shoController.text));
                     });
                   }),
                   const SizedBox(height: 16.0),
@@ -236,9 +290,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStatCard('Matches Joués', _matches_played.value, Colors.blue),
-                      _buildStatCard('Matches Gagnés', _matchWon.value, Colors.green),
-                      _buildStatCard('Buts Marqués', _goals_scored.value, Colors.red),
+                      _buildStatCard(
+                          'Matches Joués', _matches_played.value, Colors.blue),
+                      _buildStatCard(
+                          'Matches Gagnés', _matchWon.value, Colors.green),
+                      _buildStatCard(
+                          'Buts Marqués', _goals_scored.value, Colors.red),
                     ],
                   ),
                   const SizedBox(height: 16.0),
@@ -262,7 +319,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, String value, Color iconColor) {
+  Widget _buildInfoTile(
+      IconData icon, String title, String value, Color iconColor) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
@@ -295,7 +353,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  Widget _buildEditableStatCard(IconData icon, String title, int value, Color color, TextEditingController controller, Function onSave) {
+  Widget _buildEditableStatCard(IconData icon, String title, int value,
+      Color color, TextEditingController controller, Function onSave) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: ListTile(
@@ -305,7 +364,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
           icon: const Icon(Icons.edit),
           onPressed: () {
             controller.text = value.toString();
-            _openEditDialog(title, controller, onSave);
+            _openEditDialog(title, controller, () {
+              onSave();
+              _updateUserStats();
+            });
           },
         ),
       ),

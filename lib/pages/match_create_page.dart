@@ -66,10 +66,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     final String matchTimeStr = DateFormat('HH:mm:ss').format(DateTime(0, 1, 1, matchTime!.hour, matchTime.minute));
     final String endTimeStr = DateFormat('HH:mm:ss').format(DateTime(0, 1, 1, endTime!.hour, endTime.minute));
 
-    print('Formatted Date: $matchDateStr');
-    print('Formatted Start Time: $matchTimeStr');
-    print('Formatted End Time: $endTimeStr');
-
     Map<String, dynamic> matchData = {
       'description': _descriptionController.text,
       'match_date': matchDateStr,

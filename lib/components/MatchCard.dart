@@ -1,11 +1,13 @@
-// ignore_for_file: prefer_const_constructors
-
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+const String baseUrl = "ws://192.168.1.100:3003/api";
 
 class MatchCard extends StatefulWidget {
   final String description;
@@ -48,6 +50,8 @@ class _MatchCardState extends State<MatchCard> {
   late WebSocketChannel _channel;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  Timer? _timer;
+  Timer? _reconnectTimer;
 
   @override
   void initState() {
@@ -56,6 +60,7 @@ class _MatchCardState extends State<MatchCard> {
     _status = widget.status;
     _initializeWebSocket();
     _initializeNotifications();
+    _startStatusUpdater();
   }
 
   void _initializeDateTime() {
@@ -66,7 +71,10 @@ class _MatchCardState extends State<MatchCard> {
           ? DateTime.parse(
               '${widget.matchDate.split('T')[0]}T${widget.endTime.split('T')[1]}')
           : _matchDateTime.add(Duration(hours: 1));
+      print('Match start time: $_matchDateTime');
+      print('Match end time: $_endDateTime');
     } catch (e) {
+      print('Error parsing date/time: $e');
       _matchDateTime = DateTime.now();
       _endDateTime = DateTime.now();
     }
@@ -75,8 +83,7 @@ class _MatchCardState extends State<MatchCard> {
   void _initializeWebSocket() {
     try {
       print('Initializing WebSocket connection...');
-      _channel = IOWebSocketChannel.connect(
-          'wss://api-teamup.onrender.com/api/matches/status/updates');
+      _channel = IOWebSocketChannel.connect('$baseUrl/matches/status/updates');
       _channel.stream.listen(
         (message) {
           print('Received message: $message');
@@ -84,14 +91,27 @@ class _MatchCardState extends State<MatchCard> {
         },
         onError: (error) {
           print('WebSocket error: $error');
+          _reconnectWebSocket();
         },
         onDone: () {
           print('WebSocket connection closed');
+          _reconnectWebSocket();
         },
       );
     } catch (e) {
       print('Error during WebSocket connection: $e');
+      _reconnectWebSocket();
     }
+  }
+
+  void _reconnectWebSocket() {
+    if (_reconnectTimer != null && _reconnectTimer!.isActive) {
+      return;
+    }
+    _reconnectTimer = Timer(Duration(seconds: 2), () {
+      print('Reconnecting WebSocket...');
+      _initializeWebSocket();
+    });
   }
 
   void _initializeNotifications() async {
@@ -177,6 +197,33 @@ class _MatchCardState extends State<MatchCard> {
         .show(0, title, body, platformChannelSpecifics, payload: 'item x');
   }
 
+  void _updateStatusBasedOnDate() {
+    final now = DateTime.now();
+    print('Checking status update at $now');
+    print('Match start time: $_matchDateTime');
+    print('Match end time: $_endDateTime');
+    if (now.isAfter(_matchDateTime) && now.isBefore(_endDateTime)) {
+      setState(() {
+        _status = 'ongoing';
+      });
+    } else if (now.isAfter(_endDateTime)) {
+      setState(() {
+        _status = 'completed';
+      });
+    } else if (now.isBefore(_matchDateTime)) {
+      setState(() {
+        _status = 'upcoming';
+      });
+    }
+    print('Updated status: $_status');
+  }
+
+  void _startStatusUpdater() {
+    _timer = Timer.periodic(Duration(minutes: 1), (timer) {
+      _updateStatusBasedOnDate();
+    });
+  }
+
   IconData _getStatusIcon(String status) {
     switch (status) {
       case 'upcoming':
@@ -225,6 +272,8 @@ class _MatchCardState extends State<MatchCard> {
   @override
   void dispose() {
     _channel.sink.close();
+    _timer?.cancel();
+    _reconnectTimer?.cancel();
     super.dispose();
   }
 
