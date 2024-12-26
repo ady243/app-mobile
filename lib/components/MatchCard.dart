@@ -19,7 +19,7 @@ class MatchCard extends StatefulWidget {
   final bool isOrganizer;
   final VoidCallback? onTap;
   final VoidCallback onJoin;
-  final Set<String> joinedMatches; // Ajout de la liste des matchs rejoints
+  final Set<String> joinedMatches;
 
   const MatchCard({
     Key? key,
@@ -34,7 +34,7 @@ class MatchCard extends StatefulWidget {
     required this.isOrganizer,
     this.onTap,
     required this.onJoin,
-    required this.joinedMatches, // Ajout de la liste des matchs rejoints
+    required this.joinedMatches,
   }) : super(key: key);
 
   @override
@@ -46,7 +46,8 @@ class _MatchCardState extends State<MatchCard> {
   late DateTime _endDateTime;
   String _status = '';
   late WebSocketChannel _channel;
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -59,30 +60,38 @@ class _MatchCardState extends State<MatchCard> {
 
   void _initializeDateTime() {
     try {
-      print('Parsing matchDate: ${widget.matchDate}');
-      print('Parsing matchTime: ${widget.matchTime}');
-      print('Parsing endTime: ${widget.endTime}');
-
-      _matchDateTime = DateTime.parse('${widget.matchDate.split('T')[0]}T${widget.matchTime.split('T')[1]}');
+      _matchDateTime = DateTime.parse(
+          '${widget.matchDate.split('T')[0]}T${widget.matchTime.split('T')[1]}');
       _endDateTime = widget.endTime.isNotEmpty
-          ? DateTime.parse('${widget.matchDate.split('T')[0]}T${widget.endTime.split('T')[1]}')
-          : _matchDateTime.add(Duration(hours: 1)); // Default to 1 hour after match start if endTime is empty
-
-      print('Parsed matchDateTime: $_matchDateTime');
-      print('Parsed endDateTime: $_endDateTime');
+          ? DateTime.parse(
+              '${widget.matchDate.split('T')[0]}T${widget.endTime.split('T')[1]}')
+          : _matchDateTime.add(Duration(hours: 1));
     } catch (e) {
-      print('Erreur lors de la conversion de la date et de l\'heure: $e');
-      _matchDateTime = DateTime.now(); // Valeur par défaut en cas d'erreur
-      _endDateTime = DateTime.now(); // Valeur par défaut en cas d'erreur
+      _matchDateTime = DateTime.now();
+      _endDateTime = DateTime.now();
     }
   }
 
   void _initializeWebSocket() {
-    _channel = IOWebSocketChannel.connect('ws://your-websocket-server-url');
-    _channel.stream.listen((message) {
-      print('Received message: $message');
-      _updateStatus(message);
-    });
+    try {
+      print('Initializing WebSocket connection...');
+      _channel = IOWebSocketChannel.connect(
+          'wss://api-teamup.onrender.com/api/matches/status/updates');
+      _channel.stream.listen(
+        (message) {
+          print('Received message: $message');
+          _updateStatus(message);
+        },
+        onError: (error) {
+          print('WebSocket error: $error');
+        },
+        onDone: () {
+          print('WebSocket connection closed');
+        },
+      );
+    } catch (e) {
+      print('Error during WebSocket connection: $e');
+    }
   }
 
   void _initializeNotifications() async {
@@ -95,9 +104,10 @@ class _MatchCardState extends State<MatchCard> {
             requestBadgePermission: false,
             requestSoundPermission: false);
 
-    final InitializationSettings initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsIOS);
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsIOS);
 
     await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: selectNotification);
@@ -108,7 +118,8 @@ class _MatchCardState extends State<MatchCard> {
     // handle your actions
   }
 
-  Future<void> selectNotification(NotificationResponse notificationResponse) async {
+  Future<void> selectNotification(
+      NotificationResponse notificationResponse) async {
     // handle your actions
   }
 
@@ -124,7 +135,7 @@ class _MatchCardState extends State<MatchCard> {
         });
 
         // Check if the user has joined the match before showing the notification
-        if (widget.joinedMatches.contains(widget.description)) {
+        if (widget.isJoined) {
           _showNotification(json['status']);
         }
       }
@@ -162,9 +173,8 @@ class _MatchCardState extends State<MatchCard> {
         body = 'Statut inconnu pour le match ${widget.description}.';
     }
 
-    await _flutterLocalNotificationsPlugin.show(
-        0, title, body, platformChannelSpecifics,
-        payload: 'item x');
+    await _flutterLocalNotificationsPlugin
+        .show(0, title, body, platformChannelSpecifics, payload: 'item x');
   }
 
   IconData _getStatusIcon(String status) {
@@ -220,8 +230,10 @@ class _MatchCardState extends State<MatchCard> {
 
   @override
   Widget build(BuildContext context) {
-    final String formattedDate = DateFormat('dd MMM yyyy').format(_matchDateTime);
-    final String formattedStartTime = DateFormat('HH:mm').format(_matchDateTime);
+    final String formattedDate =
+        DateFormat('dd MMM yyyy').format(_matchDateTime);
+    final String formattedStartTime =
+        DateFormat('HH:mm').format(_matchDateTime);
     final String formattedEndTime = DateFormat('HH:mm').format(_endDateTime);
 
     return GestureDetector(
@@ -323,7 +335,8 @@ class _MatchCardState extends State<MatchCard> {
                   ),
                   Row(
                     children: [
-                      Icon(_getStatusIcon(_status), color: _getStatusColor(_status)),
+                      Icon(_getStatusIcon(_status),
+                          color: _getStatusColor(_status)),
                       const SizedBox(width: 5),
                       Text(
                         _getStatusText(_status),
@@ -352,12 +365,22 @@ class _MatchCardState extends State<MatchCard> {
                               ),
                             )
                           : ElevatedButton(
-                              onPressed: (widget.isJoined || _status == 'ongoing' || _status == 'completed') ? null : widget.onJoin,
+                              onPressed: (widget.isJoined ||
+                                      _status == 'ongoing' ||
+                                      _status == 'completed')
+                                  ? null
+                                  : widget.onJoin,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: (widget.isJoined || _status == 'ongoing' || _status == 'completed') ? Colors.grey : Colors.green,
+                                backgroundColor: (widget.isJoined ||
+                                        _status == 'ongoing' ||
+                                        _status == 'completed')
+                                    ? Colors.grey
+                                    : Colors.green,
                               ),
                               child: Text(
-                                widget.isJoined ? 'Vous avez rejoint' : 'Réjoindre le match',
+                                widget.isJoined
+                                    ? 'Vous avez rejoint'
+                                    : 'Réjoindre le match',
                                 style: const TextStyle(
                                   color: Colors.white,
                                 ),

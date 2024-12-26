@@ -65,7 +65,6 @@ class AuthService {
         throw Exception('Erreur lors du rafraîchissement du token.');
       }
     } catch (e) {
-      print('Erreur lors du rafraîchissement du token: $e');
       await logout();
       rethrow;
     }

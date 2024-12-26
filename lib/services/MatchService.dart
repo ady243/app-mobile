@@ -274,13 +274,25 @@ class MatchService {
     }
   }
 
-  void connectWebSocket(void Function(Map<String, dynamic>) onMessage) {
+void connectWebSocket(void Function(Map<String, dynamic>) onMessage) {
+  try {
     _channel = WebSocketChannel.connect(Uri.parse('$baseUrl/matches/status/updates'));
-    _channel!.stream.listen((message) {
-      final data = jsonDecode(message);
-      onMessage(data);
-    });
+    _channel!.stream.listen(
+      (message) {
+        final data = jsonDecode(message);
+        onMessage(data);
+      },
+      onError: (error) {
+        print('WebSocket error: $error');
+      },
+      onDone: () {
+        print('WebSocket connection closed');
+      },
+    );
+  } catch (e) {
+    print('Erreur lors de la connexion WebSocket: $e');
   }
+}
 
   void closeWebSocket() {
     _channel?.sink.close();

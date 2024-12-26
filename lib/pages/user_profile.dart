@@ -67,7 +67,7 @@ class UserProfilePages extends StatelessWidget {
                     title: Text('Bio: ${userDetails['bio'] ?? 'Non spécifié'}'),
                   ),
                   const SizedBox(height: 16.0),
-                  Text(
+                  const Text(
                     'Statistiques',
                     style: const TextStyle(
                       fontSize: 20,
