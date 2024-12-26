@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../components/TopBar.dart';
+import '../components/TopBarDetail.dart';
 import '../components/MatchInfoTab.dart';
 import '../components/ChatTab.dart';
 import '../components/AiSuggestionOverlay.dart';
@@ -7,6 +7,7 @@ import '../services/MatchService.dart';
 import '../services/ChatService.dart';
 import '../components/theme_provider.dart';
 import 'package:provider/provider.dart';
+import '../models/Match.dart';
 
 class MatchDetailsPage extends StatefulWidget {
   final String matchId;
@@ -25,6 +26,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   late Animation<Offset> _offsetAnimation;
   bool _hasNewMessages = false;
   final ChatService _chatService = ChatService();
+  String _organizerId = '';
+  List<Map<String, dynamic>> _participants = [];
+  String? _selectedParticipantId;
 
   @override
   void initState() {
@@ -40,6 +44,8 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
       parent: _controller,
       curve: Curves.easeInOut,
     ));
+    _fetchMatchDetails();
+    _fetchParticipants();
     _checkForNewMessages();
   }
 
@@ -47,6 +53,45 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _fetchMatchDetails() async {
+    try {
+      final matchService = MatchService();
+      final matchDetailsJson = await matchService.getMatchDetails(widget.matchId);
+      print('Match details fetched: $matchDetailsJson'); // Ajoutez ce log pour vérifier les données JSON
+      final matchDetails = Match.fromJson(matchDetailsJson);
+      print('Organizer ID: ${matchDetails.organizer.id}'); // Ajoutez ce log pour vérifier l'ID de l'organisateur
+      setState(() {
+        _organizerId = matchDetails.organizer.id;
+      });
+    } catch (e) {
+      print('Erreur lors de la récupération des détails du match: $e');
+    }
+  }
+
+  void _fetchParticipants() async {
+    try {
+      final matchService = MatchService();
+      final participants = await matchService.getMatchPlayers(widget.matchId);
+      setState(() {
+        _participants = participants;
+      });
+    } catch (e) {
+      print('Erreur lors de la récupération des participants: $e');
+    }
+  }
+
+  void _assignReferee(String participantId) async {
+    try {
+      final matchService = MatchService();
+      await matchService.assignReferee(widget.matchId, participantId);
+      setState(() {
+        _selectedParticipantId = participantId;
+      });
+    } catch (e) {
+      print('Erreur lors de l\'attribution de l\'arbitre: $e');
+    }
   }
 
   void _checkForNewMessages() async {
@@ -113,7 +158,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
         children: [
           Column(
             children: [
-              TopBar(
+              TopBarDetail(
                 currentIndex: _currentTabIndex,
                 onTabSelected: _onTabSelected,
                 hasNewMessages: _hasNewMessages,
@@ -122,7 +167,20 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
                 child: IndexedStack(
                   index: _currentTabIndex,
                   children: [
-                    MatchInfoTab(matchId: widget.matchId),
+                    MatchInfoTab(
+                      matchId: widget.matchId,
+                      organizerId: _organizerId,
+                      participants: _participants,
+                      selectedParticipantId: _selectedParticipantId,
+                      onParticipantSelected: (String? newValue) {
+                        setState(() {
+                          _selectedParticipantId = newValue;
+                        });
+                        if (newValue != null) {
+                          _assignReferee(newValue);
+                        }
+                      },
+                    ),
                     ChatTab(matchId: widget.matchId),
                   ],
                 ),
@@ -139,10 +197,10 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
       ),
       floatingActionButton: _currentTabIndex == 0
           ? FloatingActionButton(
-        onPressed: _fetchAndShowAiResponse,
-        backgroundColor: const Color(0xFFFFFFFF),
-        child: Image.asset('assets/images/ia.png'),
-      )
+              onPressed: _fetchAndShowAiResponse,
+              backgroundColor: const Color(0xFFFFFFFF),
+              child: Image.asset('assets/images/ia.png'),
+            )
           : null,
     );
   }

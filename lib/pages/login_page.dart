@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:teamup/pages/signup_page.dart';
 import 'package:toastification/toastification.dart';
 import '../components/ToastComponent.dart';
@@ -13,17 +16,19 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final AuthService _authService = AuthService();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center( // Centered the entire column
-        child: SingleChildScrollView( // To handle overflow in small screens
+      body: Center(
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _logo(), // Logo at the top
+                _logo(),
                 const SizedBox(height: 20),
                 _header(),
                 const SizedBox(height: 20),
@@ -63,15 +68,14 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _inputFields(BuildContext context) {
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-    final AuthService authService = AuthService();
+    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
-          controller: emailController,
+          controller: _emailController,
           decoration: InputDecoration(
             hintText: "Email",
             border: OutlineInputBorder(
@@ -85,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         const SizedBox(height: 10),
         TextField(
-          controller: passwordController,
+          controller: _passwordController,
           decoration: InputDecoration(
             hintText: "Mot de passe",
             border: OutlineInputBorder(
@@ -101,23 +105,26 @@ class _LoginPageState extends State<LoginPage> {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () async {
-          if (emailController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-            try {
-              await authService.login(
-                  emailController.text, passwordController.text
-              );
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-              ToastComponent.showToast(context, "Connexion réussie", ToastificationType.success);
-            } catch (e) {
-              ToastComponent.showToast(context, "Erreur lors de la connexion", ToastificationType.error);
+            if (_emailController.text.isNotEmpty &&
+                _passwordController.text.isNotEmpty) {
+              try {
+                await _authService.login(
+                    _emailController.text, _passwordController.text);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                );
+                ToastComponent.showToast(
+                    context, "Connexion réussie", ToastificationType.success);
+              } catch (e) {
+                ToastComponent.showToast(context, "Erreur lors de la connexion",
+                    ToastificationType.error);
+              }
+            } else {
+              ToastComponent.showToast(context,
+                  "Veuillez remplir tous les champs", ToastificationType.error);
             }
-          } else {
-            ToastComponent.showToast(context, "Veuillez remplir tous les champs", ToastificationType.error);
-          }
-        },
+          },
           style: ElevatedButton.styleFrom(
             shape: const StadiumBorder(),
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -138,7 +145,10 @@ class _LoginPageState extends State<LoginPage> {
   Widget _forgotPassword(BuildContext context) {
     return TextButton(
       onPressed: () {
-        ToastComponent.showToast(context, "Contactez l'administrateur pour réinitialiser votre mot de passe.", ToastificationType.info);
+        ToastComponent.showToast(
+            context,
+            "Contactez l'administrateur pour réinitialiser votre mot de passe.",
+            ToastificationType.info);
       },
       child: const Text(
         "Mot de passe oublié ?",
@@ -169,13 +179,56 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildGoogleSignInButton() {
-    return CircleAvatar(
-      radius: 30,
-      backgroundColor: Colors.grey[200],
-      child: Image.asset(
-        'assets/logos/google_light.png',
-        height: 30,
+    return GestureDetector(
+      onTap: () async {
+        try {
+          await _handleGoogleSignIn();
+        } catch (e) {
+          // ignore: use_build_context_synchronously
+          ToastComponent.showToast(
+              context,
+              "Erreur lors de la connexion avec Google",
+              ToastificationType.error);
+        }
+      },
+      child: CircleAvatar(
+        radius: 30,
+        backgroundColor: Colors.grey[200],
+        child: Image.asset(
+          'assets/logos/google_light.png',
+          height: 30,
+        ),
       ),
     );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    try {
+      final GoogleSignInAccount? googleUser =
+          await _authService.googleSignIn.signIn();
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
+        final response =
+            await _authService.loginWithGoogle(googleAuth.idToken!);
+        if (response) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+          ToastComponent.showToast(
+              context, "Connexion réussie", ToastificationType.success);
+        } else {
+          ToastComponent.showToast(
+              context,
+              "Erreur lors de la connexion avec Google",
+              ToastificationType.error);
+        }
+      }
+    } catch (e) {
+      print('Erreur lors de la connexion avec Google: $e');
+      ToastComponent.showToast(context,
+          "Erreur lors de la connexion avec Google", ToastificationType.error);
+    }
   }
 }

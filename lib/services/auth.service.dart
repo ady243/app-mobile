@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../utils/basUrl.dart';
 
 class AuthService {
   final Dio _dio = Dio();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  bool _isRefreshing = false;
+  final GoogleSignIn googleSignIn = GoogleSignIn();
 
   AuthService() {
     _dio.interceptors.add(LogInterceptor(
@@ -24,10 +27,18 @@ class AuthService {
         }
         return handler.next(options);
       },
-      onError: (DioException error, handler) async {
-        if (error.response?.statusCode == 401) {
-          await _refreshToken();
-          handler.resolve(await _retry(error.requestOptions));
+      onError: (DioError error, handler) async {
+        if (error.response?.statusCode == 401 && !_isRefreshing) {
+          _isRefreshing = true;
+          try {
+            await _refreshToken();
+            _isRefreshing = false;
+            handler.resolve(await _retry(error.requestOptions));
+          } catch (e) {
+            _isRefreshing = false;
+            await logout();
+            handler.next(error);
+          }
         } else {
           return handler.next(error);
         }
@@ -37,15 +48,25 @@ class AuthService {
 
   Future<void> _refreshToken() async {
     try {
-      final response = await _dio.post('$baseUrl/refresh');
-      if (response.statusCode == 200 && response.data['accessToken'] != null) {
+      final refreshToken = await _storage.read(key: 'refreshToken');
+      if (refreshToken == null) {
+        throw Exception('No refresh token available');
+      }
+
+      final response = await _dio.post(
+        '$baseUrl/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+
+      if (response.statusCode == 200 && response.data['accessToken'] != null && response.data['refreshToken'] != null) {
         await _storage.write(key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(key: 'refreshToken', value: response.data['refreshToken']);
       } else {
         throw Exception('Erreur lors du rafraîchissement du token.');
       }
     } catch (e) {
-      print('Erreur lors du rafraîchissement du token: $e');
       await logout();
+      rethrow;
     }
   }
 
@@ -74,8 +95,9 @@ class AuthService {
 
       print('Réponse de l\'API: ${response.data}');
 
-      if (response.statusCode == 200 && response.data['accessToken'] != null) {
+      if (response.statusCode == 200 && response.data['accessToken'] != null && response.data['refreshToken'] != null) {
         await _storage.write(key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(key: 'refreshToken', value: response.data['refreshToken']);
       } else {
         throw Exception('Erreur lors de la connexion : token non fourni.');
       }
@@ -86,6 +108,27 @@ class AuthService {
         print('Erreur inattendue: $e');
       }
       rethrow;
+    }
+  }
+
+  Future<bool> loginWithGoogle(String idToken) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/auth/google/callback',
+        data: jsonEncode({'idToken': idToken}),
+        options: Options(headers: {'Content-Type': 'application/json'}),
+      );
+
+      if (response.statusCode == 200 && response.data['accessToken'] != null && response.data['refreshToken'] != null) {
+        await _storage.write(key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(key: 'refreshToken', value: response.data['refreshToken']);
+        return true;
+      } else {
+        throw Exception('Erreur lors de la connexion avec Google.');
+      }
+    } catch (e) {
+      print('Erreur lors de la connexion avec Google: $e');
+      return false;
     }
   }
 
@@ -184,6 +227,7 @@ class AuthService {
   Future<void> logout() async {
     try {
       await _storage.delete(key: 'accessToken');
+      await _storage.delete(key: 'refreshToken');
     } catch (e) {
       print('Erreur lors de la déconnexion: $e');
       rethrow;
@@ -209,7 +253,6 @@ class AuthService {
     }
   }
 
-  //delete my account
   Future<void> deleteAccount() async {
     try {
       final response = await _dio.delete('$baseUrl/deleteMyAccount');
@@ -220,6 +263,59 @@ class AuthService {
       }
     } catch (e) {
       print('Erreur lors de la suppression du compte utilisateur: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> assignRole(String userId, String role) async {
+    try {
+      final response = await _dio.put(
+        '$baseUrl/assignRole',
+        data: {
+          'userId': userId,
+          'role': role,
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'affectation du rôle utilisateur: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> checkRole(String userId) async {
+    try {
+      final response = await _dio.get(
+        '$baseUrl/CheckAndResetRole',
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Erreur lors de la vérification du rôle utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la vérification du rôle utilisateur: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateRole(String userId, String role) async {
+    try {
+      final response = await _dio.put(
+        '$baseUrl/updateRole',
+        data: {
+          'userId': userId,
+          'role': role,
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'affectation du rôle utilisateur: $e');
       rethrow;
     }
   }

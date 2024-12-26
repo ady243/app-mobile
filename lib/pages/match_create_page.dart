@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:teamup/components/CreateMatchForm.dart';
+import 'package:teamup/components/CreateMatchPageContent.dart';
 import 'dart:convert';
 import 'dart:async';
 import '../services/MatchService.dart';
@@ -20,6 +22,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _matchDate;
   TimeOfDay? _matchTime;
+  TimeOfDay? _endTime;
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _numberOfPlayersController = TextEditingController();
   final MatchService _matchService = MatchService();
@@ -36,9 +39,14 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     super.dispose();
   }
 
-  Future<void> _createMatch() async {
-    if (_matchDate == null || _matchTime == null) {
-      Fluttertoast.showToast(msg: 'Veuillez sélectionner une date et une heure.');
+  Future<void> _createMatch(DateTime? matchDate, TimeOfDay? matchTime, TimeOfDay? endTime) async {
+    print('Creating match with:');
+    print('Date: $matchDate');
+    print('Start Time: $matchTime');
+    print('End Time: $endTime');
+
+    if (matchDate == null || matchTime == null || endTime == null) {
+      Fluttertoast.showToast(msg: 'Veuillez sélectionner une date, une heure de début et une heure de fin.');
       return;
     }
 
@@ -53,12 +61,20 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       return;
     }
 
-    final String matchTime = '${_matchTime!.hour.toString().padLeft(2, '0')}:${_matchTime!.minute.toString().padLeft(2, '0')}';
+    // Formatage de la date et des heures
+    final String matchDateStr = DateFormat('yyyy-MM-dd').format(matchDate);
+    final String matchTimeStr = DateFormat('HH:mm:ss').format(DateTime(0, 1, 1, matchTime!.hour, matchTime.minute));
+    final String endTimeStr = DateFormat('HH:mm:ss').format(DateTime(0, 1, 1, endTime!.hour, endTime.minute));
+
+    print('Formatted Date: $matchDateStr');
+    print('Formatted Start Time: $matchTimeStr');
+    print('Formatted End Time: $endTimeStr');
 
     Map<String, dynamic> matchData = {
       'description': _descriptionController.text,
-      'match_date': DateFormat('yyyy-MM-dd').format(_matchDate!),
-      'match_time': matchTime,
+      'match_date': matchDateStr,
+      'match_time': matchTimeStr,
+      'end_time': endTimeStr,
       'address': _addressController.text,
       'number_of_players': numberOfPlayers,
     };
@@ -70,6 +86,23 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     } catch (e) {
       Fluttertoast.showToast(msg: 'Erreur lors de la création du match : $e');
     }
+  }
+
+  Future<void> _deleteMatch(String matchId) async {
+    try {
+      await _matchService.deleteMatch(matchId);
+      Fluttertoast.showToast(msg: 'Match supprimé avec succès !');
+      setState(() {
+        // Actualiser la liste des matchs après suppression
+        _fetchMatches();
+      });
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'Erreur lors de la suppression du match : $e');
+    }
+  }
+
+  Future<void> _fetchMatches() async {
+    // Implémentez la logique pour récupérer les matchs créés par l'utilisateur
   }
 
   Future<void> _autoCompleteAddress(String query) async {
@@ -113,110 +146,15 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               right: 16,
               top: 16,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Créer un match',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    final DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: _matchDate ?? DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime(2101),
-                    );
-                    if (pickedDate != null) {
-                      setState(() {
-                        _matchDate = pickedDate;
-                      });
-                    }
-                  },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Sélectionner la date',
-                      border: OutlineInputBorder(),
-                    ),
-                    child: Text(
-                      _matchDate != null ? DateFormat('yyyy-MM-dd').format(_matchDate!) : 'Date',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: () async {
-                    final TimeOfDay? pickedTime = await showTimePicker(
-                      context: context,
-                      initialTime: _matchTime ?? TimeOfDay.now(),
-                    );
-                    if (pickedTime != null) {
-                      setState(() {
-                        _matchTime = pickedTime;
-                      });
-                    }
-                  },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      labelText: 'Sélectionner l\'heure',
-                      border: OutlineInputBorder(),
-                    ),
-                    child: Text(
-                      _matchTime != null ? _matchTime!.format(context) : 'Heure',
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(
-                    labelText: 'Adresse',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (query) {
-                    if (_debounce?.isActive ?? false) _debounce!.cancel();
-                    _debounce = Timer(const Duration(seconds: 6), () {
-                      _autoCompleteAddress(query);
-                    });
-                  },
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _numberOfPlayersController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre de joueurs',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () async {
-                    await _createMatch();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: themeProvider.primaryColor,
-                  ),
-                  child: const Text(
-                    'Créer le match',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
+            child: CreateMatchForm(
+              descriptionController: _descriptionController,
+              matchDate: _matchDate,
+              matchTime: _matchTime,
+              endTime: _endTime,
+              addressController: _addressController,
+              numberOfPlayersController: _numberOfPlayersController,
+              createMatch: _createMatch,
+              autoCompleteAddress: _autoCompleteAddress,
             ),
           ),
         );
@@ -230,81 +168,33 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(120.0),
-          child: AppBar(
-            title: const Text(
-              'Mes Matchs',
-              style: TextStyle(color: Colors.white, fontSize: 20),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(kToolbarHeight),
-              child: Container(
-                color: Colors.white,
-                child: TabBar(
-                  tabs: const [
-                    Tab(text: 'Mes matches créés'),
-                    Tab(text: 'Créer un match'),
-                  ],
-                  indicatorColor: Colors.green,
-                  labelColor: const Color(0xFF01BF6B),
-                  unselectedLabelColor: themeProvider.primaryColor,
-                ),
-              ),
-            ),
-            centerTitle: true,
-            backgroundColor: themeProvider.primaryColor,
+        appBar: AppBar(
+          title: const Text(
+            'Mes Matchs',
+            style: TextStyle(color: Colors.white, fontSize: 20),
           ),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Mes matches créés'),
+              Tab(text: 'Créer un match'),
+            ],
+            indicatorColor: Colors.green,
+            labelColor: Color(0xFF01BF6B),
+            unselectedLabelColor: Colors.white,
+          ),
+          centerTitle: true,
+          backgroundColor: themeProvider.primaryColor,
         ),
         body: TabBarView(
           children: [
-            const MyCreatedMatchesPage(),
+            MyCreatedMatchesPage(
+              onDeleteMatch: _deleteMatch,
+            ),
             CreateMatchPageContent(
-              descriptionController: _descriptionController,
-              matchDate: _matchDate,
-              matchTime: _matchTime,
-              addressController: _addressController,
-              numberOfPlayersController: _numberOfPlayersController,
-              createMatch: _createMatch,
               openBottomSheet: _openBottomSheet,
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class CreateMatchPageContent extends StatelessWidget {
-  final TextEditingController descriptionController;
-  final DateTime? matchDate;
-  final TimeOfDay? matchTime;
-  final TextEditingController addressController;
-  final TextEditingController numberOfPlayersController;
-  final Future<void> Function() createMatch;
-  final void Function(BuildContext) openBottomSheet;
-
-  const CreateMatchPageContent({
-    super.key,
-    required this.descriptionController,
-    required this.matchDate,
-    required this.matchTime,
-    required this.addressController,
-    required this.numberOfPlayersController,
-    required this.createMatch,
-    required this.openBottomSheet,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: FloatingActionButton(
-        onPressed: () {
-          openBottomSheet(context);
-        },
-        backgroundColor: const Color(0xFF01BF6B),
-        tooltip: 'Créer un match',
-        child: const Icon(Icons.add),
       ),
     );
   }

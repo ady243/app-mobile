@@ -26,4 +26,7 @@ class ThemeProvider with ChangeNotifier {
   Color get primaryColor => _isDarkTheme ? const Color(0xFF004D40) : const Color(0xFF01BF6B);
   Color get iconColor => _isDarkTheme ? Colors.white : Colors.black;
   Color get backgroundColor => _isDarkTheme ? const Color(0xFF121212) : Colors.white;
+  Color get navBouton => _isDarkTheme ? Colors.white : Colors.black;
+  Color get selectedLabelColor => const Color(0xFF01BF6B);
+  Color get unselectedLabelColor => _isDarkTheme ? Colors.white : Colors.black;
 }

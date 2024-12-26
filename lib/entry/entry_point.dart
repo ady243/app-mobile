@@ -8,21 +8,16 @@ class EntryPoint extends StatefulWidget {
 }
 
 class _EntryPointState extends State<EntryPoint> {
-
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
   }
 
-  void _checkLoginStatus() async {
-
-  }
+  void _checkLoginStatus() async {}
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-
-    );
+    return const Scaffold();
   }
 }

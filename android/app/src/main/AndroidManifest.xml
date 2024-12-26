@@ -14,6 +14,11 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg"/>
 
+        <!-- Clé API Google Sign-In -->
+        <meta-data
+            android:name="com.google.android.gms.auth.api.signin.API_KEY"
+            android:value="352689561996-btrtmukipkgudca8dr10jb7m7j73knbi.apps.googleusercontent.com"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
