@@ -18,7 +18,8 @@ class MatchDetailsPage extends StatefulWidget {
   _MatchDetailsPageState createState() => _MatchDetailsPageState();
 }
 
-class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerProviderStateMixin {
+class _MatchDetailsPageState extends State<MatchDetailsPage>
+    with SingleTickerProviderStateMixin {
   int _currentTabIndex = 0;
   bool _showAiResponse = false;
   String _aiResponse = 'Laisse moi te proposer une formation ... ...';
@@ -26,6 +27,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   late Animation<Offset> _offsetAnimation;
   bool _hasNewMessages = false;
   final ChatService _chatService = ChatService();
+  final MatchService _matchService = MatchService();
   String _organizerId = '';
   List<Map<String, dynamic>> _participants = [];
   String? _selectedParticipantId;
@@ -57,11 +59,13 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
 
   void _fetchMatchDetails() async {
     try {
-      final matchService = MatchService();
-      final matchDetailsJson = await matchService.getMatchDetails(widget.matchId);
-      print('Match details fetched: $matchDetailsJson'); // Ajoutez ce log pour vérifier les données JSON
+      final matchDetailsJson =
+          await _matchService.getMatchDetails(widget.matchId);
+      print(
+          'Match details fetched: $matchDetailsJson'); // Ajoutez ce log pour vérifier les données JSON
       final matchDetails = Match.fromJson(matchDetailsJson);
-      print('Organizer ID: ${matchDetails.organizer.id}'); // Ajoutez ce log pour vérifier l'ID de l'organisateur
+      print(
+          'Organizer ID: ${matchDetails.organizer.id}'); // Ajoutez ce log pour vérifier l'ID de l'organisateur
       setState(() {
         _organizerId = matchDetails.organizer.id;
       });
@@ -72,8 +76,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
 
   void _fetchParticipants() async {
     try {
-      final matchService = MatchService();
-      final participants = await matchService.getMatchPlayers(widget.matchId);
+      final participants = await _matchService.getMatchPlayers(widget.matchId);
       setState(() {
         _participants = participants;
       });
@@ -84,8 +87,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
 
   void _assignReferee(String participantId) async {
     try {
-      final matchService = MatchService();
-      await matchService.assignReferee(widget.matchId, participantId);
+      await _matchService.assignReferee(widget.matchId, participantId);
       setState(() {
         _selectedParticipantId = participantId;
       });
@@ -112,13 +114,16 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   }
 
   String _cleanAiResponse(String response) {
-    return response.replaceAll('*', '').replaceAll('###', '').replaceAll('####', '').replaceAll('#', '');
+    return response
+        .replaceAll('*', '')
+        .replaceAll('###', '')
+        .replaceAll('####', '')
+        .replaceAll('#', '');
   }
 
   Future<void> _fetchAndShowAiResponse() async {
     try {
-      final matchService = MatchService();
-      final aiData = await matchService.isAi(widget.matchId);
+      final aiData = await _matchService.isAi(widget.matchId);
       if (aiData.containsKey('formation')) {
         setState(() {
           _aiResponse = _cleanAiResponse(aiData['formation'].join('\n'));
@@ -140,6 +145,44 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
   void _closeAiResponse() {
     setState(() => _showAiResponse = false);
     _controller.reverse();
+  }
+
+  void _handleLeaveMatch() async {
+    try {
+      await _matchService.leaveMatch(widget.matchId);
+      setState(() {
+        _participants.removeWhere(
+            (participant) => participant['id'] == _selectedParticipantId);
+        _selectedParticipantId = null;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Vous avez quitté le match avec succès',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la tentative de quitter le match',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -180,6 +223,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> with SingleTickerPr
                           _assignReferee(newValue);
                         }
                       },
+                      onLeaveMatch: _handleLeaveMatch, // Ajoutez cet argument
                     ),
                     ChatTab(matchId: widget.matchId),
                   ],

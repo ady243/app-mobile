@@ -73,8 +73,9 @@ class _ChatTabState extends State<ChatTab> {
         _messages = messages;
       });
       _scrollToBottom();
+    // ignore: empty_catches
     } catch (e) {
-      print('Error fetching messages: $e');
+    
     }
   }
 

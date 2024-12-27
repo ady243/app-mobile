@@ -1,13 +1,12 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:teamup/utils/basUrl.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'dart:convert';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
-const String baseUrl = "ws://192.168.1.100:3003/api";
+import '../services/MatchService.dart';
 
 class MatchCard extends StatefulWidget {
   final String description;
@@ -17,11 +16,13 @@ class MatchCard extends StatefulWidget {
   final String address;
   final String status;
   final int numberOfPlayers;
-  final bool isJoined;
   final bool isOrganizer;
   final VoidCallback? onTap;
   final VoidCallback onJoin;
+  final VoidCallback onLeave;
   final Set<String> joinedMatches;
+  final String matchId;
+  final String userId;
 
   const MatchCard({
     Key? key,
@@ -32,14 +33,17 @@ class MatchCard extends StatefulWidget {
     required this.address,
     required this.status,
     required this.numberOfPlayers,
-    required this.isJoined,
     required this.isOrganizer,
     this.onTap,
     required this.onJoin,
+    required this.onLeave,
     required this.joinedMatches,
+    required this.matchId,
+    required this.userId,
   }) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _MatchCardState createState() => _MatchCardState();
 }
 
@@ -52,6 +56,7 @@ class _MatchCardState extends State<MatchCard> {
       FlutterLocalNotificationsPlugin();
   Timer? _timer;
   Timer? _reconnectTimer;
+  bool _isJoined = false;
 
   @override
   void initState() {
@@ -61,6 +66,7 @@ class _MatchCardState extends State<MatchCard> {
     _initializeWebSocket();
     _initializeNotifications();
     _startStatusUpdater();
+    _checkIfUserIsInMatch();
   }
 
   void _initializeDateTime() {
@@ -70,9 +76,7 @@ class _MatchCardState extends State<MatchCard> {
       _endDateTime = widget.endTime.isNotEmpty
           ? DateTime.parse(
               '${widget.matchDate.split('T')[0]}T${widget.endTime.split('T')[1]}')
-          : _matchDateTime.add(Duration(hours: 1));
-      print('Match start time: $_matchDateTime');
-      print('Match end time: $_endDateTime');
+          : _matchDateTime.add(const Duration(hours: 1));
     } catch (e) {
       print('Error parsing date/time: $e');
       _matchDateTime = DateTime.now();
@@ -82,24 +86,19 @@ class _MatchCardState extends State<MatchCard> {
 
   void _initializeWebSocket() {
     try {
-      print('Initializing WebSocket connection...');
       _channel = IOWebSocketChannel.connect('$baseUrl/matches/status/updates');
       _channel.stream.listen(
         (message) {
-          print('Received message: $message');
           _updateStatus(message);
         },
         onError: (error) {
-          print('WebSocket error: $error');
           _reconnectWebSocket();
         },
         onDone: () {
-          print('WebSocket connection closed');
           _reconnectWebSocket();
         },
       );
     } catch (e) {
-      print('Error during WebSocket connection: $e');
       _reconnectWebSocket();
     }
   }
@@ -108,8 +107,7 @@ class _MatchCardState extends State<MatchCard> {
     if (_reconnectTimer != null && _reconnectTimer!.isActive) {
       return;
     }
-    _reconnectTimer = Timer(Duration(seconds: 2), () {
-      print('Reconnecting WebSocket...');
+    _reconnectTimer = Timer(const Duration(seconds: 2), () {
       _initializeWebSocket();
     });
   }
@@ -118,13 +116,13 @@ class _MatchCardState extends State<MatchCard> {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('app_icon');
 
-    final DarwinInitializationSettings initializationSettingsIOS =
+    const DarwinInitializationSettings initializationSettingsIOS =
         DarwinInitializationSettings(
             requestAlertPermission: false,
             requestBadgePermission: false,
             requestSoundPermission: false);
 
-    final InitializationSettings initializationSettings =
+    const InitializationSettings initializationSettings =
         InitializationSettings(
             android: initializationSettingsAndroid,
             iOS: initializationSettingsIOS);
@@ -134,34 +132,25 @@ class _MatchCardState extends State<MatchCard> {
   }
 
   Future<void> onDidReceiveLocalNotification(
-      int id, String? title, String? body, String? payload) async {
-    // handle your actions
-  }
+      int id, String? title, String? body, String? payload) async {}
 
   Future<void> selectNotification(
-      NotificationResponse notificationResponse) async {
-    // handle your actions
-  }
+      NotificationResponse notificationResponse) async {}
 
   void _updateStatus(String message) {
     try {
-      // Parse the JSON message
       final Map<String, dynamic> json = jsonDecode(message);
-
-      // Update the status if the JSON contains a 'status' field
       if (json.containsKey('status')) {
         setState(() {
           _status = json['status'];
         });
 
-        // Check if the user has joined the match before showing the notification
-        if (widget.isJoined) {
+        if (_isJoined) {
           _showNotification(json['status']);
         }
       }
-    } catch (e) {
-      print('Erreur lors de la conversion du message JSON: $e');
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   void _showNotification(String status) async {
@@ -199,9 +188,6 @@ class _MatchCardState extends State<MatchCard> {
 
   void _updateStatusBasedOnDate() {
     final now = DateTime.now();
-    print('Checking status update at $now');
-    print('Match start time: $_matchDateTime');
-    print('Match end time: $_endDateTime');
     if (now.isAfter(_matchDateTime) && now.isBefore(_endDateTime)) {
       setState(() {
         _status = 'ongoing';
@@ -215,11 +201,10 @@ class _MatchCardState extends State<MatchCard> {
         _status = 'upcoming';
       });
     }
-    print('Updated status: $_status');
   }
 
   void _startStatusUpdater() {
-    _timer = Timer.periodic(Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _updateStatusBasedOnDate();
     });
   }
@@ -267,6 +252,12 @@ class _MatchCardState extends State<MatchCard> {
       default:
         return 'Inconnu';
     }
+  }
+
+  void _checkIfUserIsInMatch() {
+    setState(() {
+      _isJoined = widget.joinedMatches.contains(widget.matchId);
+    });
   }
 
   @override
@@ -414,21 +405,15 @@ class _MatchCardState extends State<MatchCard> {
                               ),
                             )
                           : ElevatedButton(
-                              onPressed: (widget.isJoined ||
-                                      _status == 'ongoing' ||
-                                      _status == 'completed')
-                                  ? null
-                                  : widget.onJoin,
+                              onPressed:
+                                  _isJoined ? widget.onLeave : widget.onJoin,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: (widget.isJoined ||
-                                        _status == 'ongoing' ||
-                                        _status == 'completed')
-                                    ? Colors.grey
-                                    : Colors.green,
+                                backgroundColor:
+                                    _isJoined ? Colors.red : Colors.green,
                               ),
                               child: Text(
-                                widget.isJoined
-                                    ? 'Vous avez rejoint'
+                                _isJoined
+                                    ? 'Quitter le match'
                                     : 'Réjoindre le match',
                                 style: const TextStyle(
                                   color: Colors.white,

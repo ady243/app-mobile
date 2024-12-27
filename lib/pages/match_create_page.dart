@@ -24,7 +24,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   TimeOfDay? _matchTime;
   TimeOfDay? _endTime;
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _numberOfPlayersController = TextEditingController();
+  final TextEditingController _numberOfPlayersController =
+      TextEditingController();
   final MatchService _matchService = MatchService();
   final String _googleApiKey = 'AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg';
 
@@ -39,32 +40,35 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     super.dispose();
   }
 
-  Future<void> _createMatch(DateTime? matchDate, TimeOfDay? matchTime, TimeOfDay? endTime) async {
-    print('Creating match with:');
-    print('Date: $matchDate');
-    print('Start Time: $matchTime');
-    print('End Time: $endTime');
-
+  Future<void> _createMatch(
+      DateTime? matchDate, TimeOfDay? matchTime, TimeOfDay? endTime) async {
     if (matchDate == null || matchTime == null || endTime == null) {
-      Fluttertoast.showToast(msg: 'Veuillez sélectionner une date, une heure de début et une heure de fin.');
+      Fluttertoast.showToast(
+          msg:
+              'Veuillez sélectionner une date, une heure de début et une heure de fin.');
       return;
     }
 
-    if (_descriptionController.text.isEmpty || _addressController.text.isEmpty) {
-      Fluttertoast.showToast(msg: 'Veuillez remplir tous les champs obligatoires.');
+    if (_descriptionController.text.isEmpty ||
+        _addressController.text.isEmpty) {
+      Fluttertoast.showToast(
+          msg: 'Veuillez remplir tous les champs obligatoires.');
       return;
     }
 
     final int? numberOfPlayers = int.tryParse(_numberOfPlayersController.text);
     if (numberOfPlayers == null || numberOfPlayers <= 0) {
-      Fluttertoast.showToast(msg: 'Veuillez entrer un nombre valide de joueurs.');
+      Fluttertoast.showToast(
+          msg: 'Veuillez entrer un nombre valide de joueurs.');
       return;
     }
 
     // Formatage de la date et des heures
     final String matchDateStr = DateFormat('yyyy-MM-dd').format(matchDate);
-    final String matchTimeStr = DateFormat('HH:mm:ss').format(DateTime(0, 1, 1, matchTime!.hour, matchTime.minute));
-    final String endTimeStr = DateFormat('HH:mm:ss').format(DateTime(0, 1, 1, endTime!.hour, endTime.minute));
+    final String matchTimeStr = DateFormat('HH:mm:ss')
+        .format(DateTime(0, 1, 1, matchTime!.hour, matchTime.minute));
+    final String endTimeStr = DateFormat('HH:mm:ss')
+        .format(DateTime(0, 1, 1, endTime!.hour, endTime.minute));
 
     Map<String, dynamic> matchData = {
       'description': _descriptionController.text,
@@ -78,6 +82,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     try {
       await _matchService.createMatch(matchData);
       Fluttertoast.showToast(msg: 'Match créé avec succès !');
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
     } catch (e) {
       Fluttertoast.showToast(msg: 'Erreur lors de la création du match : $e');
@@ -93,7 +98,19 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         _fetchMatches();
       });
     } catch (e) {
-      Fluttertoast.showToast(msg: 'Erreur lors de la suppression du match : $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la suppression du match',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
   }
 
@@ -124,12 +141,24 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         }
       }
     } catch (error) {
-      print('Erreur lors de la récupération des suggestions : $error');
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la recherche d\'adresse',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
   }
 
   void _openBottomSheet(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../pages/user_profile.dart';
@@ -10,6 +12,7 @@ class MatchInfoTab extends StatefulWidget {
   final List<Map<String, dynamic>> participants;
   final String? selectedParticipantId;
   final ValueChanged<String?> onParticipantSelected;
+  final VoidCallback onLeaveMatch;
 
   const MatchInfoTab({
     Key? key,
@@ -18,6 +21,7 @@ class MatchInfoTab extends StatefulWidget {
     required this.participants,
     required this.selectedParticipantId,
     required this.onParticipantSelected,
+    required this.onLeaveMatch,
   }) : super(key: key);
 
   @override
@@ -29,6 +33,8 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
   late Future<List<Map<String, dynamic>>> _matchPlayers;
   String? _refereeId;
   bool _isOrganizer = false;
+  bool _isParticipant = false;
+  String? _organizerUsername;
 
   @override
   void initState() {
@@ -36,18 +42,44 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
     _matchDetails = MatchService().getMatchDetails(widget.matchId);
     _matchPlayers = MatchService().getMatchPlayers(widget.matchId);
     _checkIfOrganizer();
+    _checkIfParticipant();
   }
 
   void _checkIfOrganizer() async {
     final userInfo = await AuthService().getUserInfo();
-    print('User Info: $userInfo');
-    print('Organizer ID: ${widget.organizerId}');
     if (userInfo != null && userInfo['id'] == widget.organizerId) {
       setState(() {
         _isOrganizer = true;
       });
     }
-    print('Is Organizer: $_isOrganizer');
+  }
+
+  void _checkIfParticipant() async {
+    try {
+      final userInfo = await AuthService().getUserInfo();
+      if (userInfo != null && userInfo.containsKey('id')) {
+        final players = await MatchService().getMatchPlayers(widget.matchId);
+        final isParticipant =
+            players.any((player) => player['id'] == userInfo['id']);
+        setState(() {
+          _isParticipant = isParticipant;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la vérification de la participation au match',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
   }
 
   String _formatDate(String date) {
@@ -71,17 +103,53 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
 
   void _assignReferee(String participantId) async {
     try {
-      print('Assigning referee: matchId=${widget.matchId}, participantId=$participantId');
       await MatchService().assignReferee(widget.matchId, participantId);
       setState(() {
         _refereeId = participantId;
       });
     } catch (e) {
-      print('Erreur lors de l\'attribution de l\'arbitre: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
             'Erreur lors de l\'attribution de l\'arbitre',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _leaveMatch() async {
+    try {
+      await MatchService().leaveMatch(widget.matchId);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Vous avez quitté le match avec succès',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      setState(() {
+        _isParticipant = false;
+      });
+      widget.onLeaveMatch(); // Appel du callback onLeaveMatch
+      Navigator.pop(context); // Retourner à la page précédente
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la tentative de quitter le match',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
@@ -117,96 +185,121 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
           final matchDate = matchDetails['date'] ?? 'No Date';
           final matchTime = matchDetails['time'] ?? 'No Time';
           _refereeId = matchDetails['referee_id'];
+          final organizerUsername =
+              matchDetails['organizer']['username'] ?? widget.organizerId;
 
-          print('Match Details: $matchDetails');
-          print('Referee ID: $_refereeId');
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.description, color: Colors.blue),
-                    const SizedBox(width: 8.0),
-                    Expanded(child: Text('Titre: $description')),
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, color: Colors.red),
-                    const SizedBox(width: 8.0),
-                    Expanded(child: Text('Adresse: $address')),
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today, color: Colors.green),
-                    const SizedBox(width: 8.0),
-                    Expanded(child: Text('Date: ${_formatDate(matchDate)}')),
-                  ],
-                ),
-                const SizedBox(height: 8.0),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, color: Colors.orange),
-                    const SizedBox(width: 8.0),
-                    Expanded(child: Text('Heure: ${_formatTime(matchTime)}')),
-                  ],
-                ),
-                const SizedBox(height: 16.0),
-                Text('Organisateur: ${widget.organizerId}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8.0),
-                const SizedBox(height: 16.0),
-                const Text('Participants:', style: TextStyle(fontWeight: FontWeight.bold)),
-                FutureBuilder<List<Map<String, dynamic>>>(
-                  future: _matchPlayers,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Erreur: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Text('Pas encore de participants dans ce match.');
-                    } else {
-                      final participants = snapshot.data!;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: participants.map<Widget>((participant) {
-                          return ListTile(
-                            leading: const Icon(Icons.person),
-                            title: Row(
-                              children: [
-                                Text(participant['username'] ?? 'Unknown'),
-                                if (participant['id'] == _refereeId)
-                                  const Icon(Icons.star, color: Colors.yellow),
-                              ],
-                            ),
-                            trailing: _isOrganizer
-                                ? ElevatedButton(
-                                    onPressed: () => _assignReferee(participant['id']),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      foregroundColor: buttonTextColor,
-                                      side: BorderSide(color: buttonBorderColor),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8.0),
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.description, color: Colors.blue),
+                      const SizedBox(width: 8.0),
+                      Expanded(child: Text('Titre: $description')),
+                    ],
+                  ),
+                  const SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, color: Colors.red),
+                      const SizedBox(width: 8.0),
+                      Expanded(child: Text('Adresse: $address')),
+                    ],
+                  ),
+                  const SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      const Icon(Icons.calendar_today, color: Colors.green),
+                      const SizedBox(width: 8.0),
+                      Expanded(child: Text('Date: ${_formatDate(matchDate)}')),
+                    ],
+                  ),
+                  const SizedBox(height: 8.0),
+                  Row(
+                    children: [
+                      const Icon(Icons.access_time, color: Colors.orange),
+                      const SizedBox(width: 8.0),
+                      Expanded(child: Text('Heure: ${_formatTime(matchTime)}')),
+                    ],
+                  ),
+                  const SizedBox(height: 16.0),
+                  Text('Organisateur: $organizerUsername',
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8.0),
+                  const SizedBox(height: 16.0),
+                  const Text('Participants:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _matchPlayers,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text('Erreur: ${snapshot.error}'));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Text(
+                            'Pas encore de participants dans ce match.');
+                      } else {
+                        final participants = snapshot.data!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: participants.map<Widget>((participant) {
+                            return ListTile(
+                              leading: const Icon(Icons.person),
+                              title: Row(
+                                children: [
+                                  Text(participant['username'] ?? 'Unknown'),
+                                  if (participant['id'] == _refereeId)
+                                    const Icon(Icons.star,
+                                        color: Colors.yellow),
+                                ],
+                              ),
+                              trailing: _isOrganizer
+                                  ? ElevatedButton(
+                                      onPressed: () =>
+                                          _assignReferee(participant['id']),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        foregroundColor: buttonTextColor,
+                                        side: BorderSide(
+                                            color: buttonBorderColor),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8.0),
+                                        ),
                                       ),
-                                    ),
-                                    child: const Text('Nommer Arbitre'),
-                                  )
-                                : null,
-                            onTap: () => _navigateToUserProfile(participant['id']),
-                          );
-                        }).toList(),
-                      );
-                    }
-                  },
-                ),
-              ],
+                                      child: const Text('Nommer Arbitre'),
+                                    )
+                                  : null,
+                              onTap: () =>
+                                  _navigateToUserProfile(participant['id']),
+                            );
+                          }).toList(),
+                        );
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  if (_isParticipant)
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: _leaveMatch,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        child: const Text('Quitter le match'),
+                      ),
+                    ),
+                ],
+              ),
             ),
           );
         }
