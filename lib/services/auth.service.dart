@@ -58,9 +58,13 @@ class AuthService {
         data: {'refreshToken': refreshToken},
       );
 
-      if (response.statusCode == 200 && response.data['accessToken'] != null && response.data['refreshToken'] != null) {
-        await _storage.write(key: 'accessToken', value: response.data['accessToken']);
-        await _storage.write(key: 'refreshToken', value: response.data['refreshToken']);
+      if (response.statusCode == 200 &&
+          response.data['accessToken'] != null &&
+          response.data['refreshToken'] != null) {
+        await _storage.write(
+            key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(
+            key: 'refreshToken', value: response.data['refreshToken']);
       } else {
         throw Exception('Erreur lors du rafraîchissement du token.');
       }
@@ -93,20 +97,19 @@ class AuthService {
         },
       );
 
-      print('Réponse de l\'API: ${response.data}');
-
-      if (response.statusCode == 200 && response.data['accessToken'] != null && response.data['refreshToken'] != null) {
-        await _storage.write(key: 'accessToken', value: response.data['accessToken']);
-        await _storage.write(key: 'refreshToken', value: response.data['refreshToken']);
+      if (response.statusCode == 200 &&
+          response.data['accessToken'] != null &&
+          response.data['refreshToken'] != null) {
+        await _storage.write(
+            key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(
+            key: 'refreshToken', value: response.data['refreshToken']);
       } else {
         throw Exception('Erreur lors de la connexion : token non fourni.');
       }
     } catch (e) {
-      if (e is DioException) {
-        print('Erreur de connexion: ${e.response?.statusCode} - ${e.response?.data}');
-      } else {
-        print('Erreur inattendue: $e');
-      }
+      if (e is DioError) {
+      } else {}
       rethrow;
     }
   }
@@ -119,9 +122,13 @@ class AuthService {
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
-      if (response.statusCode == 200 && response.data['accessToken'] != null && response.data['refreshToken'] != null) {
-        await _storage.write(key: 'accessToken', value: response.data['accessToken']);
-        await _storage.write(key: 'refreshToken', value: response.data['refreshToken']);
+      if (response.statusCode == 200 &&
+          response.data['accessToken'] != null &&
+          response.data['refreshToken'] != null) {
+        await _storage.write(
+            key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(
+            key: 'refreshToken', value: response.data['refreshToken']);
         return true;
       } else {
         throw Exception('Erreur lors de la connexion avec Google.');
@@ -167,21 +174,19 @@ class AuthService {
           } else if (response.statusCode == 429) {
             retryCount++;
             if (retryCount < maxRetries) {
-              print('Rate limit exceeded. Retrying in $delay seconds...');
               await Future.delayed(Duration(seconds: delay));
               delay *= 2;
             } else {
-              print('Max retries reached. Rate limit exceeded.');
               throw Exception('Rate limit exceeded. Please try again later.');
             }
           } else {
-            throw Exception('Error retrieving user info: ${response.statusCode}');
+            throw Exception(
+                'Erreur lors de la récupération des informations utilisateur');
           }
         } else {
           throw Exception('User not logged in.');
         }
       } catch (e) {
-        print('Error retrieving user info: $e');
         return null;
       }
     }
@@ -199,10 +204,10 @@ class AuthService {
       if (response.statusCode == 200) {
         return response.data;
       } else {
-        throw Exception('Erreur lors de la récupération des détails de l\'utilisateur');
+        throw Exception(
+            'Erreur lors de la récupération des détails de l\'utilisateur');
       }
     } catch (e) {
-      print('Erreur lors de la récupération des détails de l\'utilisateur: $e');
       return null;
     }
   }
@@ -217,7 +222,8 @@ class AuthService {
       if (response.statusCode == 200) {
         return response.data;
       } else {
-        throw Exception('Erreur lors de la mise à jour des informations utilisateur: ${response.statusCode}');
+        throw Exception(
+            'Erreur lors de la mise à jour des informations utilisateur: ${response.statusCode}');
       }
     } catch (e) {
       return null;
@@ -259,7 +265,8 @@ class AuthService {
       if (response.statusCode == 200) {
         await logout();
       } else {
-        throw Exception('Erreur lors de la suppression du compte utilisateur: ${response.statusCode}');
+        throw Exception(
+            'Erreur lors de la suppression du compte utilisateur: ${response.statusCode}');
       }
     } catch (e) {
       print('Erreur lors de la suppression du compte utilisateur: $e');
@@ -278,7 +285,8 @@ class AuthService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
+        throw Exception(
+            'Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
       }
     } catch (e) {
       print('Erreur lors de l\'affectation du rôle utilisateur: $e');
@@ -293,7 +301,8 @@ class AuthService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Erreur lors de la vérification du rôle utilisateur: ${response.statusCode}');
+        throw Exception(
+            'Erreur lors de la vérification du rôle utilisateur: ${response.statusCode}');
       }
     } catch (e) {
       print('Erreur lors de la vérification du rôle utilisateur: $e');
@@ -312,7 +321,8 @@ class AuthService {
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
+        throw Exception(
+            'Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
       }
     } catch (e) {
       print('Erreur lors de l\'affectation du rôle utilisateur: $e');

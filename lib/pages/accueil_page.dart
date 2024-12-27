@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -11,7 +10,6 @@ import 'MatchDetailsPage.dart';
 import '../components/MatchCard.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart' show ByteData, rootBundle;
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class AccueilPage extends StatefulWidget {
   const AccueilPage({super.key});
@@ -32,13 +30,10 @@ class _AccueilPageState extends State<AccueilPage> {
   BitmapDescriptor? _customMarkerIcon;
   String? _userId;
   Timer? _timer;
-  Timer? _socketTimer;
-  final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
     super.initState();
-    _initializeNotifications();
     _fetchUserAndMatches();
     _loadCustomMarker();
     _startAutoRefresh();
@@ -46,103 +41,14 @@ class _AccueilPageState extends State<AccueilPage> {
 
   @override
   void dispose() {
-    _matchService.closeWebSocket();
     _timer?.cancel();
-    _socketTimer?.cancel();
     super.dispose();
   }
 
-  void _initializeNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('app_icon');
-
-    final DarwinInitializationSettings initializationSettingsIOS =
-        DarwinInitializationSettings();
-
-    final InitializationSettings initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsIOS);
-
-    await _flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onDidReceiveNotificationResponse: selectNotification);
-  }
-
-  Future<void> onDidReceiveLocalNotification(
-      int id, String? title, String? body, String? payload) async {
-    // handle your actions
-  }
-
-  Future<void> selectNotification(NotificationResponse notificationResponse) async {
-    // handle your actions
-  }
-
   void _startAutoRefresh() {
-    _timer = Timer.periodic(Duration(minutes: 1), (timer) {
+    _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _fetchMatches();
     });
-  }
-
-  void _scheduleSocketConnection(DateTime matchDateTime) {
-    final now = DateTime.now();
-    if (matchDateTime.isAfter(now)) {
-      final durationUntilMatch = matchDateTime.difference(now);
-      _socketTimer = Timer(durationUntilMatch, () {
-        _connectWebSocket();
-      });
-    } else {
-      _connectWebSocket();
-    }
-  }
-
-  void _connectWebSocket() {
-    _matchService.connectWebSocket((data) {
-      final matchId = data['match_id'];
-      final status = data['status'];
-
-      setState(() {
-        final matchIndex = _matches.indexWhere((match) => match['id'] == matchId);
-        if (matchIndex != -1) {
-          _matches[matchIndex]['status'] = status;
-          if (_joinedMatches.contains(matchId)) {
-            _showNotification(matchId, status);
-          }
-        }
-      });
-    });
-  }
-
-  void _showNotification(String matchId, String status) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails('your_channel_id', 'your_channel_name',
-            importance: Importance.max,
-            priority: Priority.high,
-            ticker: 'ticker');
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-
-    String title = 'Mise à jour du match';
-    String body = '';
-
-    switch (status) {
-      case 'upcoming':
-        body = 'Le match $matchId est à venir.';
-        break;
-      case 'ongoing':
-        body = 'Le match $matchId a commencé.';
-        break;
-      case 'completed':
-        body = 'Le match $matchId est terminé.';
-        break;
-      case 'expired':
-        body = 'Le match $matchId a expiré.';
-        break;
-      default:
-        body = 'Statut inconnu pour le match $matchId.';
-    }
-
-    await _flutterLocalNotificationsPlugin.show(
-        0, title, body, platformChannelSpecifics,
-        payload: 'item x');
   }
 
   void _fetchUserAndMatches() async {
@@ -173,7 +79,6 @@ class _AccueilPageState extends State<AccueilPage> {
   void _fetchMatches() async {
     try {
       final matches = await _matchService.getMatches();
-      print('Matches fetched: $matches');
       setState(() {
         _matches = matches;
         _isLoading = false;
@@ -184,7 +89,6 @@ class _AccueilPageState extends State<AccueilPage> {
       setState(() {
         _isLoading = false;
       });
-      print('Erreur lors de la récupération des matchs: $e');
     }
   }
 
@@ -194,14 +98,12 @@ class _AccueilPageState extends State<AccueilPage> {
       final matchDateTime = _parseDateTime(match['date'], match['time']);
       final endDateTime = _parseDateTime(match['date'], match['end_time']);
       if (matchDateTime != null && endDateTime != null) {
-        print('Match DateTime: $matchDateTime, Now: $now');
         if (now.isAfter(endDateTime)) {
           match['status'] = 'completed';
         } else if (now.isAfter(matchDateTime) && now.isBefore(endDateTime)) {
           match['status'] = 'ongoing';
         } else {
           match['status'] = 'upcoming';
-          _scheduleSocketConnection(matchDateTime);
         }
       }
     }
@@ -211,25 +113,27 @@ class _AccueilPageState extends State<AccueilPage> {
   DateTime? _parseDateTime(String date, String time) {
     try {
       final dateTimeString = '${date.split('T')[0]}T${time.split('T')[1]}';
-      print('Parsing DateTime: $dateTimeString');
       return DateTime.parse(dateTimeString);
     } catch (e) {
-      print('Erreur lors de la conversion de la date et de l\'heure: $e');
       return null;
     }
   }
 
-  Future<BitmapDescriptor> _resizeImage(String assetPath, int width, int height) async {
+  Future<BitmapDescriptor> _resizeImage(
+      String assetPath, int width, int height) async {
     ByteData data = await rootBundle.load(assetPath);
-    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width, targetHeight: height);
+    ui.Codec codec = await ui.instantiateImageCodec(data.buffer.asUint8List(),
+        targetWidth: width, targetHeight: height);
     ui.FrameInfo fi = await codec.getNextFrame();
-    ByteData? resizedData = await fi.image.toByteData(format: ui.ImageByteFormat.png);
+    ByteData? resizedData =
+        await fi.image.toByteData(format: ui.ImageByteFormat.png);
     // ignore: deprecated_member_use
     return BitmapDescriptor.fromBytes(resizedData!.buffer.asUint8List());
   }
 
   void _loadCustomMarker() async {
-    final BitmapDescriptor markerIcon = await _resizeImage('assets/logos/grey_logo.png', 200, 200);
+    final BitmapDescriptor markerIcon =
+        await _resizeImage('assets/logos/grey_logo.png', 200, 200);
     setState(() {
       _customMarkerIcon = markerIcon;
     });
@@ -238,7 +142,6 @@ class _AccueilPageState extends State<AccueilPage> {
   void _setMarkers() async {
     _markers.clear();
     for (var match in _matches) {
-      final String description = match['description'] ?? 'No Description';
       final String matchId = match['id']?.toString() ?? '';
       final String address = match['address'] ?? 'No Address';
 
@@ -246,9 +149,6 @@ class _AccueilPageState extends State<AccueilPage> {
         final coordinates = await _matchService.getCoordinates(address);
         final double latitude = coordinates['latitude'];
         final double longitude = coordinates['longitude'];
-
-        print('Match: $description, Latitude: $latitude, Longitude: $longitude');
-
         final marker = Marker(
           markerId: MarkerId(matchId),
           position: LatLng(latitude, longitude),
@@ -262,7 +162,7 @@ class _AccueilPageState extends State<AccueilPage> {
 
         _markers.add(marker);
       } catch (e) {
-        print('Erreur lors de la récupération des coordonnées: $e');
+        // Handle error
       }
     }
     setState(() {});
@@ -283,14 +183,76 @@ class _AccueilPageState extends State<AccueilPage> {
       });
       _saveJoinedMatches(playerId);
 
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous avez rejoint le match !')),
+        SnackBar(
+          content: const Text(
+            'Vous avez rejoint le match avec succès !',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     } catch (e) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Erreur lors de la tentative de rejoindre le match.')),
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la jointure du match',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _leaveMatch(String matchId) async {
+    try {
+      await _matchService.leaveMatch(matchId);
+      final userInfo = await _authService.getUserInfo();
+      if (userInfo != null && userInfo.containsKey('id')) {
+        setState(() {
+          _joinedMatches.remove(matchId);
+          _selectedMatch = null;
+        });
+        _saveJoinedMatches(userInfo['id']);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Vous avez quitté le match avec succès',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la tentative de quitter le match',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     }
   }
@@ -307,11 +269,10 @@ class _AccueilPageState extends State<AccueilPage> {
   Future<void> _setMapStyle() async {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     if (themeProvider.isDarkTheme) {
-      final String style = await rootBundle.loadString('assets/map_style_dark.json');
-      // ignore: deprecated_member_use
+      final String style =
+          await rootBundle.loadString('assets/map_style_dark.json');
       _mapController.setMapStyle(style);
     } else {
-      // ignore: deprecated_member_use
       _mapController.setMapStyle(null);
     }
   }
@@ -326,7 +287,7 @@ class _AccueilPageState extends State<AccueilPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Mes Matchs',
+          'Accueil',
           style: TextStyle(color: Colors.white, fontSize: 20),
         ),
         centerTitle: true,
@@ -336,14 +297,12 @@ class _AccueilPageState extends State<AccueilPage> {
         children: [
           Container(
             color: themeProvider.primaryColor,
-            padding: const EdgeInsets.only(top: 20.0),
+            padding: const EdgeInsets.only(top: 0.0),
             width: double.infinity,
-            height: 90,
+            height: 95,
             child: Center(
               child: Image.asset(
                 'assets/logos/grey_logo.png',
-                height: 100,
-                width: 100,
               ),
             ),
           ),
@@ -375,21 +334,34 @@ class _AccueilPageState extends State<AccueilPage> {
                               left: 16,
                               right: 16,
                               child: GestureDetector(
-                                onTap: () => _navigateToMatchDetails(_selectedMatch!['id'].toString()),
+                                onTap: () => _navigateToMatchDetails(
+                                    _selectedMatch!['id'].toString()),
                                 child: Stack(
                                   children: [
                                     MatchCard(
-                                      description: _truncateText(_selectedMatch!['description'] ?? '', 24),
+                                      description: _truncateText(
+                                          _selectedMatch!['description'] ?? '',
+                                          24),
                                       matchDate: _selectedMatch!['date'] ?? '',
                                       matchTime: _selectedMatch!['time'] ?? '',
-                                      endTime: _selectedMatch!['end_time'] ?? '',
-                                      address: _truncateText(_selectedMatch!['address'] ?? '', 24),
+                                      endTime:
+                                          _selectedMatch!['end_time'] ?? '',
+                                      address: _truncateText(
+                                          _selectedMatch!['address'] ?? '', 24),
                                       status: _selectedMatch!['status'] ?? '',
-                                      numberOfPlayers: _selectedMatch!['number_of_players'] ?? 0,
-                                      isJoined: _joinedMatches.contains(_selectedMatch!['id']),
-                                      isOrganizer: _selectedMatch!['organizer_id'] == _userId,
-                                      onJoin: () => _joinMatch(_selectedMatch!['id']),
-                                      joinedMatches: _joinedMatches, // Passer la liste des matchs rejoints
+                                      numberOfPlayers: _selectedMatch![
+                                              'number_of_players'] ??
+                                          0,
+                                      isOrganizer:
+                                          _selectedMatch!['organizer_id'] ==
+                                              _userId,
+                                      onJoin: () =>
+                                          _joinMatch(_selectedMatch!['id']),
+                                      onLeave: () =>
+                                          _leaveMatch(_selectedMatch!['id']),
+                                      joinedMatches: _joinedMatches,
+                                      matchId: _selectedMatch!['id'].toString(),
+                                      userId: _userId!,
                                     ),
                                     Positioned(
                                       top: 8,
