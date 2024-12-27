@@ -1,15 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:teamup/services/auth.service.dart';
+import 'package:teamup/utils/basUrl.dart';
 
 class EventService {
   final AuthService authService;
   EventService(this.authService);
 
   Future<void> addEventToMatch(String matchId, String eventType, String player, int minute) async {
-    final url = Uri.parse('http://localhost:8080/matches/$matchId/events'); // A adapter
+    final url = Uri.parse('$baseUrl/matches/$matchId/events');
     final body = {
-      'type': eventType, // ex: "goal", "yellow_card", ...
+      'type': eventType,
       'player': player,
       'minute': minute,
     };

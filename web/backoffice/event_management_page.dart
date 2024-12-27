@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import '../../lib/utils/basUrl.dart';
+
+const String baseUrl = "http://192.168.1.160:3003/api";
 
 class EventManagementPage extends StatefulWidget {
   final String matchId;

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:teamup/services/auth.service.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class LoginPageAnalyst extends StatefulWidget {
+  const LoginPageAnalyst({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<LoginPageAnalyst> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPageAnalyst> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final AuthService _authService = AuthService();

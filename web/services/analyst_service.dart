@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import '../../lib/utils/basUrl.dart';
+import 'package:teamup/utils/basUrl.dart';
+
 
 class AnalystService {
   final Dio _dio = Dio();
