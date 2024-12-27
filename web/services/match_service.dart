@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:teamup/services/auth.service.dart';
+import 'package:teamup/utils/basUrl.dart';
 
 class MatchService {
   final AuthService authService;
   MatchService(this.authService);
 
   Future<List<Map<String, dynamic>>> getRefereeMatches() async {
-    final url = Uri.parse('http://localhost:8080/referee/matches'); // A adapter
+    final url = Uri.parse('$baseUrl/matches/referee/matches');
     final response = await http.get(url, headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ${authService.getToken}'
