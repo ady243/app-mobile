@@ -134,7 +134,6 @@ class AuthService {
         throw Exception('Erreur lors de la connexion avec Google.');
       }
     } catch (e) {
-      print('Erreur lors de la connexion avec Google: $e');
       return false;
     }
   }
@@ -154,7 +153,6 @@ class AuthService {
         throw Exception('Erreur lors de l\'inscription.');
       }
     } catch (e) {
-      print('Erreur d\'inscription: $e');
       rethrow;
     }
   }
@@ -235,7 +233,6 @@ class AuthService {
       await _storage.delete(key: 'accessToken');
       await _storage.delete(key: 'refreshToken');
     } catch (e) {
-      print('Erreur lors de la déconnexion: $e');
       rethrow;
     }
   }
@@ -245,7 +242,6 @@ class AuthService {
       final accessToken = await _storage.read(key: 'accessToken');
       return accessToken != null;
     } catch (e) {
-      print('Erreur lors de la vérification de connexion: $e');
       return false;
     }
   }
@@ -254,7 +250,6 @@ class AuthService {
     try {
       return await _storage.read(key: 'accessToken');
     } catch (e) {
-      print('Erreur lors de la récupération du token: $e');
       return null;
     }
   }
@@ -269,63 +264,6 @@ class AuthService {
             'Erreur lors de la suppression du compte utilisateur: ${response.statusCode}');
       }
     } catch (e) {
-      print('Erreur lors de la suppression du compte utilisateur: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> assignRole(String userId, String role) async {
-    try {
-      final response = await _dio.put(
-        '$baseUrl/assignRole',
-        data: {
-          'userId': userId,
-          'role': role,
-        },
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Erreur lors de l\'affectation du rôle utilisateur: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> checkRole(String userId) async {
-    try {
-      final response = await _dio.get(
-        '$baseUrl/CheckAndResetRole',
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Erreur lors de la vérification du rôle utilisateur: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Erreur lors de la vérification du rôle utilisateur: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> updateRole(String userId, String role) async {
-    try {
-      final response = await _dio.put(
-        '$baseUrl/updateRole',
-        data: {
-          'userId': userId,
-          'role': role,
-        },
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception(
-            'Erreur lors de l\'affectation du rôle utilisateur: ${response.statusCode}');
-      }
-    } catch (e) {
-      print('Erreur lors de l\'affectation du rôle utilisateur: $e');
       rethrow;
     }
   }
