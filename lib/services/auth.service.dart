@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import '../utils/basUrl.dart';
+import '../utils/baseUrl.dart';
 
 class AuthService {
   final Dio _dio = Dio();
@@ -265,6 +265,23 @@ class AuthService {
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getAllUsers() async {
+    try {
+      final accessToken = await _storage.read(key: 'accessToken');
+      final response = await _dio.get(
+        '$baseUrl/users',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception('Erreur lors de la récupération des utilisateurs.');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération des utilisateurs: $e');
     }
   }
 }

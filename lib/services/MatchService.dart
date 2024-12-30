@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../utils/basUrl.dart';
+import '../utils/baseUrl.dart';
 import 'auth.service.dart';
 
 class MatchService {

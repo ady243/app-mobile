@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:teamup/pages/friend_page.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
+import '../pages/chat_list_page.dart'; // Import de la page de liste de chat
 import 'SideNav.dart';
 import '../components/theme_provider.dart';
 // ignore: depend_on_referenced_packages
@@ -21,16 +23,17 @@ class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    AccueilPage(),
-    CreateMatchPage(),
-    UserProfilePage(),
-    SettingPage(),
+  static final List<Widget> _widgetOptions = <Widget>[
+    const AccueilPage(),
+    const FriendsPage(),
+    const CreateMatchPage(),
+    const ChatListPage(), // Ajout de la page de liste de chat
+    const SettingPage(), // Ajout de la page de paramètres
   ];
 
   void _onItemTapped(int index) {
     setState(() {
-      if (index == 2) {
+      if (index == 4) {
         _scaffoldKey.currentState?.openEndDrawer();
       } else {
         _selectedIndex = index;
@@ -54,21 +57,30 @@ class _BottomNavBarState extends State<BottomNavBar> {
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            // ignore: deprecated_member_use
             icon: FaIcon(FontAwesomeIcons.home, color: themeProvider.iconColor),
             label: 'Accueil',
           ),
           BottomNavigationBarItem(
-            // ignore: deprecated_member_use
-            icon: FaIcon(FontAwesomeIcons.plusCircle, color: themeProvider.iconColor),
+            icon: FaIcon(FontAwesomeIcons.userFriends,
+                color: themeProvider.iconColor),
+            label: 'Amis',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.plusCircle,
+                color: themeProvider.iconColor),
             label: 'Créer',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.comments,
+                color: themeProvider.iconColor),
+            label: 'Chat', // Ajout de l'élément de navigation pour le chat
           ),
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.bars, color: themeProvider.iconColor),
             label: 'Menu',
           ),
         ],
-        currentIndex: _selectedIndex < 2 ? _selectedIndex : 0,
+        currentIndex: _selectedIndex,
         selectedItemColor: themeProvider.selectedLabelColor,
         unselectedItemColor: themeProvider.unselectedLabelColor,
         selectedLabelStyle: TextStyle(

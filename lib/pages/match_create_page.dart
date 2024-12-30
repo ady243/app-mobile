@@ -63,12 +63,11 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       return;
     }
 
-    // Formatage de la date et des heures
     final String matchDateStr = DateFormat('yyyy-MM-dd').format(matchDate);
     final String matchTimeStr = DateFormat('HH:mm:ss')
-        .format(DateTime(0, 1, 1, matchTime!.hour, matchTime.minute));
+        .format(DateTime(0, 1, 1, matchTime.hour, matchTime.minute));
     final String endTimeStr = DateFormat('HH:mm:ss')
-        .format(DateTime(0, 1, 1, endTime!.hour, endTime.minute));
+        .format(DateTime(0, 1, 1, endTime.hour, endTime.minute));
 
     Map<String, dynamic> matchData = {
       'description': _descriptionController.text,
@@ -93,10 +92,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     try {
       await _matchService.deleteMatch(matchId);
       Fluttertoast.showToast(msg: 'Match supprimé avec succès !');
-      setState(() {
-        // Actualiser la liste des matchs après suppression
-        _fetchMatches();
-      });
+      setState(() {});
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -112,10 +108,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         ),
       );
     }
-  }
-
-  Future<void> _fetchMatches() async {
-    // Implémentez la logique pour récupérer les matchs créés par l'utilisateur
   }
 
   Future<void> _autoCompleteAddress(String query) async {

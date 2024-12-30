@@ -63,23 +63,35 @@ class _SideNavState extends State<SideNav> {
           Expanded(
             child: ListView(
               children: [
-                _buildListTile(FontAwesomeIcons.home, 'Accueil', Colors.blue, () => _onItemTap(0)),
-                _buildListTile(FontAwesomeIcons.plusCircle, 'Créer', Colors.green, () => _onItemTap(1)),
-                _buildListTile(FontAwesomeIcons.user, 'Profil', Colors.orange, () => _onItemTap(2)),
-                _buildListTile(FontAwesomeIcons.bell, 'Notifications', Colors.red, () {
+                _buildListTile(FontAwesomeIcons.home, 'Accueil', Colors.blue,
+                    () => _onItemTap(0)),
+                _buildListTile(FontAwesomeIcons.userFriends, 'Amis',
+                    Colors.green, () => _onItemTap(1)),
+                _buildListTile(FontAwesomeIcons.plusCircle, 'Créer',
+                    Colors.orange, () => _onItemTap(2)),
+                _buildListTile(
+                    FontAwesomeIcons.comments,
+                    'Chat',
+                    Colors.pink,
+                    () => _onItemTap(
+                        3)), // Ajout de l'élément de navigation pour le chat
+                _buildListTile(FontAwesomeIcons.user, 'Profil', Colors.red,
+                    () => _onItemTap(4)),
+                _buildListTile(FontAwesomeIcons.cog, 'Paramètres',
+                    Colors.purple, () => _onItemTap(5)),
+                _buildListTile(
+                    FontAwesomeIcons.questionCircle, 'Aide', Colors.teal, () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Notifications en cours de développement')),
+                    const SnackBar(
+                        content: Text('Aide en cours de développement')),
                   );
                 }),
-                _buildListTile(FontAwesomeIcons.cog, 'Paramètres', Colors.purple, () => _onItemTap(3)),
-                _buildListTile(FontAwesomeIcons.questionCircle, 'Aide', Colors.teal, () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Aide en cours de développement')),
-                  );
-                }),
-                _buildListTile(FontAwesomeIcons.signOutAlt, 'Se déconnecter', Colors.brown, () {
+                _buildListTile(
+                    FontAwesomeIcons.signOutAlt, 'Se déconnecter', Colors.brown,
+                    () {
                   AuthService().logout();
-                  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                  Navigator.pushNamedAndRemoveUntil(
+                      context, '/login', (route) => false);
                 }),
               ],
             ),
@@ -89,7 +101,8 @@ class _SideNavState extends State<SideNav> {
     );
   }
 
-  ListTile _buildListTile(IconData icon, String title, Color iconColor, VoidCallback onTap) {
+  ListTile _buildListTile(
+      IconData icon, String title, Color iconColor, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, color: iconColor),
       title: Text(title),

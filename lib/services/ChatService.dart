@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/basUrl.dart';
+import '../utils/baseUrl.dart';
 import 'auth.service.dart';
 
 class ChatService {

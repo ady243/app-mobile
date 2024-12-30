@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:teamup/utils/basUrl.dart';
+import 'package:teamup/utils/baseUrl.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import '../services/MatchService.dart';
 
 class MatchCard extends StatefulWidget {
   final String description;
@@ -78,7 +77,6 @@ class _MatchCardState extends State<MatchCard> {
               '${widget.matchDate.split('T')[0]}T${widget.endTime.split('T')[1]}')
           : _matchDateTime.add(const Duration(hours: 1));
     } catch (e) {
-      print('Error parsing date/time: $e');
       _matchDateTime = DateTime.now();
       _endDateTime = DateTime.now();
     }
