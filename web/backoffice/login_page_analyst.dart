@@ -17,36 +17,57 @@ class _LoginPageState extends State<LoginPageAnalyst> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Analyst Login'),
+        title: const Text('TeamUp - Analyst Login'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailCtrl,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await _authService.login(_emailCtrl.text, _passCtrl.text);
-                  // Si aucun problème, on navigue
-                  Navigator.pushReplacementNamed(context, '/refereeDashboard', arguments: {'authService': _authService});
-                } catch (e) {
-                  // En cas d'échec de la connexion
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login failed')));
-                }
-              },
-              child: const Text('Login'),
-            )
-          ],
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                '../../assets/logos/logo_green.png',
+                height: 100,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Connectez-vous pour gérer les matchs !',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              TextField(
+                controller: _emailCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Mot de passe',
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    await _authService.login(_emailCtrl.text, _passCtrl.text);
+                    Navigator.pushReplacementNamed(context, '/analystDashboard');
+                  } catch (e) {
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(const SnackBar(content: Text('Échec de connexion')));
+                  }
+                },
+                child: const Text('Connexion'),
+              ),
+            ],
+          ),
         ),
       ),
     );

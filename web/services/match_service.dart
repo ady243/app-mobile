@@ -7,11 +7,15 @@ class MatchService {
   final AuthService authService;
   MatchService(this.authService);
 
-  Future<List<Map<String, dynamic>>> getRefereeMatches() async {
-    final url = Uri.parse('$baseUrl/matches/referee/matches');
+  Future<List<Map<String, dynamic>>> getAnalystMatches() async {
+    final token = await authService.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Aucun token disponible.');
+    }
+    final url = Uri.parse('$baseUrl/matches/analyst/matches');
     final response = await http.get(url, headers: {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer ${authService.getToken}'
+      'Authorization': 'Bearer $token'
     });
 
     if (response.statusCode == 200) {
@@ -19,22 +23,6 @@ class MatchService {
       return List<Map<String, dynamic>>.from(data);
     } else {
       throw Exception('Failed to fetch matches');
-    }
-  }
-
-  Future<void> recordEvent(String matchId, String eventType) async {
-    final url = Uri.parse('http://localhost:8080/matches/$matchId/events'); // A adapter
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${authService.getToken}'
-      },
-      body: json.encode({'eventType': eventType}),
-    );
-
-    if (response.statusCode != 201) {
-      throw Exception('Failed to record event');
     }
   }
 }
