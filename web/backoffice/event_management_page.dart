@@ -128,6 +128,118 @@ class _EventManagementPageState extends State<EventManagementPage> {
     }
   }
 
+  Future<void> _deleteEvent(String eventId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.delete(
+        '$baseUrl/analyst/events/$eventId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Événement supprimé avec succès !')),
+        );
+        _fetchMatchEvents();
+      } else {
+        throw Exception("Erreur lors de la suppression de l'événement.");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la suppression de l\'événement : $e')),
+      );
+    }
+  }
+
+  void _editEvent(Map<String, dynamic> event) {
+    String? selectedEventType = event['event_type'];
+    int? minute = event['minute'];
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Modifier l'événement"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<String>(
+                isExpanded: true,
+                value: selectedEventType,
+                items: _eventTypes.map((eventType) {
+                  return DropdownMenuItem<String>(
+                    value: eventType,
+                    child: Text(eventType),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    selectedEventType = value;
+                  });
+                },
+              ),
+              TextField(
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Minute"),
+                controller: TextEditingController(text: minute.toString()),
+                onChanged: (value) {
+                  minute = int.tryParse(value);
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Annuler"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _updateEvent(event['id'], selectedEventType, minute);
+              },
+              child: const Text("Enregistrer"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _updateEvent(String eventId, String? eventType, int? minute) async {
+    if (eventType == null || minute == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tous les champs doivent être renseignés.')),
+      );
+      return;
+    }
+
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.put(
+        '$baseUrl/analyst/events/$eventId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+        data: {
+          "event_type": eventType,
+          "minute": minute,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Événement modifié avec succès !')),
+        );
+        _fetchMatchEvents();
+      } else {
+        throw Exception("Erreur lors de la modification de l'événement.");
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la modification de l\'événement : $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -208,8 +320,20 @@ class _EventManagementPageState extends State<EventManagementPage> {
                   final event = _events[index];
                   return ListTile(
                     title: Text("Joueur : ${event['player']['username']}"),
-                    subtitle: Text(
-                        "${event['event_type']} à la ${event['minute']}e minute"),
+                    subtitle: Text("${event['event_type']} à la ${event['minute']}e minute"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () => _editEvent(event),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteEvent(event['id']),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
