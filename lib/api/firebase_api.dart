@@ -1,7 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:teamup/main.dart';
-import 'package:teamup/pages/chat_page.dart';
 
 class FirebaseApi {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -29,22 +27,12 @@ class FirebaseApi {
   void handleMessage(RemoteMessage? message) {
     if (message == null) return;
 
-    if (message.data['type'] == 'new_message') {
-      final senderId = message.data['senderID'];
-      final receiverId = message.data['receiverID'];
-      final content = message.data['content'];
-      final friendName = message.data['friendName'];
-      final receiverFcmToken = message.data['receiverFcmToken'];
-
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => ChatPage(
-            friendName: friendName,
-            senderId: receiverId,
-            receiverId: senderId,
-            receiverFcmToken: receiverFcmToken,
-          ),
-        ),
+    if (message.data['type'] == 'new_message' ||
+        message.data['type'] == 'friend_request' ||
+        message.data['type'] == 'match_update') {
+      navigatorKey.currentState?.pushNamed(
+        '/notification',
+        arguments: message,
       );
     }
   }

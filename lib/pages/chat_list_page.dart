@@ -131,7 +131,7 @@ class _ChatListPageState extends State<ChatListPage> {
                                       friendName: friend['username'],
                                       senderId: _currentUserId!,
                                       receiverId: friend['id'],
-                                      receiverFcmToken: friend['fcm_token'], // Ajoutez le token FCM du destinataire
+                                      receiverFcmToken: friend['fcm_token'],
                                     ),
                                   ),
                                 );

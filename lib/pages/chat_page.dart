@@ -43,9 +43,8 @@ class _ChatPageState extends State<ChatPage> {
           'createdAt': message.createdAt,
         }));
       });
-      print('Loaded messages: $_messages');
     } catch (e) {
-      print('Error loading messages: $e');
+      // ignore: empty_catches
     }
   }
 
@@ -68,8 +67,8 @@ class _ChatPageState extends State<ChatPage> {
           });
           _messageController.clear();
         });
+      // ignore: empty_catches
       } catch (e) {
-        print('Error sending message: $e');
       }
     }
   }

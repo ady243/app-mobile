@@ -1,10 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamup/components/theme_provider.dart';
 import 'package:teamup/services/auth.service.dart';
-import 'package:teamup/pages/chat_page.dart';
 import 'package:teamup/pages/notification_page.dart';
 import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/pages/signup_page.dart';
@@ -100,7 +98,9 @@ class _MyAppState extends State<MyApp> {
 
   void _setupFirebaseMessaging() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.notification != null) {}
+      if (message.notification != null) {
+        _showNotification(message);
+      }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
@@ -108,24 +108,31 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void _handleNotificationClick(RemoteMessage message) {
-    if (message.data['type'] == 'chat') {
-      final friendName = message.data['friendName'];
-      final senderId = message.data['senderId'];
-      final receiverId = message.data['receiverId'];
-      final receiverFcmToken = message.data['receiverFcmToken'];
-
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(
-          builder: (context) => ChatPage(
-            friendName: friendName,
-            senderId: senderId,
-            receiverId: receiverId,
-            receiverFcmToken: receiverFcmToken,
+  void _showNotification(RemoteMessage message) {
+    showDialog(
+      context: navigatorKey.currentContext!,
+      builder: (context) => AlertDialog(
+        title: Text(message.notification!.title ?? 'TeamUp'),
+        content:
+            Text(message.notification!.body ?? 'Vous avez reçu une notification'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _handleNotificationClick(message);
+            },
+            child: const Text('Voir'),
           ),
-        ),
-      );
-    }
+        ],
+      ),
+    );
+  }
+
+  void _handleNotificationClick(RemoteMessage message) {
+    navigatorKey.currentState?.pushNamed(
+      '/notification',
+      arguments: message,
+    );
   }
 
   @override
@@ -155,12 +162,6 @@ class _MyAppState extends State<MyApp> {
           '/signup': (context) => const SignupPage(),
           '/home': (context) => const EntryPoint(),
           '/notification': (context) => const NotificationPage(),
-          '/chat': (context) => ChatPage(
-                friendName: '',
-                senderId: '',
-                receiverId: '',
-                receiverFcmToken: '',
-              ),
         },
       ),
     );

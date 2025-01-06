@@ -5,7 +5,8 @@ import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
 import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
-import '../pages/chat_list_page.dart'; // Import de la page de liste de chat
+import '../pages/chat_list_page.dart';
+import '../pages/notification_page.dart'; // Import de la page de notification
 import 'SideNav.dart';
 import '../components/theme_provider.dart';
 // ignore: depend_on_referenced_packages
@@ -27,13 +28,14 @@ class _BottomNavBarState extends State<BottomNavBar> {
     const AccueilPage(),
     const FriendsPage(),
     const CreateMatchPage(),
-    const ChatListPage(), // Ajout de la page de liste de chat
+    const ChatListPage(),
+    const NotificationPage(), // Ajout de la page de notification
     const SettingPage(), // Ajout de la page de paramètres
   ];
 
   void _onItemTapped(int index) {
     setState(() {
-      if (index == 4) {
+      if (index == 5) {
         _scaffoldKey.currentState?.openEndDrawer();
       } else {
         _selectedIndex = index;
@@ -73,7 +75,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.comments,
                 color: themeProvider.iconColor),
-            label: 'Chat', // Ajout de l'élément de navigation pour le chat
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.bell, color: themeProvider.iconColor),
+            label:
+                'Notification', // Ajout de l'élément de navigation pour les notifications
           ),
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.bars, color: themeProvider.iconColor),

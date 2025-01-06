@@ -15,7 +15,6 @@ class ChatTab extends StatefulWidget {
   const ChatTab({super.key, required this.matchId});
 
   @override
-  // ignore: library_private_types_in_public_api
   _ChatTabState createState() => _ChatTabState();
 }
 
@@ -27,7 +26,6 @@ class _ChatTabState extends State<ChatTab> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _currentUserId;
-  String? _organizerId;
   Timer? _timer;
 
   @override
@@ -60,9 +58,7 @@ class _ChatTabState extends State<ChatTab> {
 
     final matchDetails = await _matchService.getMatchDetails(widget.matchId);
     if (matchDetails != null && matchDetails.containsKey('organizer_id')) {
-      setState(() {
-        _organizerId = matchDetails['organizer_id'];
-      });
+      setState(() {});
     }
   }
 
@@ -73,16 +69,16 @@ class _ChatTabState extends State<ChatTab> {
         _messages = messages;
       });
       _scrollToBottom();
-    // ignore: empty_catches
     } catch (e) {
-    
+      // Handle error
     }
   }
 
   void _sendMessage() async {
     if (_currentUserId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Impossible de récupérer l\'ID utilisateur')),
+        const SnackBar(
+            content: Text('Impossible de récupérer l\'ID utilisateur')),
       );
       return;
     }
@@ -166,7 +162,8 @@ class _ChatTabState extends State<ChatTab> {
               itemBuilder: (context, index) {
                 final message = _messages[index];
                 final isCurrentUser = message['userId'] == _currentUserId;
-                return _buildMessageBubble(message, isCurrentUser, themeProvider);
+                return _buildMessageBubble(
+                    message, isCurrentUser, themeProvider);
               },
             ),
           ),
@@ -175,14 +172,16 @@ class _ChatTabState extends State<ChatTab> {
           else
             const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('Vous ne pouvez pas envoyer de messages sans être connecté.'),
+              child: Text(
+                  'Vous ne pouvez pas envoyer de messages sans être connecté.'),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> message, bool isCurrentUser, ThemeProvider themeProvider) {
+  Widget _buildMessageBubble(Map<String, dynamic> message, bool isCurrentUser,
+      ThemeProvider themeProvider) {
     final username = message['username'] ?? 'Utilisateur';
     final userId = message['userId'] ?? '';
     final messageText = message['message'] ?? '';
@@ -191,7 +190,8 @@ class _ChatTabState extends State<ChatTab> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isCurrentUser) _buildAvatar(userId, username),
@@ -209,12 +209,15 @@ class _ChatTabState extends State<ChatTab> {
                 ),
               ),
               child: Column(
-                crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isCurrentUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   if (!isCurrentUser)
                     Text(
                       username,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   const SizedBox(height: 4),
                   Text(
@@ -267,7 +270,8 @@ class _ChatTabState extends State<ChatTab> {
       child: _currentUserId == null
           ? const Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('Vous ne pouvez pas envoyer de messages sans être connecté.'),
+              child: Text(
+                  'Vous ne pouvez pas envoyer de messages sans être connecté.'),
             )
           : Row(
               children: [
@@ -282,7 +286,8 @@ class _ChatTabState extends State<ChatTab> {
                       decoration: const InputDecoration(
                         hintText: 'Entrez votre message...',
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                       ),
                     ),
                   ),

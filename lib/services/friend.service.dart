@@ -55,8 +55,8 @@ class FriendService {
       final response = await _dio.post(
         '$baseUrl/friend/accept',
         data: jsonEncode({
-          'senderId': senderId,
-          'receiverId': receiverId,
+          'sender_id': senderId,
+          'receiver_id': receiverId,
         }),
         options: Options(
           headers: {
@@ -88,8 +88,8 @@ class FriendService {
       final response = await _dio.post(
         '$baseUrl/friend/decline',
         data: jsonEncode({
-          'senderId': senderId,
-          'receiverId': receiverId,
+          'sender_id': senderId,
+          'receiver_id': receiverId,
         }),
         options: Options(
           headers: {

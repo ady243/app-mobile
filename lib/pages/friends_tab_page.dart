@@ -79,8 +79,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       });
       _fetchAllUsers();
       _fetchFriends();
+    // ignore: empty_catches
     } catch (e) {
-      print('Failed to fetch current user info: $e');
     }
   }
 
