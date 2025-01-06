@@ -17,6 +17,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:toastification/toastification.dart';
 import 'package:uni_links/uni_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 import 'UserProvider/user_provider.dart';
 
@@ -28,16 +29,27 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialisation d'EasyLocalization
+  await EasyLocalization.ensureInitialized();
+
+  // Initialisation de Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FirebaseApi().initNotifications();
+
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        ChangeNotifierProvider(create: (_) => UserProvider()),
-      ],
-      child: const MyApp(),
+    EasyLocalization(
+      supportedLocales: const [Locale('en', 'US'), Locale('fr', 'FR')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en', 'US'),
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => UserProvider()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -81,7 +93,6 @@ class _MyAppState extends State<MyApp> {
           _handleDeepLink(uri);
         }
       }, onError: (err) {});
-      // ignore: empty_catches
     } catch (e) {}
     final initialUri = await getInitialUri();
     if (initialUri != null) {
@@ -136,18 +147,11 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         useInheritedMediaQuery: true,
-        locale: DevicePreview.locale(context),
+        locale: context.locale,
         builder: DevicePreview.appBuilder,
         theme: themeProvider.isDarkTheme ? ThemeData.dark() : ThemeData.light(),
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: [
-          const Locale('en', 'US'),
-          const Locale('fr', 'FR'),
-        ],
+        localizationsDelegates: context.localizationDelegates,
+        supportedLocales: context.supportedLocales,
         initialRoute: _isLoggedIn ? '/home' : '/login',
         navigatorKey: navigatorKey,
         routes: {
@@ -156,11 +160,11 @@ class _MyAppState extends State<MyApp> {
           '/home': (context) => const EntryPoint(),
           '/notification': (context) => const NotificationPage(),
           '/chat': (context) => ChatPage(
-                friendName: '',
-                senderId: '',
-                receiverId: '',
-                receiverFcmToken: '',
-              ),
+            friendName: '',
+            senderId: '',
+            receiverId: '',
+            receiverFcmToken: '',
+          ),
         },
       ),
     );

@@ -1,0 +1,15 @@
+{
+  "settings": "Paramètres",
+  "general": "Général",
+  "language": "Langue",
+  "theme_change": "Changer le thème",
+  "account": "Compte",
+  "username": "Nom d'utilisateur",
+  "choose_language": "Choisir une langue",
+  "language_set_fr": "Langue définie sur Français",
+  "language_set_en": "Langue définie sur Anglais",
+  "edit_field": "Modifier {0}",
+  "enter_new_value": "Entrez une nouvelle valeur pour {0}",
+  "cancel": "Annuler",
+  "save": "Sauvegarder"
+}

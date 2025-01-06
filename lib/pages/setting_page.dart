@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../components/theme_provider.dart';
 import '../services/auth.service.dart';
 
@@ -24,7 +25,7 @@ class _SettingPageState extends State<SettingPage> {
   final TextEditingController _bioController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _favoriteSportController =
-      TextEditingController();
+  TextEditingController();
 
   @override
   void initState() {
@@ -74,13 +75,9 @@ class _SettingPageState extends State<SettingPage> {
           _favoriteSport = updatedUser['favorite_sport'];
         });
       }
-      // ignore: empty_catches
-    } catch (e) {}
-  }
-
-  String _truncateText(String? text, int length) {
-    if (text == null) return '';
-    return text.length > length ? '${text.substring(0, length)}...' : text;
+    } catch (e) {
+      // Handle error
+    }
   }
 
   @override
@@ -89,18 +86,18 @@ class _SettingPageState extends State<SettingPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Paramètres'),
+        title: const Text('settings').tr(),
         backgroundColor: themeProvider.primaryColor,
       ),
       body: SettingsList(
         sections: [
           SettingsSection(
-            title: const Text('Général'),
+            title: const Text('general').tr(),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: const Icon(Icons.language),
-                title: const Text('Langue'),
-                value: const Text('Français'),
+                title: const Text('language').tr(),
+                value: Text(context.locale.languageCode == 'en' ? 'English' : 'Français'),
                 onPressed: (context) {
                   _showLanguageDialog(context);
                 },
@@ -111,120 +108,64 @@ class _SettingPageState extends State<SettingPage> {
                 },
                 initialValue: themeProvider.isDarkTheme,
                 leading: const Icon(Icons.format_paint),
-                title: const Text('Changer le thème'),
+                title: const Text('theme_change').tr(),
               ),
             ],
           ),
           SettingsSection(
-            title: const Text('Compte'),
+            title: const Text('account').tr(),
             tiles: <SettingsTile>[
               SettingsTile.navigation(
                 leading: const Icon(Icons.person),
-                title: const Text('Nom d\'utilisateur'),
-                value: Text(
-                  _truncateText(_username, 10),
-                  overflow: TextOverflow.ellipsis,
-                ),
+                title: const Text('username').tr(),
+                value: Text(_username ?? ''),
                 onPressed: (context) {
-                  _openEditDialog(
-                      context, 'Nom d\'utilisateur', _usernameController);
+                  _openEditDialog(context, 'username'.tr(), _usernameController);
                 },
               ),
-              SettingsTile.navigation(
-                leading: const Icon(Icons.email),
-                title: const Text('Adresse e-mail'),
-                value: Text(
-                  _truncateText(_email, 10),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onPressed: (context) {
-                  _openEditDialog(context, 'Adresse e-mail', _emailController);
-                },
-              ),
-              SettingsTile.navigation(
-                leading: const Icon(Icons.info),
-                title: const Text('Bio'),
-                value: Text(
-                  _truncateText(_bio, 10),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onPressed: (context) {
-                  _openEditDialog(context, 'Bio', _bioController);
-                },
-              ),
-              SettingsTile.navigation(
-                leading: const Icon(Icons.location_on),
-                title: const Text('Localisation'),
-                value: Text(
-                  _truncateText(_location, 10),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onPressed: (context) {
-                  _openEditDialog(context, 'Localisation', _locationController);
-                },
-              ),
-              SettingsTile.navigation(
-                leading: const Icon(Icons.sports_soccer),
-                title: const Text('Sport préféré'),
-                value: Text(
-                  _truncateText(_favoriteSport, 10),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onPressed: (context) {
-                  _openEditDialog(
-                      context, 'Sport préféré', _favoriteSportController);
-                },
-              ),
+              // Add more account settings here
             ],
           ),
-          SettingsSection(
-            title: const Text('Actions'),
-            tiles: <SettingsTile>[
-              SettingsTile.navigation(
-                title: const Text('Se déconnecter'),
-                leading: const Icon(Icons.exit_to_app),
-                onPressed: (context) {
-                  AuthService().logout();
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/login', (route) => false);
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('choose_language').tr(),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text('Français'),
+                onTap: () {
+                  context.setLocale(const Locale('fr', 'FR'));
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('language_set_fr').tr(),
+                    ),
+                  );
                 },
               ),
-              SettingsTile.navigation(
-                title: const Text('Supprimer le compte'),
-                leading: const Icon(Icons.delete),
-                onPressed: (context) {
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('Confirmer la suppression'),
-                        content: const Text(
-                            'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Annuler'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              AuthService().deleteAccount();
-                              Navigator.pushNamedAndRemoveUntil(
-                                  context, '/login', (route) => false);
-                            },
-                            child: const Text('Supprimer'),
-                          ),
-                        ],
-                      );
-                    },
+              ListTile(
+                title: const Text('English'),
+                onTap: () {
+                  context.setLocale(const Locale('en', 'US'));
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('language_set_en').tr(),),
                   );
                 },
               ),
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -234,62 +175,28 @@ class _SettingPageState extends State<SettingPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Modifier $field'),
+          title: Text('edit_field'.tr(args: [field])),
           content: TextField(
             controller: controller,
             decoration: InputDecoration(
-                hintText: 'Entrez une nouvelle valeur pour $field'),
+              hintText: 'enter_new_value'.tr(args: [field]),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Annuler'),
+              child: const Text('cancel').tr(),
             ),
             TextButton(
               onPressed: () {
                 _updateUser();
                 Navigator.of(context).pop();
               },
-              child: const Text('Sauvegarder'),
+              child: const Text('save').tr(),
             ),
           ],
-        );
-      },
-    );
-  }
-
-  void _showLanguageDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Choisir une langue'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: const Text('Français'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Langue définie sur Français')),
-                  );
-                },
-              ),
-              ListTile(
-                title: const Text('Anglais'),
-                onTap: () {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Langue définie sur Anglais')),
-                  );
-                },
-              ),
-            ],
-          ),
         );
       },
     );

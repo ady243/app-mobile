@@ -1,0 +1,15 @@
+{
+  "settings": "Settings",
+  "general": "General",
+  "language": "Language",
+  "theme_change": "Change Theme",
+  "account": "Account",
+  "username": "Username",
+  "choose_language": "Choose a Language",
+  "language_set_fr": "Language set to French",
+  "language_set_en": "Language set to English",
+  "edit_field": "Edit {0}",
+  "enter_new_value": "Enter a new value for {0}",
+  "cancel": "Cancel",
+  "save": "Save"
+}
