@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../services/auth.service.dart';
 import 'package:provider/provider.dart';
+import 'package:easy_localization/easy_localization.dart';
+
+import '../services/auth.service.dart';
 import '../components/theme_provider.dart';
 
 class SideNav extends StatefulWidget {
@@ -63,23 +65,20 @@ class _SideNavState extends State<SideNav> {
           Expanded(
             child: ListView(
               children: [
-                _buildListTile(FontAwesomeIcons.home, 'Accueil', Colors.blue,
-                    () => _onItemTap(0)),
-                _buildListTile(FontAwesomeIcons.userFriends, 'Amis',
+                _buildListTile(FontAwesomeIcons.home, tr('home'), Colors.blue,
+                        () => _onItemTap(0)),
+                _buildListTile(FontAwesomeIcons.userFriends, tr('friends'),
                     Colors.green, () => _onItemTap(1)),
-                _buildListTile(FontAwesomeIcons.plusCircle, 'Créer',
+                _buildListTile(FontAwesomeIcons.plusCircle, tr('create'),
                     Colors.orange, () => _onItemTap(2)),
-                _buildListTile(FontAwesomeIcons.comments, 'Chat', Colors.pink,
-                    () => _onItemTap(3)),
-                _buildListTile(FontAwesomeIcons.cog, 'Paramètres',
+                _buildListTile(FontAwesomeIcons.comments, tr('chat'),
+                    Colors.pink, () => _onItemTap(3)),
+                _buildListTile(FontAwesomeIcons.cog, tr('settings'),
                     Colors.purple, () => _onItemTap(5)),
+                _buildListTile(FontAwesomeIcons.bell, tr('notification'),
+                    Colors.teal, () => _onItemTap(4)),
                 _buildListTile(
-                    FontAwesomeIcons.bell, 'Notification', Colors.teal, () {
-                  _onItemTap(4);
-                }),
-                _buildListTile(
-                    FontAwesomeIcons.signOutAlt, 'Se déconnecter', Colors.brown,
-                    () {
+                    FontAwesomeIcons.signOutAlt, tr('logout'), Colors.brown, () {
                   AuthService().logout();
                   Navigator.pushNamedAndRemoveUntil(
                       context, '/login', (route) => false);
