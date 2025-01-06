@@ -4,6 +4,8 @@ import 'package:toastification/toastification.dart';
 class ToastComponent {
   static void showToast(
       BuildContext context, String message, ToastificationType type) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
     toastification.show(
       context: context,
       type: type,
@@ -46,7 +48,7 @@ class ToastComponent {
       dragToClose: true,
       applyBlurEffect: true,
       callbacks: ToastificationCallbacks(
-        onTap: (toastItem) => ScaffoldMessenger.of(context).showSnackBar(
+        onTap: (toastItem) => scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
               'Toast ${toastItem.id} tapped',
@@ -57,8 +59,7 @@ class ToastComponent {
             ),
           ),
         ),
-        onCloseButtonTap: (toastItem) =>
-            ScaffoldMessenger.of(context).showSnackBar(
+        onCloseButtonTap: (toastItem) => scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
                 'Toast ${toastItem.id} closed by tapping the close button'),
@@ -68,8 +69,7 @@ class ToastComponent {
             ),
           ),
         ),
-        onAutoCompleteCompleted: (toastItem) =>
-            ScaffoldMessenger.of(context).showSnackBar(
+        onAutoCompleteCompleted: (toastItem) => scaffoldMessenger.showSnackBar(
           SnackBar(
             content: const Text(
               'Auto complete completed',
@@ -80,7 +80,7 @@ class ToastComponent {
             ),
           ),
         ),
-        onDismissed: (toastItem) => ScaffoldMessenger.of(context).showSnackBar(
+        onDismissed: (toastItem) => scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text(
               'Toast ${toastItem.id} dismissed',

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:teamup/api/firebase_api.dart';
 import '../utils/baseUrl.dart';
 
 class AuthService {
@@ -89,11 +90,13 @@ class AuthService {
 
   Future<void> login(String email, String password) async {
     try {
+      final fcmToken = await FirebaseApi().retrieveFCMToken();
       final response = await _dio.post(
         '$baseUrl/login',
         data: {
           'email': email,
           'password': password,
+          'fcm_token': fcmToken,
         },
       );
 
@@ -104,6 +107,8 @@ class AuthService {
             key: 'accessToken', value: response.data['accessToken']);
         await _storage.write(
             key: 'refreshToken', value: response.data['refreshToken']);
+        await _storage.write(
+            key: 'fcmToken', value: fcmToken); // Stocker le token FCM
       } else {
         throw Exception('Erreur lors de la connexion : token non fourni.');
       }
@@ -116,9 +121,10 @@ class AuthService {
 
   Future<bool> loginWithGoogle(String idToken) async {
     try {
+      final fcmToken = await FirebaseApi().retrieveFCMToken();
       final response = await _dio.post(
         '$baseUrl/auth/google/callback',
-        data: jsonEncode({'idToken': idToken}),
+        data: jsonEncode({'idToken': idToken, 'fcm_token': fcmToken}),
         options: Options(headers: {'Content-Type': 'application/json'}),
       );
 
@@ -129,6 +135,8 @@ class AuthService {
             key: 'accessToken', value: response.data['accessToken']);
         await _storage.write(
             key: 'refreshToken', value: response.data['refreshToken']);
+        await _storage.write(
+            key: 'fcmToken', value: fcmToken); // Stocker le token FCM
         return true;
       } else {
         throw Exception('Erreur lors de la connexion avec Google.');
@@ -232,6 +240,7 @@ class AuthService {
     try {
       await _storage.delete(key: 'accessToken');
       await _storage.delete(key: 'refreshToken');
+      // Ne pas supprimer le token FCM
     } catch (e) {
       rethrow;
     }
@@ -256,7 +265,9 @@ class AuthService {
 
   Future<void> deleteAccount() async {
     try {
-      final response = await _dio.delete('$baseUrl/deleteMyAccount');
+      final accessToken = await _storage.read(key: 'accessToken');
+      final response = await _dio.delete('$baseUrl/deleteMyAccount',
+          options: Options(headers: {'Authorization': 'Bearer $accessToken'}));
       if (response.statusCode == 200) {
         await logout();
       } else {

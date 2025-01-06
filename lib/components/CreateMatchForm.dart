@@ -90,7 +90,9 @@ class _CreateMatchFormState extends State<CreateMatchForm> {
               border: OutlineInputBorder(),
             ),
             child: Text(
-              _matchDate != null ? DateFormat('dd/MM/yyyy').format(_matchDate!) : 'Date',
+              _matchDate != null
+                  ? DateFormat('dd/MM/yyyy').format(_matchDate!)
+                  : 'Date',
             ),
           ),
         ),
@@ -113,7 +115,9 @@ class _CreateMatchFormState extends State<CreateMatchForm> {
               border: OutlineInputBorder(),
             ),
             child: Text(
-              _matchTime != null ? _matchTime!.format(context) : 'Heure de début',
+              _matchTime != null
+                  ? _matchTime!.format(context)
+                  : 'Heure de début',
             ),
           ),
         ),
@@ -149,7 +153,7 @@ class _CreateMatchFormState extends State<CreateMatchForm> {
           ),
           onChanged: (query) {
             if (_debounce?.isActive ?? false) _debounce!.cancel();
-            _debounce = Timer(const Duration(seconds: 1), () {
+            _debounce = Timer(const Duration(seconds: 3), () {
               widget.autoCompleteAddress(query);
             });
           },

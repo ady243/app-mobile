@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:teamup/models/message.dart';
+import 'package:teamup/services/friendChat.service.dart';
 
 class ChatPage extends StatefulWidget {
   final String friendName;
+  final String senderId;
+  final String receiverId;
+  final String receiverFcmToken;
 
-  const ChatPage({super.key, required this.friendName});
+  const ChatPage({
+    super.key,
+    required this.friendName,
+    required this.senderId,
+    required this.receiverId,
+    required this.receiverFcmToken,
+  });
 
   @override
   _ChatPageState createState() => _ChatPageState();
@@ -12,16 +24,53 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final List<Map<String, dynamic>> _messages = [];
   final TextEditingController _messageController = TextEditingController();
+  final FriendChatService _friendChatService = FriendChatService();
 
-  void _sendMessage() {
-    if (_messageController.text.isNotEmpty) {
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
+
+  Future<void> _loadMessages() async {
+    try {
+      List<Message> messages = await _friendChatService.getMessages(
+          widget.senderId, widget.receiverId);
       setState(() {
-        _messages.add({
-          'text': _messageController.text,
-          'isSentByMe': true,
-        });
-        _messageController.clear();
+        _messages.addAll(messages.map((message) => {
+          'text': message.content,
+          'isSentByMe': message.senderId == widget.senderId,
+          'createdAt': message.createdAt,
+        }));
       });
+      print('Loaded messages: $_messages');
+    } catch (e) {
+      print('Error loading messages: $e');
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    if (_messageController.text.isNotEmpty) {
+      final newMessage = Message(
+        senderId: widget.senderId,
+        receiverId: widget.receiverId,
+        content: _messageController.text,
+        createdAt: DateTime.now(),
+      );
+
+      try {
+        await _friendChatService.sendMessage(newMessage);
+        setState(() {
+          _messages.add({
+            'text': _messageController.text,
+            'isSentByMe': true,
+            'createdAt': newMessage.createdAt,
+          });
+          _messageController.clear();
+        });
+      } catch (e) {
+        print('Error sending message: $e');
+      }
     }
   }
 
@@ -39,6 +88,8 @@ class _ChatPageState extends State<ChatPage> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages[index];
+                final formattedDate =
+                DateFormat('dd/MM/yyyy HH:mm').format(message['createdAt']);
                 return Align(
                   alignment: message['isSentByMe']
                       ? Alignment.centerRight
@@ -53,13 +104,28 @@ class _ChatPageState extends State<ChatPage> {
                           : Colors.grey[300],
                       borderRadius: BorderRadius.circular(20.0),
                     ),
-                    child: Text(
-                      message['text'],
-                      style: TextStyle(
-                        color: message['isSentByMe']
-                            ? Colors.white
-                            : Colors.black87,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          message['text'],
+                          style: TextStyle(
+                            color: message['isSentByMe']
+                                ? Colors.white
+                                : Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 5.0),
+                        Text(
+                          formattedDate,
+                          style: TextStyle(
+                            color: message['isSentByMe']
+                                ? Colors.white70
+                                : Colors.black54,
+                            fontSize: 10.0,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );

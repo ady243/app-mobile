@@ -75,10 +75,8 @@ class _SideNavState extends State<SideNav> {
                     Colors.pink,
                     () => _onItemTap(
                         3)), // Ajout de l'élément de navigation pour le chat
-                _buildListTile(FontAwesomeIcons.user, 'Profil', Colors.red,
-                    () => _onItemTap(4)),
                 _buildListTile(FontAwesomeIcons.cog, 'Paramètres',
-                    Colors.purple, () => _onItemTap(5)),
+                    Colors.purple, () => _onItemTap(4)),
                 _buildListTile(
                     FontAwesomeIcons.questionCircle, 'Aide', Colors.teal, () {
                   ScaffoldMessenger.of(context).showSnackBar(

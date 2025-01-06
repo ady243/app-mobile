@@ -17,11 +17,12 @@ class MatchCard extends StatefulWidget {
   final int numberOfPlayers;
   final bool isOrganizer;
   final VoidCallback? onTap;
-  final VoidCallback onJoin;
-  final VoidCallback onLeave;
+  final VoidCallback? onJoin;
+  final VoidCallback? onLeave;
   final Set<String> joinedMatches;
   final String matchId;
   final String userId;
+  final bool showJoinLeaveButtons;
 
   const MatchCard({
     super.key,
@@ -34,11 +35,12 @@ class MatchCard extends StatefulWidget {
     required this.numberOfPlayers,
     required this.isOrganizer,
     this.onTap,
-    required this.onJoin,
-    required this.onLeave,
+    this.onJoin,
+    this.onLeave,
     required this.joinedMatches,
     required this.matchId,
     required this.userId,
+    this.showJoinLeaveButtons = true,
   });
 
   @override
@@ -386,7 +388,7 @@ class _MatchCardState extends State<MatchCard> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  if (_status != 'completed')
+                  if (widget.showJoinLeaveButtons && _status != 'completed')
                     Align(
                       alignment: Alignment.centerRight,
                       child: widget.isOrganizer

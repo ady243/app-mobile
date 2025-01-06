@@ -46,6 +46,7 @@ ThemeData darkThemeData(BuildContext context) {
       selectedIconTheme: const IconThemeData(color: kPrimaryColor),
       showUnselectedLabels: true,
     ),
+
   );
 }
 

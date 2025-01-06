@@ -16,10 +16,6 @@ class _FriendsPageState extends State<FriendsPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Mes Amis',
-          style: TextStyle(color: Colors.white, fontSize: 20),
-        ),
         centerTitle: true,
         backgroundColor: themeProvider.primaryColor,
       ),

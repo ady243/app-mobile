@@ -52,6 +52,9 @@ class FriendChatService {
     final token = userInfo['refresh_token'];
 
     try {
+      print(
+          'Fetching messages for senderId: $senderId and receiverId: $receiverId');
+
       final response = await _dio.get(
         '$baseUrl/message/messages/$senderId/$receiverId',
         options: Options(
@@ -60,6 +63,9 @@ class FriendChatService {
           },
         ),
       );
+
+      print('Response status code: ${response.statusCode}');
+      print('Response data: ${response.data}');
 
       if (response.statusCode == 200) {
         List<dynamic> body = response.data;

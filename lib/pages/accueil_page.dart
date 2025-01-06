@@ -286,10 +286,6 @@ class _AccueilPageState extends State<AccueilPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Accueil',
-          style: TextStyle(color: Colors.white, fontSize: 20),
-        ),
         centerTitle: true,
         backgroundColor: themeProvider.primaryColor,
       ),

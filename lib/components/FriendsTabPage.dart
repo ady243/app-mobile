@@ -9,7 +9,6 @@ import 'package:teamup/services/friend.service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FriendsTabPage extends StatefulWidget {
   const FriendsTabPage({super.key});
@@ -41,9 +40,9 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _fetchCurrentUser();
     _searchController.addListener(_onSearchChanged);
 
-    print('Connecting to WebSocket at ws://192.168.1.160:3003/ws');
-    _channel =
-        WebSocketChannel.connect(Uri.parse('ws://192.168.1.160:3003/ws'));
+    print('Connecting to WebSocket at ws://api-teamup.onrender.com/ws');
+    _channel = WebSocketChannel.connect(
+        Uri.parse('ws://api-teamup.onrender.com/ws'));
 
     _channel.stream.listen((message) {
       // Handle WebSocket messages
@@ -61,7 +60,6 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       }
     });
 
-    // Mettre à jour la liste des demandes d'amis toutes les 2 secondes
     _timer = Timer.periodic(Duration(seconds: 2), (timer) {
       _fetchFriendRequests();
     });
@@ -132,9 +130,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
             .toList();
         _hasNewFriendRequests = _friendRequests.isNotEmpty;
         for (var request in requests) {
-          if (request['sender_id'] == _currentUserId) {
-            _friendRequestStatus[request['receiver_id']] = request['status'];
-          } else if (request['receiver_id'] == _currentUserId) {
+          if (request['receiver_id'] == _currentUserId) {
             _friendRequestStatus[request['sender_id']] = request['status'];
           }
         }
@@ -148,8 +144,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     setState(() {
       _filteredUsers = _allUsers
           .where((user) => user['username']
-              .toLowerCase()
-              .contains(_searchController.text.toLowerCase()))
+          .toLowerCase()
+          .contains(_searchController.text.toLowerCase()))
           .toList();
     });
   }
@@ -253,8 +249,6 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       print('Friend request sent successfully');
       setState(() {
         _friendRequestStatus[receiverId] = 'pending';
-        // Retirer l'utilisateur de la liste "Tous les utilisateurs"
-        _filteredUsers.removeWhere((user) => user['id'] == receiverId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -308,60 +302,75 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mes Amis'),
+        title: const Text('Team - relations',
+            style: TextStyle(
+              fontSize: 15,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            )),
         centerTitle: true,
         backgroundColor: themeProvider.primaryColor,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              child: Stack(
-                children: [
-                  const Tab(text: 'Demandes'),
-                  if (_hasNewFriendRequests)
-                    Positioned(
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: const Text(
-                          '',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
+      ),
+      body: Column(
+        children: [
+          const SizedBox(height: 8),
+          TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(
+                child: Stack(
+                  children: [
+                    const Tab(text: 'Demandes'),
+                    if (_hasNewFriendRequests)
+                      Positioned(
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(1),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          textAlign: TextAlign.center,
+                          constraints: const BoxConstraints(
+                            minWidth: 12,
+                            minHeight: 12,
+                          ),
+                          child: const Text(
+                            '',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Tab(text: 'Tous les utilisateurs'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          FriendRequestsTab(
-            friendRequests: _friendRequests,
-            onAccept: _acceptFriendRequest,
-            onDecline: _declineFriendRequest,
+              const Tab(text: 'Tous les utilisateurs'),
+            ],
+            indicatorColor: Colors.green,
+            labelColor: const Color(0xFF01BF6B),
+            unselectedLabelColor: Colors.green,
           ),
-          AllUsersTab(
-            users: _filteredUsers,
-            friends: _friends,
-            friendRequestStatus: _friendRequestStatus,
-            onSendRequest: _sendFriendRequest,
-            onUserTap: _navigateToUserProfile,
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                FriendRequestsTab(
+                  friendRequests: _friendRequests,
+                  onAccept: _acceptFriendRequest,
+                  onDecline: _declineFriendRequest,
+                ),
+                AllUsersTab(
+                  users: _filteredUsers,
+                  friends: _friends,
+                  friendRequestStatus: _friendRequestStatus,
+                  onSendRequest: _sendFriendRequest,
+                  onUserTap: _navigateToUserProfile,
+                ),
+              ],
+            ),
           ),
         ],
       ),

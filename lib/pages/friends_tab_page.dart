@@ -7,7 +7,6 @@ import 'package:teamup/services/friend.service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class FriendsTabPage extends StatefulWidget {
   const FriendsTabPage({super.key});
@@ -28,7 +27,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   final FriendService _friendService = FriendService();
   final TextEditingController _searchController = TextEditingController();
   String? _currentUserId;
-  Map<String, String> _friendRequestStatus = {};
+  final Map<String, String> _friendRequestStatus = {};
   bool _hasNewFriendRequests = false;
   Timer? _timer;
 
@@ -39,9 +38,9 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _fetchCurrentUser();
     _searchController.addListener(_onSearchChanged);
 
-    print('Connecting to WebSocket at ws://192.168.1.160:3003/ws');
-    _channel =
-        WebSocketChannel.connect(Uri.parse('ws://192.168.1.160:3003/ws'));
+    print('Connecting to WebSocket at ws:https://api-teamup.onrender.com/ws');
+    _channel = WebSocketChannel.connect(
+        Uri.parse('ws:https://api-teamup.onrender.com/ws'));
 
     _channel.stream.listen((message) {
       // Handle WebSocket messages
@@ -59,8 +58,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       }
     });
 
-    // Mettre à jour la liste des demandes d'amis toutes les 2 secondes
-    _timer = Timer.periodic(Duration(seconds: 2), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
       _fetchFriendRequests();
     });
   }
@@ -251,7 +249,6 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       print('Friend request sent successfully');
       setState(() {
         _friendRequestStatus[receiverId] = 'pending';
-        // Retirer l'utilisateur de la liste "Tous les utilisateurs"
         _filteredUsers.removeWhere((user) => user['id'] == receiverId);
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -306,7 +303,6 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     final themeProvider = Provider.of<ThemeProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mes Amis'),
         centerTitle: true,
         backgroundColor: themeProvider.primaryColor,
         bottom: TabBar(
@@ -394,9 +390,27 @@ class _FriendsTabPageState extends State<FriendsTabPage>
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: _searchController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Rechercher des utilisateurs',
-              border: OutlineInputBorder(),
+              labelStyle: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.bold,
+              ),
+              prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30.0),
+                borderSide: BorderSide(
+                  color: Colors.green,
+                  width: 2.0,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 15.0),
             ),
           ),
         ),
@@ -411,10 +425,14 @@ class _FriendsTabPageState extends State<FriendsTabPage>
 
               return ListTile(
                 leading: CircleAvatar(
-                  child: user['profile_picture'] != null &&
+                  backgroundImage: user['profile_picture'] != null &&
                           user['profile_picture'].isNotEmpty
-                      ? Image.network(user['profile_picture'])
-                      : const Icon(Icons.person),
+                      ? NetworkImage(user['profile_picture'])
+                      : null,
+                  child: user['profile_picture'] == null ||
+                          user['profile_picture'].isEmpty
+                      ? const Icon(Icons.person)
+                      : null,
                 ),
                 title: Text(user['username']),
                 trailing: isFriend

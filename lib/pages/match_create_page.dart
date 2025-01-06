@@ -185,30 +185,44 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Mes Matchs',
-            style: TextStyle(color: Colors.white, fontSize: 20),
-          ),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Mes matches créés'),
-              Tab(text: 'Créer un match'),
-            ],
-            indicatorColor: Colors.green,
-            labelColor: Color(0xFF01BF6B),
-            unselectedLabelColor: Colors.white,
-          ),
-          centerTitle: true,
-          backgroundColor: themeProvider.primaryColor,
-        ),
-        body: TabBarView(
-          children: [
-            MyCreatedMatchesPage(
-              onDeleteMatch: _deleteMatch,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(80.0),
+          child: AppBar(
+            backgroundColor: themeProvider.primaryColor,
+            title: const Text(
+              'Mes Matchs',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.white,
+              ),
             ),
-            CreateMatchPageContent(
-              openBottomSheet: _openBottomSheet,
+            centerTitle: true,
+          ),
+        ),
+        body: Column(
+          children: [
+            const SizedBox(height: 10),
+            const TabBar(
+              tabs: [
+                Tab(text: 'Mes matches créés'),
+                Tab(text: 'Créer un match'),
+              ],
+              indicatorColor: Colors.green,
+              labelColor: Color(0xFF01BF6B),
+              unselectedLabelColor: Colors.green,
+            ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  MyCreatedMatchesPage(
+                    onDeleteMatch: _deleteMatch,
+                  ),
+                  CreateMatchPageContent(
+                    openBottomSheet: _openBottomSheet,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
