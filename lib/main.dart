@@ -24,7 +24,6 @@ final navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  print("Handling a background message: ${message.messageId}");
 }
 
 void main() async {
@@ -81,12 +80,9 @@ class _MyAppState extends State<MyApp> {
         if (uri != null) {
           _handleDeepLink(uri);
         }
-      }, onError: (err) {
-        print('Failed to get the initial link: $err');
-      });
-    } catch (e) {
-      print('Failed to get the initial link: $e');
-    }
+      }, onError: (err) {});
+      // ignore: empty_catches
+    } catch (e) {}
     final initialUri = await getInitialUri();
     if (initialUri != null) {
       _handleDeepLink(initialUri);
@@ -97,7 +93,6 @@ class _MyAppState extends State<MyApp> {
     if (uri.path == '/api/confirm_email') {
       final token = uri.queryParameters['token'];
       if (token != null) {
-        print('Email confirmé avec le token: $token');
         Navigator.pushNamed(context, '/home');
       }
     }
@@ -105,16 +100,10 @@ class _MyAppState extends State<MyApp> {
 
   void _setupFirebaseMessaging() {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('Got a message whilst in the foreground!');
-      print('Message data: ${message.data}');
-
-      if (message.notification != null) {
-        print('Message also contained a notification: ${message.notification}');
-      }
+      if (message.notification != null) {}
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      print('Message clicked!');
       _handleNotificationClick(message);
     });
   }
@@ -167,11 +156,11 @@ class _MyAppState extends State<MyApp> {
           '/home': (context) => const EntryPoint(),
           '/notification': (context) => const NotificationPage(),
           '/chat': (context) => ChatPage(
-            friendName: '',
-            senderId: '',
-            receiverId: '',
-            receiverFcmToken: '',
-          ),
+                friendName: '',
+                senderId: '',
+                receiverId: '',
+                receiverFcmToken: '',
+              ),
         },
       ),
     );
