@@ -16,14 +16,21 @@ import 'package:device_preview/device_preview.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:toastification/toastification.dart';
 import 'package:uni_links/uni_links.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'UserProvider/user_provider.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FirebaseApi().initNotifications();
   runApp(
     MultiProvider(
@@ -52,6 +59,7 @@ class _MyAppState extends State<MyApp> {
     super.initState();
     _checkLoginStatus();
     initUniLinks();
+    _setupFirebaseMessaging();
   }
 
   @override
@@ -92,6 +100,42 @@ class _MyAppState extends State<MyApp> {
         print('Email confirmé avec le token: $token');
         Navigator.pushNamed(context, '/home');
       }
+    }
+  }
+
+  void _setupFirebaseMessaging() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Got a message whilst in the foreground!');
+      print('Message data: ${message.data}');
+
+      if (message.notification != null) {
+        print('Message also contained a notification: ${message.notification}');
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('Message clicked!');
+      _handleNotificationClick(message);
+    });
+  }
+
+  void _handleNotificationClick(RemoteMessage message) {
+    if (message.data['type'] == 'chat') {
+      final friendName = message.data['friendName'];
+      final senderId = message.data['senderId'];
+      final receiverId = message.data['receiverId'];
+      final receiverFcmToken = message.data['receiverFcmToken'];
+
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(
+          builder: (context) => ChatPage(
+            friendName: friendName,
+            senderId: senderId,
+            receiverId: receiverId,
+            receiverFcmToken: receiverFcmToken,
+          ),
+        ),
+      );
     }
   }
 
