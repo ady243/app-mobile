@@ -42,6 +42,7 @@ dependencies:
   firebase_messaging: ^15.1.6
   googleapis_auth: ^1.6.0
   go_router: ^6.0.0
+  easy_localization: ^3.0.1
 
 
 dev_dependencies:
@@ -60,5 +61,6 @@ flutter:
     - assets/images/image_empty.png
     - assets/images/marker.png
     - assets/map_style_dark.json
+    - assets/translations/
 
   uses-material-design: true
