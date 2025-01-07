@@ -6,7 +6,7 @@ import 'package:teamup/components/CreateMatchForm.dart';
 import 'package:teamup/components/CreateMatchPageContent.dart';
 import 'dart:convert';
 import 'dart:async';
-import '../services/MatchService.dart';
+import '../services/Match_service.dart';
 import 'my_match.dart';
 import 'package:provider/provider.dart';
 import '../components/theme_provider.dart';

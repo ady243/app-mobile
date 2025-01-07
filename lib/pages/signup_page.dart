@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:toastification/toastification.dart';
-import '../components/ToastComponent.dart';
 import '../services/auth.service.dart';
 import 'login_page.dart';
 
@@ -8,6 +6,7 @@ class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SignupPageState createState() => _SignupPageState();
 }
 
@@ -27,14 +26,35 @@ class _SignupPageState extends State<SignupPage> {
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (password != confirmPassword) {
-      ToastComponent.showToast(context,
-          "Les mots de passe ne correspondent pas", ToastificationType.error);
-      return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Les mots de passe ne correspondent pas',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
 
     if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      ToastComponent.showToast(context, "Veuillez remplir tous les champs",
-          ToastificationType.error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Veuillez remplir tous les champs',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
       return;
     }
 
@@ -73,16 +93,20 @@ class _SignupPageState extends State<SignupPage> {
         ),
       );
     } catch (e) {
-      ToastComponent.showToast(
-          context,
-          "Erreur lors de l'inscription : ${e.toString()}",
-          ToastificationType.error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la création du compte',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
-  }
-
-  bool _isEmailValid(String email) {
-    final emailRegExp = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    return emailRegExp.hasMatch(email);
   }
 
   @override

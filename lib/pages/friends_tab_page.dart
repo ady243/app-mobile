@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamup/components/theme_provider.dart';
-import 'package:teamup/services/friend.service.dart';
+import 'package:teamup/services/friend_service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -38,7 +38,6 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _fetchCurrentUser();
     _searchController.addListener(_onSearchChanged);
 
-    print('Connecting to WebSocket at ws:https://api-teamup.onrender.com/ws');
     _channel = WebSocketChannel.connect(
         Uri.parse('ws:https://api-teamup.onrender.com/ws'));
 
@@ -243,10 +242,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   }
 
   Future<void> _sendFriendRequest(String receiverId) async {
-    print('Sending friend request to $receiverId');
     try {
       await _friendService.sendFriendRequest(receiverId);
-      print('Friend request sent successfully');
       setState(() {
         _friendRequestStatus[receiverId] = 'pending';
         _filteredUsers.removeWhere((user) => user['id'] == receiverId);

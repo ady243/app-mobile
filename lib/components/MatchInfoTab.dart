@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../pages/user_profile.dart';
-import '../services/MatchService.dart';
+import '../services/Match_service.dart';
 import '../services/auth.service.dart';
 
 class MatchInfoTab extends StatefulWidget {

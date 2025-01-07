@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../components/BottomNavBar.dart';
+import 'package:teamup/components/BottomNavBar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

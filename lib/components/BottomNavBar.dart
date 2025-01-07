@@ -3,14 +3,14 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teamup/pages/friend_page.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
-import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
 import '../pages/chat_list_page.dart';
-import '../pages/notification_page.dart'; // Import de la page de notification
+import '../pages/notification_page.dart';
 import 'SideNav.dart';
 import '../components/theme_provider.dart';
-// ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:teamup/services/notification_service.dart';
 
 class BottomNavBar extends StatefulWidget {
   const BottomNavBar({super.key});
@@ -22,6 +22,8 @@ class BottomNavBar extends StatefulWidget {
 
 class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
+  bool _hasUnreadNotifications = false;
+  bool _hasUnreadMessages = false;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static final List<Widget> _widgetOptions = <Widget>[
@@ -29,9 +31,51 @@ class _BottomNavBarState extends State<BottomNavBar> {
     const FriendsPage(),
     const CreateMatchPage(),
     const ChatListPage(),
-    const NotificationPage(), // Ajout de la page de notification
-    const SettingPage(), // Ajout de la page de paramètres
+    const NotificationPage(),
+    const SettingPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _setupFirebaseMessaging();
+    _checkUnreadNotifications();
+  }
+
+  void _setupFirebaseMessaging() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      setState(() {
+        if (message.data['type'] == 'new_message') {
+          _hasUnreadMessages = true;
+        } else {
+          _hasUnreadNotifications = true;
+        }
+      });
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      setState(() {
+        if (message.data['type'] == 'new_message') {
+          _hasUnreadMessages = true;
+        } else {
+          _hasUnreadNotifications = true;
+        }
+      });
+    });
+  }
+
+  Future<void> _checkUnreadNotifications() async {
+    final notificationService =
+        Provider.of<NotificationService>(context, listen: false);
+    final token = await notificationService.getToken();
+    if (token != null) {
+      final notifications =
+          await notificationService.getUnreadNotifications(token);
+      setState(() {
+        _hasUnreadNotifications = notifications.isNotEmpty;
+      });
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -39,8 +83,24 @@ class _BottomNavBarState extends State<BottomNavBar> {
         _scaffoldKey.currentState?.openEndDrawer();
       } else {
         _selectedIndex = index;
+        if (index == 4) {
+          _hasUnreadNotifications = false;
+          _markNotificationsAsRead();
+        }
+        if (index == 3) {
+          _hasUnreadMessages = false;
+        }
       }
     });
+  }
+
+  Future<void> _markNotificationsAsRead() async {
+    final notificationService =
+        Provider.of<NotificationService>(context, listen: false);
+    final token = await notificationService.getToken();
+    if (token != null) {
+      await notificationService.markNotificationsAsRead(token);
+    }
   }
 
   void _onSideNavItemSelected(int index) {
@@ -73,14 +133,67 @@ class _BottomNavBarState extends State<BottomNavBar> {
             label: 'Créer',
           ),
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.comments,
-                color: themeProvider.iconColor),
+            icon: Stack(
+              children: [
+                FaIcon(FontAwesomeIcons.comments,
+                    color: themeProvider.iconColor),
+                if (_hasUnreadMessages)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(1),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: const Text(
+                        '',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.bell, color: themeProvider.iconColor),
-            label:
-                'Notification', // Ajout de l'élément de navigation pour les notifications
+            icon: Stack(
+              children: [
+                FaIcon(FontAwesomeIcons.bell, color: themeProvider.iconColor),
+                if (_hasUnreadNotifications)
+                  Positioned(
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(1),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: const Text(
+                        '',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            label: 'Notification',
           ),
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.bars, color: themeProvider.iconColor),

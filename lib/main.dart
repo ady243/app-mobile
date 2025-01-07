@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamup/components/theme_provider.dart';
 import 'package:teamup/services/auth.service.dart';
+import 'package:teamup/services/notification_service.dart';
 import 'package:teamup/pages/notification_page.dart';
 import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/pages/signup_page.dart';
@@ -29,11 +30,13 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FirebaseApi().initNotifications();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
+        Provider(create: (_) => NotificationService()),
       ],
       child: const MyApp(),
     ),
@@ -113,8 +116,8 @@ class _MyAppState extends State<MyApp> {
       context: navigatorKey.currentContext!,
       builder: (context) => AlertDialog(
         title: Text(message.notification!.title ?? 'TeamUp'),
-        content:
-            Text(message.notification!.body ?? 'Vous avez reçu une notification'),
+        content: Text(
+            message.notification!.body ?? 'Vous avez reçu une notification'),
         actions: [
           TextButton(
             onPressed: () {

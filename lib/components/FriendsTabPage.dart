@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:teamup/components/AllUsersTab.dart';
 import 'package:teamup/components/FriendRequestsTab.dart';
 import 'package:teamup/components/theme_provider.dart';
-import 'package:teamup/services/friend.service.dart';
+import 'package:teamup/services/friend_service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -29,9 +29,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   final FriendService _friendService = FriendService();
   final TextEditingController _searchController = TextEditingController();
   String? _currentUserId;
-  Map<String, String> _friendRequestStatus = {};
+  final Map<String, String> _friendRequestStatus = {};
   bool _hasNewFriendRequests = false;
-  Timer? _timer;
 
   @override
   void initState() {
@@ -41,8 +40,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _searchController.addListener(_onSearchChanged);
 
     print('Connecting to WebSocket at ws://api-teamup.onrender.com/ws');
-    _channel = WebSocketChannel.connect(
-        Uri.parse('ws://api-teamup.onrender.com/ws'));
+    _channel =
+        WebSocketChannel.connect(Uri.parse('ws://api-teamup.onrender.com/ws'));
 
     _channel.stream.listen((message) {
       // Handle WebSocket messages
@@ -59,17 +58,12 @@ class _FriendsTabPageState extends State<FriendsTabPage>
         }
       }
     });
-
-    _timer = Timer.periodic(Duration(seconds: 2), (timer) {
-      _fetchFriendRequests();
-    });
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _channel.sink.close();
-    _timer?.cancel();
     super.dispose();
   }
 
@@ -144,8 +138,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     setState(() {
       _filteredUsers = _allUsers
           .where((user) => user['username']
-          .toLowerCase()
-          .contains(_searchController.text.toLowerCase()))
+              .toLowerCase()
+              .contains(_searchController.text.toLowerCase()))
           .toList();
     });
   }
