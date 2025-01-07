@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:teamup/services/auth.service.dart';
+import '../services/authweb_service.dart';
 import '../services/match_service.dart';
 
 class AnalystDashboardPage extends StatefulWidget {
@@ -18,8 +18,8 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
   @override
   void initState() {
     super.initState();
-    final authService = AuthService();
-    _matchService = MatchService(authService);
+    final authWebService = AuthWebService();
+    _matchService = MatchService(authWebService);
     _fetchMatches();
   }
 

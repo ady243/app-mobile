@@ -161,4 +161,54 @@ class AuthWebService {
       return null;
     }
   }
+
+  /// Récupère un token d'accès
+  Future<String?> getToken() async {
+    try {
+      return _getAccessToken();
+    } catch (e) {
+      print('Erreur lors de la récupération du token : $e');
+      return null;
+    }
+  }
+
+  /// Met à jour les informations utilisateur
+  Future<Map<String, dynamic>?> updateUser(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(
+        '$baseUrl/userUpdate',
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        return response.data;
+      } else {
+        throw Exception(
+            'Erreur lors de la mise à jour des informations utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la mise à jour des informations utilisateur : $e');
+      return null;
+    }
+  }
+
+  /// Supprime le compte utilisateur
+  Future<void> deleteAccount() async {
+    try {
+      final accessToken = _getAccessToken();
+      final response = await _dio.delete(
+        '$baseUrl/deleteMyAccount',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      if (response.statusCode == 200) {
+        await logout();
+      } else {
+        throw Exception(
+            'Erreur lors de la suppression du compte utilisateur: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la suppression du compte utilisateur : $e');
+      rethrow;
+    }
+  }
 }
