@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamup/components/theme_provider.dart';
-import 'package:teamup/services/friend.service.dart';
+import 'package:teamup/services/friend_service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'chat_page.dart';
@@ -44,8 +44,9 @@ class _ChatListPageState extends State<ChatListPage> {
       setState(() {
         _currentUserId = userInfo?['id'];
       });
+    // ignore: empty_catches
     } catch (e) {
-      print('Failed to fetch current user: $e');
+  
     }
   }
 

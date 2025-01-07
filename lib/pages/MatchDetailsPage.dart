@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:teamup/services/Chat_service.dart';
 import '../components/TopBarDetail.dart';
 import '../components/MatchInfoTab.dart';
 import '../components/ChatTab.dart';
 import '../components/AiSuggestionOverlay.dart';
-import '../services/MatchService.dart';
-import '../services/ChatService.dart';
+import '../services/Match_service.dart';
 import '../components/theme_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/Match.dart';
@@ -61,11 +61,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     try {
       final matchDetailsJson =
           await _matchService.getMatchDetails(widget.matchId);
-      print(
-          'Match details fetched: $matchDetailsJson'); // Ajoutez ce log pour vérifier les données JSON
+      print('Match details fetched: $matchDetailsJson');
       final matchDetails = Match.fromJson(matchDetailsJson);
-      print(
-          'Organizer ID: ${matchDetails.organizer.id}'); // Ajoutez ce log pour vérifier l'ID de l'organisateur
+      print('Organizer ID: ${matchDetails.organizer.id}');
       setState(() {
         _organizerId = matchDetails.organizer.id;
       });

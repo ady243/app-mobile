@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:teamup/pages/signup_page.dart';
-import 'package:toastification/toastification.dart';
-import '../components/ToastComponent.dart';
 import '../services/auth.service.dart';
 import 'home_page.dart';
 
@@ -114,15 +110,48 @@ class _LoginPageState extends State<LoginPage> {
                   context,
                   MaterialPageRoute(builder: (context) => const HomePage()),
                 );
-                ToastComponent.showToast(
-                    context, "Connexion réussie", ToastificationType.success);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                      'Connexion réussie',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.green,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
               } catch (e) {
-                ToastComponent.showToast(context, "Erreur lors de la connexion",
-                    ToastificationType.error);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                      'Erreur lors de la connexion',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                );
               }
             } else {
-              ToastComponent.showToast(context,
-                  "Veuillez remplir tous les champs", ToastificationType.error);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text(
+                    'Veuillez remplir tous les champs',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  backgroundColor: Colors.red,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              );
             }
           },
           style: ElevatedButton.styleFrom(
@@ -145,10 +174,19 @@ class _LoginPageState extends State<LoginPage> {
   Widget _forgotPassword(BuildContext context) {
     return TextButton(
       onPressed: () {
-        ToastComponent.showToast(
-            context,
-            "Contactez l'administrateur pour réinitialiser votre mot de passe.",
-            ToastificationType.info);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'Fonctionnalité non disponible',
+              style: TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
       },
       child: const Text(
         "Mot de passe oublié ?",
@@ -185,10 +223,19 @@ class _LoginPageState extends State<LoginPage> {
           await _handleGoogleSignIn();
         } catch (e) {
           // ignore: use_build_context_synchronously
-          ToastComponent.showToast(
-              context,
-              "Erreur lors de la connexion avec Google",
-              ToastificationType.error);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Erreur lors de la connexion avec Google',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
         }
       },
       child: CircleAvatar(
@@ -216,19 +263,49 @@ class _LoginPageState extends State<LoginPage> {
             context,
             MaterialPageRoute(builder: (context) => const HomePage()),
           );
-          ToastComponent.showToast(
-              context, "Connexion réussie", ToastificationType.success);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Connexion réussie',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
         } else {
-          ToastComponent.showToast(
-              context,
-              "Erreur lors de la connexion avec Google",
-              ToastificationType.error);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Erreur lors de la connexion avec Google',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
         }
       }
     } catch (e) {
-      print('Erreur lors de la connexion avec Google: $e');
-      ToastComponent.showToast(context,
-          "Erreur lors de la connexion avec Google", ToastificationType.error);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la connexion avec Google',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     }
   }
 }

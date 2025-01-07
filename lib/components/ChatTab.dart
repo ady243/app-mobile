@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:teamup/pages/user_profile.dart';
-import '../services/ChatService.dart';
-import '../services/MatchService.dart';
+import 'package:teamup/services/Chat_service.dart';
+import '../services/Match_service.dart';
 import '../services/auth.service.dart';
 import 'package:intl/intl.dart';
 // ignore: depend_on_referenced_packages

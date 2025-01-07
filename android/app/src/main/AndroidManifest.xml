@@ -38,7 +38,10 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="api-teamup.onrender.com" android:pathPrefix="/api/confirm_email" />
+                <data 
+                android:scheme="https" 
+                android:host="api-teamup.onrender.com"
+                android:pathPrefix="/api/confirm_email" />
             </intent-filter>
         </activity>
         <meta-data

@@ -1,10 +1,10 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:teamup/components/theme_provider.dart';
-import 'package:teamup/pages/MatchDetailsPage.dart';
-import 'package:teamup/pages/chat_page.dart';
-import 'package:teamup/pages/friends_tab_page.dart';
 import 'package:provider/provider.dart';
+import 'package:teamup/components/ChatTab.dart';
+import 'package:teamup/pages/MatchDetailsPage.dart';
+import 'package:teamup/pages/friends_tab_page.dart';
+import 'package:teamup/services/notification_service.dart';
+import 'package:teamup/components/theme_provider.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -14,43 +14,30 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
+  List<dynamic> _notifications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifications();
+  }
+
+  Future<void> _loadNotifications() async {
+    final notificationService =
+        Provider.of<NotificationService>(context, listen: false);
+    final token = await notificationService.getToken();
+    if (token != null) {
+      final notifications =
+          await notificationService.getUnreadNotifications(token);
+      setState(() {
+        _notifications = notifications;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final message =
-        ModalRoute.of(context)!.settings.arguments as RemoteMessage?;
     final themeProvider = Provider.of<ThemeProvider>(context);
-
-    if (message == null) {
-      return Scaffold(
-        appBar: AppBar(
-          backgroundColor: themeProvider.primaryColor,
-          centerTitle: true,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(30.0),
-            child: Container(
-              color: themeProvider.primaryColor,
-              padding: const EdgeInsets.only(top: 5.0, bottom: 10.0),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Notifications',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        body: Center(
-          child: const Text('Aucune notification disponible'),
-        ),
-      );
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -77,48 +64,47 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          Text(message.notification?.title ?? 'Pas de titre'),
-          Text(message.notification?.body ?? 'Pas de corps'),
-          Text(message.data.toString()),
-          ElevatedButton(
-            onPressed: () {
-              _handleNotificationClick(message);
-            },
-            child: const Text('Voir'),
-          ),
-        ],
-      ),
+      body: _notifications.isEmpty
+          ? const Center(
+              child: Text('Aucune notification disponible'),
+            )
+          : ListView.builder(
+              itemCount: _notifications.length,
+              itemBuilder: (context, index) {
+                final notification = _notifications[index];
+                return ListTile(
+                  title: Text(notification['title'] ?? 'Pas de titre'),
+                  subtitle: Text(notification['body'] ?? 'Pas de corps'),
+                  onTap: () {
+                    _handleNotificationClick(notification);
+                  },
+                );
+              },
+            ),
     );
   }
 
-  void _handleNotificationClick(RemoteMessage message) {
-    if (message.data['type'] == 'new_message') {
+  void _handleNotificationClick(dynamic notification) {
+    if (notification['type'] == 'new_message') {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ChatPage(
-            friendName: message.data['friendName'],
-            senderId: message.data['senderId'],
-            receiverId: message.data['receiverId'],
-            receiverFcmToken: message.data['receiverFcmToken'],
-          ),
+          builder: (context) => ChatTab(matchId: notification['matchId']),
         ),
       );
-    } else if (message.data['type'] == 'friend_request') {
+    } else if (notification['type'] == 'friend_request') {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => const FriendsTabPage(),
         ),
       );
-    } else if (message.data['type'] == 'match_update') {
+    } else if (notification['type'] == 'match_update') {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => MatchDetailsPage(
-            matchId: message.data['matchId'],
+            matchId: notification['matchId'],
           ),
         ),
       );
