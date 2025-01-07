@@ -6,6 +6,7 @@ import 'backoffice/event_management_page.dart';
 
 void main() {
   runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
     theme: ThemeData(
       colorScheme: ColorScheme.fromSwatch(
         primarySwatch: Colors.green,
