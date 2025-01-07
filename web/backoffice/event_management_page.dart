@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
-import 'package:teamup/services/auth.service.dart';
+import '../services/authweb_service.dart';
 
 const String baseUrl = "http://localhost:3003/api";
 
@@ -14,7 +14,7 @@ class EventManagementPage extends StatefulWidget {
 
 class _EventManagementPageState extends State<EventManagementPage> {
   final Dio _dio = Dio();
-  final AuthService _authService = AuthService();
+  final AuthWebService _authWebService = AuthWebService();
   final List<String> _eventTypes = ["But", "Passe décisive", "Carton jaune", "Carton rouge"];
   List<Map<String, dynamic>> _players = [];
   List<Map<String, dynamic>> _events = [];
@@ -33,7 +33,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
 
   Future<void> _fetchMatchPlayers() async {
     try {
-      final accessToken = await _authService.getToken();
+      final accessToken = await _authWebService.getToken();
       final response = await _dio.get(
         '$baseUrl/matchesPlayers/${widget.matchId}',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
@@ -58,7 +58,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
 
   Future<void> _fetchMatchEvents() async {
     try {
-      final accessToken = await _authService.getToken();
+      final accessToken = await _authWebService.getToken();
       final response = await _dio.get(
         '$baseUrl/analyst/match/${widget.matchId}/events',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
@@ -83,7 +83,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
   }
 
   Future<void> _createEvent() async {
-    final userInfo = await _authService.getUserInfo();
+    final userInfo = await _authWebService.getUserInfo();
     if (userInfo == null || !userInfo.containsKey('id')) {
       throw Exception('Impossible de récupérer l\'ID utilisateur');
     }
@@ -95,7 +95,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
     }
 
     try {
-      final accessToken = await _authService.getToken();
+      final accessToken = await _authWebService.getToken();
       final response = await _dio.post(
         '$baseUrl/analyst/events',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
@@ -130,7 +130,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
 
   Future<void> _deleteEvent(String eventId) async {
     try {
-      final accessToken = await _authService.getToken();
+      final accessToken = await _authWebService.getToken();
       final response = await _dio.delete(
         '$baseUrl/analyst/events/$eventId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
@@ -215,7 +215,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
     }
 
     try {
-      final accessToken = await _authService.getToken();
+      final accessToken = await _authWebService.getToken();
       final response = await _dio.put(
         '$baseUrl/analyst/events/$eventId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),

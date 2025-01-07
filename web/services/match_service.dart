@@ -12,7 +12,7 @@ class MatchService {
     if (token == null || token.isEmpty) {
       throw Exception('Aucun token disponible.');
     }
-    final url = Uri.parse('$baseUrl/matches/analyst/matches');
+    final url = Uri.parse('$baseUrl/matches/referee/matches');
     final response = await http.get(url, headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token'
