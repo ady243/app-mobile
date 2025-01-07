@@ -34,8 +34,8 @@ void main() async {
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en', 'US'), Locale('fr', 'FR')],
-      path: 'assets/translations', // Chemin vers vos fichiers de traduction
-      fallbackLocale: const Locale('en', 'US'),
+      path: 'assets/translations',
+      fallbackLocale: const Locale('fr', 'FR'),
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
@@ -61,6 +61,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    print('initState called');
     _checkLoginStatus();
     initUniLinks();
     _setupFirebaseMessaging();
@@ -70,51 +71,67 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     _sub?.cancel();
     super.dispose();
+    print('dispose called');
   }
 
   void _checkLoginStatus() async {
+    print('Checking login status...');
     bool loggedIn = await AuthService().isLoggedIn();
     setState(() {
       _isLoggedIn = loggedIn;
+      print('Login status: $_isLoggedIn');
     });
   }
 
   void initUniLinks() async {
+    print('Initializing UniLinks...');
     try {
       _sub = uriLinkStream.listen((Uri? uri) {
         if (uri != null) {
+          print('Received URI: $uri');
           _handleDeepLink(uri);
         }
-      }, onError: (err) {});
-    } catch (e) {}
+      }, onError: (err) {
+        print('Error listening to URI stream: $err');
+      });
+    } catch (e) {
+      print('Exception in initUniLinks: $e');
+    }
     final initialUri = await getInitialUri();
     if (initialUri != null) {
+      print('Initial URI: $initialUri');
       _handleDeepLink(initialUri);
     }
   }
 
   void _handleDeepLink(Uri uri) {
+    print('Handling deep link: $uri');
     if (uri.path == '/api/confirm_email') {
       final token = uri.queryParameters['token'];
       if (token != null) {
+        print('Email confirmation token: $token');
         Navigator.pushNamed(context, '/home');
       }
     }
   }
 
   void _setupFirebaseMessaging() {
+    print('Setting up Firebase Messaging...');
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      print('Received message: ${message.messageId}');
       if (message.notification != null) {
         _showNotification(message);
       }
     });
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('Message opened from background: ${message.messageId}');
       _handleNotificationClick(message);
     });
   }
 
   void _showNotification(RemoteMessage message) {
+    print('Showing notification: ${message.notification?.title}');
     showDialog(
       context: navigatorKey.currentContext!,
       builder: (context) => AlertDialog(
@@ -134,6 +151,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleNotificationClick(RemoteMessage message) {
+    print('Handling notification click: ${message.messageId}');
     navigatorKey.currentState?.pushNamed(
       '/notification',
       arguments: message,
@@ -142,6 +160,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    print('Building MyApp');
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return ToastificationWrapper(
