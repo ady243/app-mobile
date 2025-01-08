@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:teamup/services/auth.service.dart';
+import '../services/authweb_service.dart';
 import '../services/event_service.dart';
 
 class MatchDetailPage extends StatefulWidget {
@@ -19,8 +19,8 @@ class _MatchDetailPageState extends State<MatchDetailPage> {
   @override
   void initState() {
     super.initState();
-    final authService = AuthService(); // Idéalement: gestion globale
-    _eventService = EventService(authService);
+    final authWebService = AuthWebService();
+    _eventService = EventService(authWebService);
   }
 
   Future<void> _addEvent() async {

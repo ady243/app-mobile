@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'backoffice/login_page_analyst.dart';
 import 'backoffice/analyst_dashboard_page.dart';
-import 'backoffice/match_detail_page.dart';
 import 'backoffice/event_management_page.dart';
+import 'widgets/auth_guard.dart';
 
 void main() {
   runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
     theme: ThemeData(
       colorScheme: ColorScheme.fromSwatch(
         primarySwatch: Colors.green,
@@ -26,25 +27,21 @@ void main() {
     ),
     initialRoute: '/loginAnalyst',
     routes: {
-      '/loginAnalyst': (context) => LoginPageAnalyst(),
-      '/analystDashboard': (context) => AnalystDashboardPage(),
-      '/eventManagement': (context) {
-        final matchId = ModalRoute.of(context)!.settings.arguments as String?;
-        if (matchId == null || matchId.isEmpty) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Gestion des événements')),
-            body: const Center(
-              child: Text('Aucun match sélectionné.'),
-            ),
-          );
-        }
-        return EventManagementPage(matchId: matchId);
-      },
-      '/matchDetail': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        final matchId = args['matchId'] as String;
-        return MatchDetailPage(matchId: matchId);
-      },
+      '/loginAnalyst': (context) => const LoginPageAnalyst(),
+      '/analystDashboard': (context) => AuthGuard(
+        builder: (_) => const AnalystDashboardPage(),
+      ),
+    },
+    onGenerateRoute: (settings) {
+      if (settings.name!.startsWith('/eventManagement/')) {
+        final matchId = settings.name!.split('/').last;
+        return MaterialPageRoute(
+          builder: (context) => AuthGuard(
+            builder: (_) => EventManagementPage(matchId: matchId),
+          ),
+        );
+      }
+      return null;
     },
   ));
 }

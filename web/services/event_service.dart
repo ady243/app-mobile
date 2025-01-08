@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:teamup/services/auth.service.dart';
+import '../services/authweb_service.dart';
 import 'package:teamup/utils/basUrl.dart';
 
 class EventService {
-  final AuthService authService;
-  EventService(this.authService);
+  final AuthWebService authWebService;
+  EventService(this.authWebService);
 
   Future<void> addEventToMatch(String matchId, String eventType, String player, int minute) async {
     final url = Uri.parse('$baseUrl/matches/$matchId/events');
@@ -17,7 +17,7 @@ class EventService {
     final response = await http.post(url,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${authService.getToken}'
+          'Authorization': 'Bearer ${authWebService.getToken}'
         },
         body: json.encode(body));
 

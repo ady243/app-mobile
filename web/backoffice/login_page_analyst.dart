@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:teamup/services/auth.service.dart';
+import '../services/authweb_service.dart';
 
 class LoginPageAnalyst extends StatefulWidget {
   const LoginPageAnalyst({super.key});
@@ -11,7 +11,7 @@ class LoginPageAnalyst extends StatefulWidget {
 class _LoginPageState extends State<LoginPageAnalyst> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
-  final AuthService _authService = AuthService();
+  final AuthWebService _authWebService = AuthWebService();
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +57,7 @@ class _LoginPageState extends State<LoginPageAnalyst> {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    await _authService.login(_emailCtrl.text, _passCtrl.text);
+                    await _authWebService.login(_emailCtrl.text, _passCtrl.text);
                     Navigator.pushReplacementNamed(context, '/analystDashboard');
                   } catch (e) {
                     ScaffoldMessenger.of(context)
