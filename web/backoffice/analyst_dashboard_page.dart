@@ -104,10 +104,10 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
               ],
             ),
             onTap: () {
+              final matchId = match['id'];
               Navigator.pushNamed(
                 context,
-                '/eventManagement',
-                arguments: match['id'],
+                '/eventManagement/$matchId',
               );
             },
           ),

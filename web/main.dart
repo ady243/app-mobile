@@ -31,18 +31,17 @@ void main() {
       '/analystDashboard': (context) => AuthGuard(
         builder: (_) => const AnalystDashboardPage(),
       ),
-      '/eventManagement': (context) => AuthGuard(
-        builder: (context) {
-          final matchId = ModalRoute.of(context)!.settings.arguments as String? ?? '';
-          if (matchId.isEmpty) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Gestion des événements')),
-              body: const Center(child: Text('Aucun match sélectionné.')),
-            );
-          }
-          return EventManagementPage(matchId: matchId);
-        },
-      ),
+    },
+    onGenerateRoute: (settings) {
+      if (settings.name!.startsWith('/eventManagement/')) {
+        final matchId = settings.name!.split('/').last;
+        return MaterialPageRoute(
+          builder: (context) => AuthGuard(
+            builder: (_) => EventManagementPage(matchId: matchId),
+          ),
+        );
+      }
+      return null;
     },
   ));
 }
