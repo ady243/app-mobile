@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:teamup/services/Chat_service.dart';
@@ -8,8 +8,6 @@ import 'package:intl/intl.dart';
 // ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
 import '../components/theme_provider.dart';
-import 'package:web_socket_channel/io.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatTab extends StatefulWidget {
   final String matchId;
@@ -28,31 +26,26 @@ class _ChatTabState extends State<ChatTab> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _currentUserId;
-  late WebSocketChannel _channel;
+  String? _organizerId;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _getCurrentUserId();
-    _initializeWebSocket();
+    _fetchMessages();
+    _startAutoRefresh();
   }
 
   @override
   void dispose() {
-    _channel.sink.close();
+    _timer?.cancel();
     super.dispose();
   }
 
-  void _initializeWebSocket() {
-    _channel = IOWebSocketChannel.connect('wss://api-teamup.onrender.com/ws');
-    _channel.stream.listen((message) {
-      final decodedMessage = jsonDecode(message);
-      if (decodedMessage['matchId'] == widget.matchId) {
-        setState(() {
-          _messages.add(decodedMessage);
-        });
-        _scrollToBottom();
-      }
+  void _startAutoRefresh() {
+    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      _fetchMessages();
     });
   }
 
@@ -66,7 +59,9 @@ class _ChatTabState extends State<ChatTab> {
 
     final matchDetails = await _matchService.getMatchDetails(widget.matchId);
     if (matchDetails != null && matchDetails.containsKey('organizer_id')) {
-      setState(() {});
+      setState(() {
+        _organizerId = matchDetails['organizer_id'];
+      });
     }
   }
 
@@ -97,15 +92,18 @@ class _ChatTabState extends State<ChatTab> {
       return;
     }
 
+    if (_currentUserId == _organizerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Vous ne pouvez pas envoyer de message en tant qu\'organisateur')),
+      );
+      return;
+    }
+
     try {
       await _chatService.sendMessage(widget.matchId, _currentUserId!, message);
       _messageController.clear();
-      _channel.sink.add(jsonEncode({
-        'matchId': widget.matchId,
-        'userId': _currentUserId,
-        'message': message,
-        'timestamp': DateTime.now().toIso8601String(),
-      }));
+      _fetchMessages();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -204,7 +202,7 @@ class _ChatTabState extends State<ChatTab> {
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
         mainAxisAlignment:
-            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isCurrentUser) _buildAvatar(userId, username),
@@ -282,39 +280,39 @@ class _ChatTabState extends State<ChatTab> {
       ),
       child: _currentUserId == null
           ? const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                  'Vous ne pouvez pas envoyer de messages sans être connecté.'),
-            )
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+            'Vous ne pouvez pas envoyer de messages sans être connecté.'),
+      )
           : Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: theme.inputDecorationTheme.fillColor,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Entrez votre message...',
-                        border: InputBorder.none,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                      ),
-                    ),
-                  ),
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: theme.inputDecorationTheme.fillColor,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: TextField(
+                controller: _messageController,
+                decoration: const InputDecoration(
+                  hintText: 'Entrez votre message...',
+                  border: InputBorder.none,
+                  contentPadding:
+                  EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
-                const SizedBox(width: 8),
-                CircleAvatar(
-                  backgroundColor: themeProvider.primaryColor,
-                  child: IconButton(
-                    icon: const Icon(Icons.send, color: Colors.white),
-                    onPressed: _sendMessage,
-                  ),
-                ),
-              ],
+              ),
             ),
+          ),
+          const SizedBox(width: 8),
+          CircleAvatar(
+            backgroundColor: themeProvider.primaryColor,
+            child: IconButton(
+              icon: const Icon(Icons.send, color: Colors.white),
+              onPressed: _sendMessage,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

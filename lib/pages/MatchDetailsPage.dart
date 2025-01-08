@@ -34,6 +34,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
   List<Map<String, dynamic>> _participants = [];
   String? _selectedParticipantId;
   String? _currentUserId;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -49,10 +50,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
       parent: _controller,
       curve: Curves.easeInOut,
     ));
-    _fetchMatchDetails();
-    _fetchParticipants();
-    _fetchCurrentUser();
-    _checkForNewMessages();
+    _fetchData();
   }
 
   @override
@@ -61,10 +59,25 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     super.dispose();
   }
 
-  void _fetchMatchDetails() async {
+  Future<void> _fetchData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await Future.wait([
+      _fetchMatchDetails(),
+      _fetchParticipants(),
+      _fetchCurrentUser(),
+      _checkForNewMessages(),
+    ]);
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _fetchMatchDetails() async {
     try {
       final matchDetailsJson =
-          await _matchService.getMatchDetails(widget.matchId);
+      await _matchService.getMatchDetails(widget.matchId);
       print('Match details fetched: $matchDetailsJson');
       final matchDetails = Match.fromJson(matchDetailsJson);
       print('Organizer ID: ${matchDetails.organizer.id}');
@@ -76,7 +89,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     }
   }
 
-  void _fetchParticipants() async {
+  Future<void> _fetchParticipants() async {
     try {
       final participants = await _matchService.getMatchPlayers(widget.matchId);
       setState(() {
@@ -87,7 +100,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     }
   }
 
-  void _fetchCurrentUser() async {
+  Future<void> _fetchCurrentUser() async {
     try {
       final userInfo = await _authService.getUserInfo();
       setState(() {
@@ -96,6 +109,13 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     } catch (e) {
       print('Erreur lors de la récupération des informations utilisateur: $e');
     }
+  }
+
+  Future<void> _checkForNewMessages() async {
+    bool hasNew = await _chatService.hasNewMessages(widget.matchId);
+    setState(() {
+      _hasNewMessages = hasNew;
+    });
   }
 
   void _assignReferee(String participantId) async {
@@ -107,13 +127,6 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     } catch (e) {
       print('Erreur lors de l\'attribution de l\'arbitre: $e');
     }
-  }
-
-  void _checkForNewMessages() async {
-    bool hasNew = await _chatService.hasNewMessages(widget.matchId);
-    setState(() {
-      _hasNewMessages = hasNew;
-    });
   }
 
   void _onTabSelected(int index) {
@@ -165,7 +178,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
       await _matchService.leaveMatch(widget.matchId);
       setState(() {
         _participants.removeWhere(
-            (participant) => participant['id'] == _selectedParticipantId);
+                (participant) => participant['id'] == _selectedParticipantId);
         _selectedParticipantId = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -210,7 +223,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
         centerTitle: true,
         backgroundColor: themeProvider.primaryColor,
       ),
-      body: Stack(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Stack(
         children: [
           Column(
             children: [
@@ -236,7 +251,9 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
                           _assignReferee(newValue);
                         }
                       },
-                      onLeaveMatch: _organizerId == _currentUserId ? () {} : _handleLeaveMatch,
+                      onLeaveMatch: _organizerId == _currentUserId
+                          ? () {}
+                          : _handleLeaveMatch,
                     ),
                     ChatTab(matchId: widget.matchId),
                   ],
@@ -254,10 +271,10 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
       ),
       floatingActionButton: _currentTabIndex == 0
           ? FloatingActionButton(
-              onPressed: _fetchAndShowAiResponse,
-              backgroundColor: const Color(0xFFFFFFFF),
-              child: Image.asset('assets/images/ia.png'),
-            )
+        onPressed: _fetchAndShowAiResponse,
+        backgroundColor: const Color(0xFFFFFFFF),
+        child: Image.asset('assets/images/ia.png'),
+      )
           : null,
     );
   }

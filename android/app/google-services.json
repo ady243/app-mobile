@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:812994509921:android:64e9ed8a1ef906311b7e20",
+        "mobilesdk_app_id": "1:812994509921:android:7ca93e219e7a4d291b7e20",
         "android_client_info": {
-          "package_name": "com.example.teamup"
+          "package_name": "com.teamup.app"
         }
       },
       "oauth_client": [],

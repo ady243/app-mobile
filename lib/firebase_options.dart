@@ -57,7 +57,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyC7DDmuslgRHNQJDKz8qgiA5WX2dwpU30o',
-    appId: '1:812994509921:android:64e9ed8a1ef906311b7e20',
+    appId: '1:812994509921:android:7ca93e219e7a4d291b7e20',
     messagingSenderId: '812994509921',
     projectId: 'notification-push-40d24',
     storageBucket: 'notification-push-40d24.firebasestorage.app',
@@ -69,7 +69,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '812994509921',
     projectId: 'notification-push-40d24',
     storageBucket: 'notification-push-40d24.firebasestorage.app',
-    iosBundleId: 'com.ady.teamup',
+    iosBundleId: 'com.teamup.app',
   );
 
 }

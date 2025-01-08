@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:teamup/pages/signup_page.dart';
 import '../services/auth.service.dart';
 import 'home_page.dart';
@@ -33,8 +32,6 @@ class _LoginPageState extends State<LoginPage> {
                 _forgotPassword(context),
                 const SizedBox(height: 10),
                 _signup(context),
-                const SizedBox(height: 20),
-                _buildGoogleSignInButton(),
               ],
             ),
           ),
@@ -214,98 +211,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ],
     );
-  }
-
-  Widget _buildGoogleSignInButton() {
-    return GestureDetector(
-      onTap: () async {
-        try {
-          await _handleGoogleSignIn();
-        } catch (e) {
-          // ignore: use_build_context_synchronously
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Erreur lors de la connexion avec Google',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      },
-      child: CircleAvatar(
-        radius: 30,
-        backgroundColor: Colors.grey[200],
-        child: Image.asset(
-          'assets/logos/google_light.png',
-          height: 30,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _handleGoogleSignIn() async {
-    try {
-      final GoogleSignInAccount? googleUser =
-          await _authService.googleSignIn.signIn();
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth =
-            await googleUser.authentication;
-        final response =
-            await _authService.loginWithGoogle(googleAuth.idToken!);
-        if (response) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Connexion réussie',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text(
-                'Erreur lors de la connexion avec Google',
-                style: TextStyle(color: Colors.white),
-              ),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Erreur lors de la connexion avec Google',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-    }
   }
 }

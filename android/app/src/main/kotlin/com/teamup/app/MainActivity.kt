@@ -1,4 +1,4 @@
-package com.example.teamup
+package com.teamup.app
 
 import io.flutter.embedding.android.FlutterActivity
 

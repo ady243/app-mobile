@@ -14,7 +14,7 @@ import 'package:teamup/api/firebase_api.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:toastification/toastification.dart';
-import 'package:uni_links/uni_links.dart';
+import 'package:app_links/app_links.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'UserProvider/user_provider.dart';
@@ -52,13 +52,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _isLoggedIn = false;
-  StreamSubscription? _sub;
+  StreamSubscription<Uri>? _sub;
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
-    initUniLinks();
+    initAppLinks();
     _setupFirebaseMessaging();
   }
 
@@ -75,16 +75,15 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void initUniLinks() async {
-    try {
-      _sub = uriLinkStream.listen((Uri? uri) {
-        if (uri != null) {
-          _handleDeepLink(uri);
-        }
-      }, onError: (err) {});
-      // ignore: empty_catches
-    } catch (e) {}
-    final initialUri = await getInitialUri();
+  void initAppLinks() async {
+    final appLinks = AppLinks();
+    _sub = appLinks.uriLinkStream.listen((Uri? uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    }, onError: (err) {});
+
+    final initialUri = await appLinks.getInitialLink();
     if (initialUri != null) {
       _handleDeepLink(initialUri);
     }
@@ -94,7 +93,7 @@ class _MyAppState extends State<MyApp> {
     if (uri.path == '/api/confirm_email') {
       final token = uri.queryParameters['token'];
       if (token != null) {
-        Navigator.pushNamed(context, '/home');
+        Navigator.pushNamed(context, '/login');
       }
     }
   }

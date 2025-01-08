@@ -18,7 +18,6 @@ class Number {
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
-  static String routeName = 'profile';
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();

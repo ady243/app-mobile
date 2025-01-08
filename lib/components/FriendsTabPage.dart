@@ -31,6 +31,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   String? _currentUserId;
   final Map<String, String> _friendRequestStatus = {};
   bool _hasNewFriendRequests = false;
+  bool _isLoadingUsers = true;
+  bool _isLoadingRequests = true;
 
   @override
   void initState() {
@@ -80,6 +82,9 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   }
 
   Future<void> _fetchAllUsers() async {
+    setState(() {
+      _isLoadingUsers = true;
+    });
     try {
       final users = await _authService.getAllUsers();
       setState(() {
@@ -92,9 +97,13 @@ class _FriendsTabPageState extends State<FriendsTabPage>
         for (var user in _allUsers) {
           _friendRequestStatus[user['id']] = 'none';
         }
+        _isLoadingUsers = false;
       });
       _fetchFriendRequests();
     } catch (e) {
+      setState(() {
+        _isLoadingUsers = false;
+      });
       // Handle error
     }
   }
@@ -115,6 +124,9 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   }
 
   Future<void> _fetchFriendRequests() async {
+    setState(() {
+      _isLoadingRequests = true;
+    });
     try {
       final requests = await _friendService.getFriendRequests();
       setState(() {
@@ -127,8 +139,12 @@ class _FriendsTabPageState extends State<FriendsTabPage>
             _friendRequestStatus[request['sender_id']] = request['status'];
           }
         }
+        _isLoadingRequests = false;
       });
     } catch (e) {
+      setState(() {
+        _isLoadingRequests = false;
+      });
       // Handle error
     }
   }
@@ -137,8 +153,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     setState(() {
       _filteredUsers = _allUsers
           .where((user) => user['username']
-              .toLowerCase()
-              .contains(_searchController.text.toLowerCase()))
+          .toLowerCase()
+          .contains(_searchController.text.toLowerCase()))
           .toList();
     });
   }
@@ -347,12 +363,68 @@ class _FriendsTabPageState extends State<FriendsTabPage>
             child: TabBarView(
               controller: _tabController,
               children: [
-                FriendRequestsTab(
+                _isLoadingRequests
+                    ? const Center(child: CircularProgressIndicator())
+                    : _friendRequests.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person_add_disabled,
+                          size: 100, color: Colors.grey),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Aucune demande d\'ami',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Vous n\'avez aucune demande d\'ami pour le moment.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+                    : FriendRequestsTab(
                   friendRequests: _friendRequests,
                   onAccept: _acceptFriendRequest,
                   onDecline: _declineFriendRequest,
                 ),
-                AllUsersTab(
+                _isLoadingUsers
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filteredUsers.isEmpty
+                    ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.group_off,
+                          size: 100, color: Colors.grey),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Aucun utilisateur trouvé',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Aucun utilisateur ne correspond à votre recherche.',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                )
+                    : AllUsersTab(
                   users: _filteredUsers,
                   friends: _friends,
                   friendRequestStatus: _friendRequestStatus,

@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.teamup"> <!-- Assure-toi que ce package correspond à ton projet -->
+    package="com.teamup.app"> <!-- Assure-toi que ce package correspond à ton projet -->
 
     <!-- Permission pour accéder à Internet -->
     <uses-permission android:name="android.permission.INTERNET"/>

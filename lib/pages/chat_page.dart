@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:teamup/models/message.dart';
-import 'package:teamup/services/friendChat_service.dart';
+
+
+import '../services/friendChat_service.dart';
 
 class ChatPage extends StatefulWidget {
   final String friendName;
@@ -38,10 +40,10 @@ class _ChatPageState extends State<ChatPage> {
           widget.senderId, widget.receiverId);
       setState(() {
         _messages.addAll(messages.map((message) => {
-              'text': message.content,
-              'isSentByMe': message.senderId == widget.senderId,
-              'createdAt': message.createdAt,
-            }));
+          'text': message.content,
+          'isSentByMe': message.senderId == widget.senderId,
+          'createdAt': message.createdAt,
+        }));
       });
     } catch (e) {
       // ignore: empty_catches
@@ -67,8 +69,9 @@ class _ChatPageState extends State<ChatPage> {
           });
           _messageController.clear();
         });
-        // ignore: empty_catches
-      } catch (e) {}
+      // ignore: empty_catches
+      } catch (e) {
+      }
     }
   }
 
@@ -87,7 +90,7 @@ class _ChatPageState extends State<ChatPage> {
               itemBuilder: (context, index) {
                 final message = _messages[index];
                 final formattedDate =
-                    DateFormat('dd/MM/yyyy HH:mm').format(message['createdAt']);
+                DateFormat('dd/MM/yyyy HH:mm').format(message['createdAt']);
                 return Align(
                   alignment: message['isSentByMe']
                       ? Alignment.centerRight

@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teamup/pages/friend_page.dart';
+import 'package:teamup/pages/profileScreen.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
-import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
 import '../pages/chat_list_page.dart';
 import '../pages/notification_page.dart';
-import '../pages/user_profile.dart';
 import 'SideNav.dart';
 import '../components/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -29,15 +28,14 @@ class _BottomNavBarState extends State<BottomNavBar> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static final List<Widget> _widgetOptions = <Widget>[
-    const UserProfilePage(),
     const AccueilPage(),
     const FriendsPage(),
     const CreateMatchPage(),
     const ChatListPage(),
     const NotificationPage(),
+    const UserProfilePage(),
     const SettingPage(),
   ];
-
   @override
   void initState() {
     super.initState();
@@ -82,16 +80,16 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   void _onItemTapped(int index) {
     setState(() {
-      if (index == 5) {
+      if (index == 6) {
         _scaffoldKey.currentState?.openEndDrawer();
       } else {
         _selectedIndex = index;
+        if (index == 3) {
+          _hasUnreadMessages = false;
+        }
         if (index == 4) {
           _hasUnreadNotifications = false;
           _markNotificationsAsRead();
-        }
-        if (index == 3) {
-          _hasUnreadMessages = false;
         }
       }
     });
@@ -202,6 +200,11 @@ class _BottomNavBarState extends State<BottomNavBar> {
               ],
             ),
             label: 'Notification',
+          ),
+          BottomNavigationBarItem(
+            icon: FaIcon(FontAwesomeIcons.user,
+                color: themeProvider.iconColor),
+            label: 'Profile',
           ),
           BottomNavigationBarItem(
             icon: FaIcon(FontAwesomeIcons.bars, color: themeProvider.iconColor),
