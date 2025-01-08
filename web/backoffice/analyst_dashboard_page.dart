@@ -17,12 +17,12 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
   bool _isLoading = true;
   List<Map<String, dynamic>> _futureMatches = [];
   List<Map<String, dynamic>> _pastMatches = [];
+  final AuthWebService _authWebService = AuthWebService();
 
   @override
   void initState() {
     super.initState();
-    final authWebService = AuthWebService();
-    _matchService = MatchService(authWebService);
+    _matchService = MatchService(_authWebService);
     _tabController = TabController(length: 2, vsync: this);
     _fetchMatches();
   }
@@ -37,16 +37,17 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
     try {
       final matches = await _matchService.getAnalystMatches();
       final now = DateTime.now();
+
       final futureMatches = matches
           .where((match) =>
       DateTime.parse(match['date']).isAfter(now) ||
           DateTime.parse(match['date']).isAtSameMomentAs(now))
           .toList();
+
       final pastMatches = matches
           .where((match) => DateTime.parse(match['date']).isBefore(now))
           .toList();
 
-      // Sort matches by date
       futureMatches.sort((a, b) =>
           DateTime.parse(a['date']).compareTo(DateTime.parse(b['date'])));
       pastMatches.sort((a, b) =>
@@ -61,6 +62,11 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
       print('Error: $e');
       setState(() => _isLoading = false);
     }
+  }
+
+  void _logout() async {
+    await _authWebService.logout();
+    Navigator.pushReplacementNamed(context, '/loginAnalyst');
   }
 
   String formatDateTime(String dateTime) {
@@ -115,6 +121,13 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard Analyste'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: 'Déconnexion',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

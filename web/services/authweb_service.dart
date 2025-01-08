@@ -134,7 +134,8 @@ class AuthWebService {
 
   /// Déconnexion de l'utilisateur
   Future<void> logout() async {
-    await _clearTokens();
+    html.window.localStorage.remove('accessToken');
+    html.window.localStorage.remove('refreshToken');
   }
 
   /// Vérifie si l'utilisateur est connecté
