@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../services/authweb_service.dart';
-import 'package:teamup/utils/basUrl.dart';
+import 'authweb_service.dart';
+import '../utils/baseUrl.dart';
 
 class MatchService {
   final AuthWebService authWebService;

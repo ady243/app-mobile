@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../services/authweb_service.dart';
-
-const String baseUrl = "http://localhost:3003/api";
+import '../utils/baseUrl.dart';
 
 class EventManagementPage extends StatefulWidget {
   final String matchId;
