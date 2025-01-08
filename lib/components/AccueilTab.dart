@@ -7,6 +7,7 @@ import 'package:teamup/pages/MatchDetailsPage.dart';
 import 'package:teamup/services/Match_service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:intl/intl.dart';
 import '../components/theme_provider.dart';
 import '../components/MatchCard.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +25,7 @@ class _AccueilTabState extends State<AccueilTab>
   final MatchService _matchService = MatchService();
   final AuthService _authService = AuthService();
   List<Map<String, dynamic>> _matches = [];
-  List<Map<String, dynamic>> _pastMatches = [];
+  List<Map<String, dynamic>> _participatedMatches = [];
   final Set<String> _joinedMatches = {};
   bool _isLoading = true;
   GoogleMapController? _mapController;
@@ -74,6 +75,7 @@ class _AccueilTabState extends State<AccueilTab>
       });
       _loadJoinedMatches(userId);
       _fetchMatches();
+      _fetchParticipatedMatches(userId);
     }
   }
 
@@ -98,7 +100,6 @@ class _AccueilTabState extends State<AccueilTab>
         _isLoading = false;
         _setMarkers();
       });
-      _updateMatchLists();
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -106,37 +107,33 @@ class _AccueilTabState extends State<AccueilTab>
     }
   }
 
-  void _updateMatchLists() {
-    final now = DateTime.now();
-    List<Map<String, dynamic>> pastMatches = [];
-    for (var match in _matches) {
-      final matchDateTime = _parseDateTime(match['date'], match['time']);
-      final endDateTime = _parseDateTime(match['date'], match['end_time']);
-      if (matchDateTime != null && endDateTime != null) {
-        if (now.isAfter(endDateTime)) {
-          match['status'] = 'completed';
-          if (_joinedMatches.contains(match['id'])) {
-            pastMatches.add(match);
-          }
-        } else if (now.isAfter(matchDateTime) && now.isBefore(endDateTime)) {
-          match['status'] = 'ongoing';
-        } else {
-          match['status'] = 'upcoming';
-        }
-      }
+  void _fetchParticipatedMatches(String userId) async {
+    try {
+      final participatedMatches =
+          await _matchService.getMatchesByPlayerID(userId);
+      setState(() {
+        _participatedMatches = participatedMatches;
+      });
+      print('Participated Matches: $_participatedMatches'); // Ajout du print ici
+    } catch (e) {
+      print('Erreur lors de la récupération des matchs participés: $e'); // Ajout du print pour les erreurs
     }
-    setState(() {
-      _pastMatches = pastMatches;
-    });
   }
 
-  DateTime? _parseDateTime(String date, String time) {
+  DateTime? _parseDateTime(String dateTime) {
     try {
-      final dateTimeString = '${date.split('T')[0]}T${time.split('T')[1]}';
-      return DateTime.parse(dateTimeString);
+      return DateTime.parse(dateTime);
     } catch (e) {
       return null;
     }
+  }
+
+  String _formatDateTime(String dateTime) {
+    final parsedDateTime = _parseDateTime(dateTime);
+    if (parsedDateTime != null) {
+      return DateFormat('dd/MM/yyyy HH:mm').format(parsedDateTime);
+    }
+    return dateTime;
   }
 
   Future<BitmapDescriptor> _resizeImage(
@@ -162,7 +159,7 @@ class _AccueilTabState extends State<AccueilTab>
   void _setMarkers() async {
     _markers.clear();
     for (var match in _matches) {
-      if (match['status'] == 'completed') continue; // Skip completed matches
+      if (match['status'] == 'completed') continue;
       final String matchId = match['id']?.toString() ?? '';
       final String address = match['address'] ?? 'No Address';
 
@@ -357,12 +354,25 @@ class _AccueilTabState extends State<AccueilTab>
     return text.length > length ? '${text.substring(0, length)}...' : text;
   }
 
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'completed':
+        return Colors.green;
+      case 'ongoing':
+        return Colors.orange;
+      case 'upcoming':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return TabBarView(
       children: [
         _buildCurrentMatchesTab(),
-        _buildPastMatchesTab(),
+        _buildParticipatedMatchesTab(),
       ],
     );
   }
@@ -454,8 +464,8 @@ class _AccueilTabState extends State<AccueilTab>
     );
   }
 
-  Widget _buildPastMatchesTab() {
-    return _pastMatches.isEmpty
+  Widget _buildParticipatedMatchesTab() {
+    return _participatedMatches.isEmpty
         ? Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -466,12 +476,12 @@ class _AccueilTabState extends State<AccueilTab>
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Aucun match passé',
+                  'Aucun match auquel vous avez participé',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Vous n\'avez participé à aucun match passé.',
+                  'Vous n\'avez participé à aucun match.',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.grey,
@@ -482,13 +492,65 @@ class _AccueilTabState extends State<AccueilTab>
             ),
           )
         : ListView.builder(
-            itemCount: _pastMatches.length,
+            itemCount: _participatedMatches.length,
             itemBuilder: (context, index) {
-              final match = _pastMatches[index];
-              return ListTile(
-                title: Text(match['description'] ?? 'No Description'),
-                subtitle: Text('Terminé le ${match['date']}'),
-                onTap: () => _navigateToMatchDetails(match['id'].toString()),
+              final match = _participatedMatches[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                color: _getStatusColor(match['status'] ?? 'unknown'),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(16),
+                  title: Text(
+                    match['description'] ?? 'No Description',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 16),
+                          const SizedBox(width: 8),
+                          Text(_formatDateTime(match['date'])),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time, size: 16),
+                          const SizedBox(width: 8),
+                          Text(_formatDateTime(match['time'])),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              match['address'] ?? 'No Address',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.info, size: 16),
+                          const SizedBox(width: 8),
+                          Text(match['status'] ?? 'No Status'),
+                        ],
+                      ),
+                    ],
+                  ),
+                  onTap: () => _navigateToMatchDetails(match['id'].toString()),
+                ),
               );
             },
           );

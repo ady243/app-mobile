@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
 import '../pages/user_profile.dart';
 import '../services/Match_service.dart';
 import '../services/auth.service.dart';
@@ -31,10 +33,11 @@ class MatchInfoTab extends StatefulWidget {
 class _MatchInfoTabState extends State<MatchInfoTab> {
   late Future<Map<String, dynamic>> _matchDetails;
   late Future<List<Map<String, dynamic>>> _matchPlayers;
+  late WebSocketChannel _channel;
+  List<Map<String, dynamic>> _liveEvents = [];
+  Map<String, String> _playerNames = {};
   String? _refereeId;
   bool _isOrganizer = false;
-  bool _isParticipant = false;
-  String? _organizerUsername;
 
   @override
   void initState() {
@@ -43,6 +46,35 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
     _matchPlayers = MatchService().getMatchPlayers(widget.matchId);
     _checkIfOrganizer();
     _checkIfParticipant();
+    _connectWebSocket();
+    _loadPlayerNames();
+  }
+
+  @override
+  void dispose() {
+    _channel.sink.close(status.goingAway);
+    super.dispose();
+  }
+
+  void _connectWebSocket() {
+    _channel = WebSocketChannel.connect(
+      Uri.parse('wss://api-teamup.onrender.com/ws/events/live/${widget.matchId}'),
+    );
+
+    _channel.stream.listen((message) {
+      final event = Map<String, dynamic>.from(message);
+      setState(() {
+        _liveEvents.add(event);
+      });
+    });
+  }
+
+  void _loadPlayerNames() async {
+    final players = await MatchService().getMatchPlayers(widget.matchId);
+    final playerNames = {for (var player in players) player['id']: player['username']};
+    setState(() {
+      _playerNames = playerNames.cast<String, String>();
+    });
   }
 
   void _checkIfOrganizer() async {
@@ -61,9 +93,7 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
         final players = await MatchService().getMatchPlayers(widget.matchId);
         final isParticipant =
             players.any((player) => player['id'] == userInfo['id']);
-        setState(() {
-          _isParticipant = isParticipant;
-        });
+        setState(() {});
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -140,11 +170,9 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
           ),
         ),
       );
-      setState(() {
-        _isParticipant = false;
-      });
-      widget.onLeaveMatch(); // Appel du callback onLeaveMatch
-      Navigator.pop(context); // Retourner à la page précédente
+      setState(() {});
+      widget.onLeaveMatch();
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -231,79 +259,165 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                           fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8.0),
                   const SizedBox(height: 16.0),
-                  const Text('Participants:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  FutureBuilder<List<Map<String, dynamic>>>(
-                    future: _matchPlayers,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        return Center(child: Text('Erreur: ${snapshot.error}'));
-                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const Text(
-                            'Pas encore de participants dans ce match.');
-                      } else {
-                        final participants = snapshot.data!;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: participants.map<Widget>((participant) {
-                            return ListTile(
-                              leading: const Icon(Icons.person),
-                              title: Row(
-                                children: [
-                                  Text(participant['username'] ?? 'Unknown'),
-                                  if (participant['id'] == _refereeId)
-                                    const Icon(Icons.star,
-                                        color: Colors.yellow),
-                                ],
-                              ),
-                              trailing: _isOrganizer
-                                  ? ElevatedButton(
-                                      onPressed: () =>
-                                          _assignReferee(participant['id']),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.transparent,
-                                        foregroundColor: buttonTextColor,
-                                        side: BorderSide(
-                                            color: buttonBorderColor),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8.0),
-                                        ),
-                                      ),
-                                      child: const Text('Nommer Arbitre'),
-                                    )
-                                  : null,
-                              onTap: () =>
-                                  _navigateToUserProfile(participant['id']),
-                            );
-                          }).toList(),
-                        );
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 16.0),
-                  if (_isParticipant)
-                    Center(
-                      child: ElevatedButton(
-                        onPressed: _leaveMatch,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
+                  DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
                             borderRadius: BorderRadius.circular(8.0),
                           ),
+                          child: TabBar(
+                            indicator: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            labelColor: Colors.black,
+                            unselectedLabelColor: Colors.black54,
+                            tabs: const [
+                              Tab(text: 'Participants'),
+                              Tab(text: 'Live'),
+                            ],
+                          ),
                         ),
-                        child: const Text('Quitter le match'),
-                      ),
+                        Container(
+                          height: 400,
+                          child: TabBarView(
+                            children: [
+                              _buildParticipantsTab(),
+                              _buildLiveTab(),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
                 ],
               ),
             ),
           );
         }
       },
+    );
+  }
+
+  Widget _buildParticipantsTab() {
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _matchPlayers,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Erreur: ${snapshot.error}'));
+        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Text('Pas encore de participants dans ce match.');
+        } else {
+          final participants = snapshot.data!;
+          return Column(
+            children: participants.map<Widget>((participant) {
+              return ListTile(
+                leading: const Icon(Icons.person),
+                title: Row(
+                  children: [
+                    Text(participant['username'] ?? 'Unknown'),
+                    if (participant['id'] == _refereeId)
+                      const Icon(Icons.star, color: Colors.yellow),
+                  ],
+                ),
+                trailing: _isOrganizer
+                    ? ElevatedButton(
+                        onPressed: () => _assignReferee(participant['id']),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.black,
+                          side: BorderSide(color: Colors.black),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        child: const Text('Nommer Arbitre'),
+                      )
+                    : null,
+                onTap: () => _navigateToUserProfile(participant['id']),
+              );
+            }).toList(),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildLiveTab() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Container(
+              height: 2,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16.0),
+            Stack(
+              children: [
+                Positioned(
+                  left: 20,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 2,
+                    color: Colors.grey,
+                  ),
+                ),
+                Column(
+                  children: _liveEvents.map((event) {
+                    final playerName = _playerNames[event['player_id']] ?? 'Unknown';
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            margin: const EdgeInsets.only(left: 12.0, right: 8.0),
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          Expanded(
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('${event['minute']}\'',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 4.0),
+                                    Text('$playerName - ${event['event_type']}'),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

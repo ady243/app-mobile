@@ -5,6 +5,7 @@ import '../components/MatchInfoTab.dart';
 import '../components/ChatTab.dart';
 import '../components/AiSuggestionOverlay.dart';
 import '../services/Match_service.dart';
+import '../services/auth.service.dart'; // Importer AuthService
 import '../components/theme_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/Match.dart';
@@ -28,9 +29,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
   bool _hasNewMessages = false;
   final ChatService _chatService = ChatService();
   final MatchService _matchService = MatchService();
+  final AuthService _authService = AuthService();
   String _organizerId = '';
   List<Map<String, dynamic>> _participants = [];
   String? _selectedParticipantId;
+  String? _currentUserId;
 
   @override
   void initState() {
@@ -48,6 +51,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
     ));
     _fetchMatchDetails();
     _fetchParticipants();
+    _fetchCurrentUser();
     _checkForNewMessages();
   }
 
@@ -80,6 +84,17 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
       });
     } catch (e) {
       print('Erreur lors de la récupération des participants: $e');
+    }
+  }
+
+  void _fetchCurrentUser() async {
+    try {
+      final userInfo = await _authService.getUserInfo();
+      setState(() {
+        _currentUserId = userInfo?['id'];
+      });
+    } catch (e) {
+      print('Erreur lors de la récupération des informations utilisateur: $e');
     }
   }
 
@@ -221,7 +236,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
                           _assignReferee(newValue);
                         }
                       },
-                      onLeaveMatch: _handleLeaveMatch, // Ajoutez cet argument
+                      onLeaveMatch: _organizerId == _currentUserId ? () {} : _handleLeaveMatch,
                     ),
                     ChatTab(matchId: widget.matchId),
                   ],

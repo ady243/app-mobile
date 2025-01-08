@@ -39,9 +39,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _fetchCurrentUser();
     _searchController.addListener(_onSearchChanged);
 
-    print('Connecting to WebSocket at ws://api-teamup.onrender.com/ws');
     _channel =
-        WebSocketChannel.connect(Uri.parse('ws://api-teamup.onrender.com/ws'));
+        WebSocketChannel.connect(Uri.parse('wss://api-teamup.onrender.com/ws'));
 
     _channel.stream.listen((message) {
       // Handle WebSocket messages
@@ -76,7 +75,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       _fetchAllUsers();
       _fetchFriends();
     } catch (e) {
-      print('Failed to fetch current user info: $e');
+      // Handle error
     }
   }
 
@@ -96,7 +95,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       });
       _fetchFriendRequests();
     } catch (e) {
-      print('Failed to fetch users: $e');
+      // Handle error
     }
   }
 
@@ -111,7 +110,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
             .toList();
       });
     } catch (e) {
-      print('Failed to fetch friends: $e');
+      // Handle error
     }
   }
 
@@ -130,7 +129,7 @@ class _FriendsTabPageState extends State<FriendsTabPage>
         }
       });
     } catch (e) {
-      print('Failed to fetch friend requests: $e');
+      // Handle error
     }
   }
 
@@ -237,10 +236,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   }
 
   Future<void> _sendFriendRequest(String receiverId) async {
-    print('Sending friend request to $receiverId');
     try {
       await _friendService.sendFriendRequest(receiverId);
-      print('Friend request sent successfully');
       setState(() {
         _friendRequestStatus[receiverId] = 'pending';
       });
@@ -287,7 +284,6 @@ class _FriendsTabPageState extends State<FriendsTabPage>
           ),
         );
       }
-      print('Failed to send friend request: $e');
     }
   }
 

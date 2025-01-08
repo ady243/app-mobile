@@ -315,4 +315,25 @@ class MatchService {
   void closeWebSocket() {
     _channel?.sink.close();
   }
+
+  Future<List<Map<String, dynamic>>> getMatchesByPlayerID(
+      String playerId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$baseUrl/player/$playerId',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data['data'];
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception(
+            'Échec de la récupération des matches pour le joueur: ${response.data}');
+      }
+    } catch (e) {
+      throw Exception('Échec de la récupération des matches pour le joueur');
+    }
+  }
 }

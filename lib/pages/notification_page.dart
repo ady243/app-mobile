@@ -6,6 +6,7 @@ import 'package:teamup/pages/friends_tab_page.dart';
 import 'package:teamup/services/notification_service.dart';
 import 'package:teamup/components/theme_provider.dart';
 
+
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
 
@@ -23,12 +24,10 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Future<void> _loadNotifications() async {
-    final notificationService =
-        Provider.of<NotificationService>(context, listen: false);
+    final notificationService = Provider.of<NotificationService>(context, listen: false);
     final token = await notificationService.getToken();
     if (token != null) {
-      final notifications =
-          await notificationService.getUnreadNotifications(token);
+      final notifications = await notificationService.getUnreadNotifications(token);
       setState(() {
         _notifications = notifications;
       });

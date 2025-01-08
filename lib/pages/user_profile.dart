@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:teamup/components/theme_provider.dart';
 import 'package:teamup/services/auth.service.dart';
-import 'package:teamup/utils/baseUrl.dart';
 import '../services/friend_service.dart';
 
 class UserProfilePages extends StatefulWidget {

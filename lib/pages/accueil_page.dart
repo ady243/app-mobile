@@ -32,7 +32,7 @@ class AccueilPage extends StatelessWidget {
             const TabBar(
               tabs: [
                 Tab(text: 'Matchs Actuels'),
-                Tab(text: 'Matchs Passés'),
+                Tab(text: 'Matchs Participés'),
               ],
               indicatorColor: Colors.green,
               labelColor: Color(0xFF01BF6B),

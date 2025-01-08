@@ -3,9 +3,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:teamup/pages/friend_page.dart';
 import '../pages/accueil_page.dart';
 import '../pages/match_create_page.dart';
+import '../pages/profileScreen.dart';
 import '../pages/setting_page.dart';
 import '../pages/chat_list_page.dart';
 import '../pages/notification_page.dart';
+import '../pages/user_profile.dart';
 import 'SideNav.dart';
 import '../components/theme_provider.dart';
 import 'package:provider/provider.dart';
@@ -27,6 +29,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static final List<Widget> _widgetOptions = <Widget>[
+    const UserProfilePage(),
     const AccueilPage(),
     const FriendsPage(),
     const CreateMatchPage(),
@@ -66,11 +69,11 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   Future<void> _checkUnreadNotifications() async {
     final notificationService =
-        Provider.of<NotificationService>(context, listen: false);
+    Provider.of<NotificationService>(context, listen: false);
     final token = await notificationService.getToken();
     if (token != null) {
       final notifications =
-          await notificationService.getUnreadNotifications(token);
+      await notificationService.getUnreadNotifications(token);
       setState(() {
         _hasUnreadNotifications = notifications.isNotEmpty;
       });
@@ -96,7 +99,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   Future<void> _markNotificationsAsRead() async {
     final notificationService =
-        Provider.of<NotificationService>(context, listen: false);
+    Provider.of<NotificationService>(context, listen: false);
     final token = await notificationService.getToken();
     if (token != null) {
       await notificationService.markNotificationsAsRead(token);
@@ -105,7 +108,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   void _onSideNavItemSelected(int index) {
     setState(() {
-      _selectedIndex = index;
+      if (index < _widgetOptions.length) {
+        _selectedIndex = index;
+      } else {
+        // Handle the case where the index is out of range
+        // For example, you can navigate to a different page or show an error
+      }
     });
   }
 
@@ -128,9 +136,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
             label: 'Amis',
           ),
           BottomNavigationBarItem(
-            icon: FaIcon(FontAwesomeIcons.plusCircle,
+            icon: FaIcon(FontAwesomeIcons.futbol,
                 color: themeProvider.iconColor),
-            label: 'Créer',
+            label: 'Match',
           ),
           BottomNavigationBarItem(
             icon: Stack(

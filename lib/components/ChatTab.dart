@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:teamup/services/Chat_service.dart';
@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 // ignore: depend_on_referenced_packages
 import 'package:provider/provider.dart';
 import '../components/theme_provider.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatTab extends StatefulWidget {
   final String matchId;
@@ -26,25 +28,31 @@ class _ChatTabState extends State<ChatTab> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   String? _currentUserId;
-  Timer? _timer;
+  late WebSocketChannel _channel;
 
   @override
   void initState() {
     super.initState();
     _getCurrentUserId();
-    _fetchMessages();
-    _startAutoRefresh();
+    _initializeWebSocket();
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _channel.sink.close();
     super.dispose();
   }
 
-  void _startAutoRefresh() {
-    _timer = Timer.periodic(const Duration(seconds: 2), (timer) {
-      _fetchMessages();
+  void _initializeWebSocket() {
+    _channel = IOWebSocketChannel.connect('wss://api-teamup.onrender.com/ws');
+    _channel.stream.listen((message) {
+      final decodedMessage = jsonDecode(message);
+      if (decodedMessage['matchId'] == widget.matchId) {
+        setState(() {
+          _messages.add(decodedMessage);
+        });
+        _scrollToBottom();
+      }
     });
   }
 
@@ -92,7 +100,12 @@ class _ChatTabState extends State<ChatTab> {
     try {
       await _chatService.sendMessage(widget.matchId, _currentUserId!, message);
       _messageController.clear();
-      _fetchMessages();
+      _channel.sink.add(jsonEncode({
+        'matchId': widget.matchId,
+        'userId': _currentUserId,
+        'message': message,
+        'timestamp': DateTime.now().toIso8601String(),
+      }));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
