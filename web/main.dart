@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
 import 'backoffice/login_page_analyst.dart';
 import 'backoffice/analyst_dashboard_page.dart';
-import 'backoffice/match_detail_page.dart';
 import 'backoffice/event_management_page.dart';
-import 'services/authweb_service.dart';
+import 'widgets/auth_guard.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final authWebService = AuthWebService();
-  String initialRoute = await authWebService.isLoggedIn()
-      ? '/analystDashboard'
-      : '/loginAnalyst';
-
+void main() {
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
@@ -32,27 +25,24 @@ void main() async {
         ),
       ),
     ),
-    initialRoute: initialRoute,
+    initialRoute: '/loginAnalyst',
     routes: {
-      '/loginAnalyst': (context) => LoginPageAnalyst(),
-      '/analystDashboard': (context) => AnalystDashboardPage(),
-      '/eventManagement': (context) {
-        final matchId = ModalRoute.of(context)!.settings.arguments as String?;
-        if (matchId == null || matchId.isEmpty) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Gestion des événements')),
-            body: const Center(
-              child: Text('Aucun match sélectionné.'),
-            ),
-          );
-        }
-        return EventManagementPage(matchId: matchId);
-      },
-      '/matchDetail': (context) {
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        final matchId = args['matchId'] as String;
-        return MatchDetailPage(matchId: matchId);
-      },
+      '/loginAnalyst': (context) => const LoginPageAnalyst(),
+      '/analystDashboard': (context) => AuthGuard(
+        builder: (_) => const AnalystDashboardPage(),
+      ),
+      '/eventManagement': (context) => AuthGuard(
+        builder: (context) {
+          final matchId = ModalRoute.of(context)!.settings.arguments as String? ?? '';
+          if (matchId.isEmpty) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Gestion des événements')),
+              body: const Center(child: Text('Aucun match sélectionné.')),
+            );
+          }
+          return EventManagementPage(matchId: matchId);
+        },
+      ),
     },
   ));
 }
