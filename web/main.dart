@@ -3,8 +3,15 @@ import 'backoffice/login_page_analyst.dart';
 import 'backoffice/analyst_dashboard_page.dart';
 import 'backoffice/match_detail_page.dart';
 import 'backoffice/event_management_page.dart';
+import 'services/authweb_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final authWebService = AuthWebService();
+  String initialRoute = await authWebService.isLoggedIn()
+      ? '/analystDashboard'
+      : '/loginAnalyst';
+
   runApp(MaterialApp(
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
@@ -25,7 +32,7 @@ void main() {
         ),
       ),
     ),
-    initialRoute: '/loginAnalyst',
+    initialRoute: initialRoute,
     routes: {
       '/loginAnalyst': (context) => LoginPageAnalyst(),
       '/analystDashboard': (context) => AnalystDashboardPage(),
