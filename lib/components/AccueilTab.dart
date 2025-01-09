@@ -104,19 +104,20 @@ class _AccueilTabState extends State<AccueilTab>
       setState(() {
         _isLoading = false;
       });
+      print('Erreur lors de la récupération des matchs: $e');
     }
   }
 
   void _fetchParticipatedMatches(String userId) async {
     try {
       final participatedMatches =
-          await _matchService.getMatchesByPlayerID(userId);
+      await _matchService.getMatchesByPlayerID(userId);
       setState(() {
         _participatedMatches = participatedMatches;
       });
-      print('Participated Matches: $_participatedMatches'); // Ajout du print ici
+      print('Participated Matches: $_participatedMatches');
     } catch (e) {
-      print('Erreur lors de la récupération des matchs participés: $e'); // Ajout du print pour les erreurs
+      print('Erreur lors de la récupération des matchs participés: $e');
     }
   }
 
@@ -128,12 +129,20 @@ class _AccueilTabState extends State<AccueilTab>
     }
   }
 
-  String _formatDateTime(String dateTime) {
-    final parsedDateTime = _parseDateTime(dateTime);
-    if (parsedDateTime != null) {
-      return DateFormat('dd/MM/yyyy HH:mm').format(parsedDateTime);
+  String _formatDate(String date) {
+    final parsedDate = _parseDateTime(date);
+    if (parsedDate != null) {
+      return DateFormat('dd/MM/yyyy').format(parsedDate);
     }
-    return dateTime;
+    return date;
+  }
+
+  String _formatTime(String time) {
+    final parsedTime = _parseDateTime(time);
+    if (parsedTime != null) {
+      return DateFormat('HH:mm').format(parsedTime);
+    }
+    return time;
   }
 
   Future<BitmapDescriptor> _resizeImage(
@@ -143,14 +152,14 @@ class _AccueilTabState extends State<AccueilTab>
         targetWidth: width, targetHeight: height);
     ui.FrameInfo fi = await codec.getNextFrame();
     ByteData? resizedData =
-        await fi.image.toByteData(format: ui.ImageByteFormat.png);
+    await fi.image.toByteData(format: ui.ImageByteFormat.png);
     // ignore: deprecated_member_use
     return BitmapDescriptor.fromBytes(resizedData!.buffer.asUint8List());
   }
 
   void _loadCustomMarker() async {
     final BitmapDescriptor markerIcon =
-        await _resizeImage('assets/logos/grey_logo.png', 200, 200);
+    await _resizeImage('assets/logos/grey_logo.png', 200, 200);
     setState(() {
       _customMarkerIcon = markerIcon;
     });
@@ -196,7 +205,7 @@ class _AccueilTabState extends State<AccueilTab>
 
         _markers.add(marker);
       } catch (e) {
-        // Handle error
+        print('Erreur lors de la récupération des coordonnées pour l\'adresse $address: $e');
       }
     }
     setState(() {});
@@ -342,7 +351,7 @@ class _AccueilTabState extends State<AccueilTab>
     if (_mapController != null) {
       if (themeProvider.isDarkTheme) {
         final String style =
-            await rootBundle.loadString('assets/map_style_dark.json');
+        await rootBundle.loadString('assets/map_style_dark.json');
         _mapController!.setMapStyle(style);
       } else {
         _mapController!.setMapStyle(null);
@@ -384,81 +393,82 @@ class _AccueilTabState extends State<AccueilTab>
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
               : _matches.isEmpty
-                  ? _buildEmptyState()
-                  : Stack(
+              ? _buildEmptyState()
+              : Stack(
+            children: [
+              GoogleMap(
+                onMapCreated: (controller) {
+                  _mapController = controller;
+                  _setMapStyle();
+                },
+                initialCameraPosition: const CameraPosition(
+                  target: LatLng(48.8566, 2.3522),
+                  zoom: 6,
+                ),
+                markers: _markers,
+                mapType: MapType.normal,
+                myLocationEnabled: true,
+                myLocationButtonEnabled: true,
+                zoomControlsEnabled: true,
+              ),
+              if (_selectedMatch != null)
+                Positioned(
+                  bottom: 16,
+                  left: 16,
+                  right: 16,
+                  child: GestureDetector(
+                    onTap: () => _navigateToMatchDetails(
+                        _selectedMatch!['id'].toString()),
+                    child: Stack(
                       children: [
-                        GoogleMap(
-                          onMapCreated: (controller) {
-                            _mapController = controller;
-                            _setMapStyle();
-                          },
-                          initialCameraPosition: const CameraPosition(
-                            target: LatLng(48.8566, 2.3522),
-                            zoom: 6,
-                          ),
-                          markers: _markers,
-                          mapType: MapType.normal,
-                          myLocationEnabled: true,
-                          myLocationButtonEnabled: true,
-                          zoomControlsEnabled: true,
+                        MatchCard(
+                          description: _truncateText(
+                              _selectedMatch!['description'] ?? '',
+                              24),
+                          matchDate: _selectedMatch!['date'] ?? '',
+                          matchTime: _selectedMatch!['time'] ?? '',
+                          endTime: _selectedMatch!['end_time'] ?? '',
+                          address: _truncateText(
+                              _selectedMatch!['address'] ?? '', 24),
+                          status: _selectedMatch!['status'] ?? '',
+                          numberOfPlayers:
+                          _selectedMatch!['number_of_players'] ??
+                              0,
+                          isOrganizer:
+                          _selectedMatch!['organizer_id'] ==
+                              _userId,
+                          onJoin: () =>
+                              _joinMatch(_selectedMatch!['id']),
+                          onLeave: () =>
+                              _leaveMatch(_selectedMatch!['id']),
+                          joinedMatches: _joinedMatches,
+                          matchId: _selectedMatch!['id'].toString(),
+                          userId: _userId ?? '',
+                          showJoinLeaveButtons: _selectedMatch!['organizer_id'] != _userId,
                         ),
-                        if (_selectedMatch != null)
-                          Positioned(
-                            bottom: 16,
-                            left: 16,
-                            right: 16,
-                            child: GestureDetector(
-                              onTap: () => _navigateToMatchDetails(
-                                  _selectedMatch!['id'].toString()),
-                              child: Stack(
-                                children: [
-                                  MatchCard(
-                                    description: _truncateText(
-                                        _selectedMatch!['description'] ?? '',
-                                        24),
-                                    matchDate: _selectedMatch!['date'] ?? '',
-                                    matchTime: _selectedMatch!['time'] ?? '',
-                                    endTime: _selectedMatch!['end_time'] ?? '',
-                                    address: _truncateText(
-                                        _selectedMatch!['address'] ?? '', 24),
-                                    status: _selectedMatch!['status'] ?? '',
-                                    numberOfPlayers:
-                                        _selectedMatch!['number_of_players'] ??
-                                            0,
-                                    isOrganizer:
-                                        _selectedMatch!['organizer_id'] ==
-                                            _userId,
-                                    onJoin: () =>
-                                        _joinMatch(_selectedMatch!['id']),
-                                    onLeave: () =>
-                                        _leaveMatch(_selectedMatch!['id']),
-                                    joinedMatches: _joinedMatches,
-                                    matchId: _selectedMatch!['id'].toString(),
-                                    userId: _userId ?? '',
-                                  ),
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedMatch = null;
-                                        });
-                                      },
-                                      child: const CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor: Colors.blueGrey,
-                                        child: Icon(Icons.close,
-                                            size: 16, color: Colors.white),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedMatch = null;
+                              });
+                            },
+                            child: const CircleAvatar(
+                              radius: 12,
+                              backgroundColor: Colors.blueGrey,
+                              child: Icon(Icons.close,
+                                  size: 16, color: Colors.white),
                             ),
                           ),
+                        ),
                       ],
                     ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
@@ -467,93 +477,93 @@ class _AccueilTabState extends State<AccueilTab>
   Widget _buildParticipatedMatchesTab() {
     return _participatedMatches.isEmpty
         ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/images/image_empty.png',
+            height: 200,
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Aucun match auquel vous avez participé',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Vous n\'avez participé à aucun match.',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    )
+        : ListView.builder(
+      itemCount: _participatedMatches.length,
+      itemBuilder: (context, index) {
+        final match = _participatedMatches[index];
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+          color: _getStatusColor(match['status'] ?? 'unknown'),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            title: Text(
+              match['description'] ?? 'No Description',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Image.asset(
-                  'assets/images/image_empty.png',
-                  height: 200,
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_today, size: 16),
+                    const SizedBox(width: 8),
+                    Text(_formatDate(match['date'])),
+                  ],
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Aucun match auquel vous avez participé',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.access_time, size: 16),
+                    const SizedBox(width: 8),
+                    Text(_formatTime(match['time'])),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Vous n\'avez participé à aucun match.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        match['address'] ?? 'No Address',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.info, size: 16),
+                    const SizedBox(width: 8),
+                    Text(match['status'] ?? 'No Status'),
+                  ],
                 ),
               ],
             ),
-          )
-        : ListView.builder(
-            itemCount: _participatedMatches.length,
-            itemBuilder: (context, index) {
-              final match = _participatedMatches[index];
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                color: _getStatusColor(match['status'] ?? 'unknown'),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  title: Text(
-                    match['description'] ?? 'No Description',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(Icons.calendar_today, size: 16),
-                          const SizedBox(width: 8),
-                          Text(_formatDateTime(match['date'])),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.access_time, size: 16),
-                          const SizedBox(width: 8),
-                          Text(_formatDateTime(match['time'])),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.location_on, size: 16),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              match['address'] ?? 'No Address',
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          const Icon(Icons.info, size: 16),
-                          const SizedBox(width: 8),
-                          Text(match['status'] ?? 'No Status'),
-                        ],
-                      ),
-                    ],
-                  ),
-                  onTap: () => _navigateToMatchDetails(match['id'].toString()),
-                ),
-              );
-            },
-          );
+            onTap: () => _navigateToMatchDetails(match['id'].toString()),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildEmptyState() {

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../utils/baseUrl.dart';
 import 'auth.service.dart';
+import '../models/event_model.dart';
 
 class MatchService {
   final Dio _dio;
@@ -321,7 +322,7 @@ class MatchService {
     try {
       final accessToken = await _authService.getToken();
       final response = await _dio.get(
-        '$baseUrl/player/$playerId',
+        '$baseUrl/matchesPlayers/player/$playerId',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
 
@@ -334,6 +335,26 @@ class MatchService {
       }
     } catch (e) {
       throw Exception('Échec de la récupération des matches pour le joueur');
+    }
+  }
+
+  Future<List<Event>> getMatchEvents(String matchId) async {
+    try {
+      final accessToken = await _authService.getToken();
+      final response = await _dio.get(
+        '$baseUrl/analyst/match/$matchId/events',
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data['events'];
+        print(data);
+        return data.map((event) => Event.fromJson(event)).toList();
+      } else {
+        throw Exception('Échec de la récupération des événements du match');
+      }
+    } catch (e) {
+      throw Exception('Échec de la récupération des événements du match');
     }
   }
 }

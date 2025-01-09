@@ -64,26 +64,26 @@ class _SideNavState extends State<SideNav> {
             child: ListView(
               children: [
                 _buildListTile(FontAwesomeIcons.home, 'Accueil', Colors.blue,
-                    () => _onItemTap(0)),
+                        () => _onItemTap(0)),
                 _buildListTile(FontAwesomeIcons.userFriends, 'Amis',
                     Colors.green, () => _onItemTap(1)),
                 _buildListTile(FontAwesomeIcons.plusCircle, 'Créer',
                     Colors.orange, () => _onItemTap(2)),
                 _buildListTile(FontAwesomeIcons.comments, 'Chat', Colors.pink,
-                    () => _onItemTap(3)),
+                        () => _onItemTap(3)),
                 _buildListTile(FontAwesomeIcons.cog, 'Paramètres',
-                    Colors.purple, () => _onItemTap(5)),
+                    Colors.purple, () => _onItemTap(6)),
                 _buildListTile(
                     FontAwesomeIcons.bell, 'Notification', Colors.teal, () {
                   _onItemTap(4);
                 }),
                 _buildListTile(
                     FontAwesomeIcons.signOutAlt, 'Se déconnecter', Colors.brown,
-                    () {
-                  AuthService().logout();
-                  Navigator.pushNamedAndRemoveUntil(
-                      context, '/login', (route) => false);
-                }),
+                        () {
+                      AuthService().logout();
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, '/login', (route) => false);
+                    }),
               ],
             ),
           ),

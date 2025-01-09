@@ -222,11 +222,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
               child: ListView(
                 padding: const EdgeInsets.all(8.0),
                 children: [
-                  _buildInfoTile(FontAwesomeIcons.user, 'Bio',
+                  _buildInfoTile(FontAwesomeIcons.user, 'Bio' ?? 'Non spécifié',
                       _bio ?? 'Non spécifié', Colors.purple),
-                  _buildInfoTile(FontAwesomeIcons.mapMarkerAlt, 'Localisation',
+                  _buildInfoTile(FontAwesomeIcons.mapMarkerAlt, 'Localisation' ?? 'Non spécifié',
                       _location ?? 'Non spécifié', Colors.red),
-                  _buildInfoTile(FontAwesomeIcons.footballBall, 'Sport préféré',
+                  _buildInfoTile(FontAwesomeIcons.footballBall, 'Sport préféré' ?? 'Non spécifié',
                       _favoriteSport ?? 'Non spécifié', Colors.green),
                   const SizedBox(height: 10),
                   Container(

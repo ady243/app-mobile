@@ -92,14 +92,6 @@ class _ChatTabState extends State<ChatTab> {
       return;
     }
 
-    if (_currentUserId == _organizerId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Vous ne pouvez pas envoyer de message en tant qu\'organisateur')),
-      );
-      return;
-    }
-
     try {
       await _chatService.sendMessage(widget.matchId, _currentUserId!, message);
       _messageController.clear();

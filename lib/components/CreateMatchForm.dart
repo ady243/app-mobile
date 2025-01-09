@@ -172,9 +172,20 @@ class _CreateMatchFormState extends State<CreateMatchForm> {
           onPressed: () async {
             await widget.createMatch(_matchDate, _matchTime, _endTime);
           },
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white, backgroundColor: Colors.green, // Text color
+            padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            elevation: 5, // Shadow elevation
+          ),
           child: const Text(
             'Créer le match',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

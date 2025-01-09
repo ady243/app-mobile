@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import '../services/Match_service.dart';
-
+import 'MatchDetailsPage.dart'; // Importez la page des détails du match
 
 class MyCreatedMatchesPage extends StatefulWidget {
   final Future<void> Function(String) onDeleteMatch;
@@ -114,57 +114,67 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
     );
   }
 
+  void _navigateToMatchDetails(String matchId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MatchDetailsPage(matchId: matchId),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Glissez vers la gauche pour supprimer un match',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _matches.length,
-                    itemBuilder: (context, index) {
-                      final match = _matches[index];
-                      return Dismissible(
-                        key: Key(match['id']),
-                        direction: DismissDirection.endToStart,
-                        confirmDismiss: (direction) async {
-                          _showDeleteDialog(match['id']);
-                          return false;
-                        },
-                        background: Container(
-                          color: Colors.red,
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: const FaIcon(FontAwesomeIcons.trash,
-                              color: Colors.white),
-                        ),
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 16),
-                          child: ListTile(
-                            leading: const FaIcon(FontAwesomeIcons.futbol,
-                                color: Color(0xFF01BF6B)),
-                            title:
-                                Text(match['description'] ?? 'No Description'),
-                            subtitle: Text(
-                                _formatDate(match['match_date'] ?? 'No Date')),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+        children: [
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              'Glissez vers la gauche pour supprimer un match',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
             ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _matches.length,
+              itemBuilder: (context, index) {
+                final match = _matches[index];
+                return Dismissible(
+                  key: Key(match['id']),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (direction) async {
+                    _showDeleteDialog(match['id']);
+                    return false;
+                  },
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: const FaIcon(FontAwesomeIcons.trash,
+                        color: Colors.white),
+                  ),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 16),
+                    child: ListTile(
+                      leading: const FaIcon(FontAwesomeIcons.futbol,
+                          color: Color(0xFF01BF6B)),
+                      title:
+                      Text(match['description'] ?? 'No Description'),
+                      subtitle: Text(
+                          _formatDate(match['match_date'] ?? 'No Date')),
+                      onTap: () => _navigateToMatchDetails(match['id']),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

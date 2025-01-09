@@ -1,5 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -7,6 +6,7 @@ import 'package:web_socket_channel/status.dart' as status;
 import '../pages/user_profile.dart';
 import '../services/Match_service.dart';
 import '../services/auth.service.dart';
+import '../models/event_model.dart';
 
 class MatchInfoTab extends StatefulWidget {
   final String matchId;
@@ -34,10 +34,11 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
   late Future<Map<String, dynamic>> _matchDetails;
   late Future<List<Map<String, dynamic>>> _matchPlayers;
   late WebSocketChannel _channel;
-  List<Map<String, dynamic>> _liveEvents = [];
+  List<Event> _liveEvents = [];
   Map<String, String> _playerNames = {};
   String? _refereeId;
   bool _isOrganizer = false;
+  bool _isWebSocketConnected = false;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
     _matchPlayers = MatchService().getMatchPlayers(widget.matchId);
     _checkIfOrganizer();
     _checkIfParticipant();
+    _fetchInitialEvents();
     _connectWebSocket();
     _loadPlayerNames();
   }
@@ -56,16 +58,55 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
     super.dispose();
   }
 
+  void _fetchInitialEvents() async {
+    try {
+      final events = await MatchService().getMatchEvents(widget.matchId);
+      setState(() {
+        _liveEvents = events;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Erreur lors de la récupération des événements',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+    }
+  }
+
   void _connectWebSocket() {
     _channel = WebSocketChannel.connect(
       Uri.parse('wss://api-teamup.onrender.com/ws/events/live/${widget.matchId}'),
     );
 
-    _channel.stream.listen((message) {
-      final event = Map<String, dynamic>.from(message);
-      setState(() {
-        _liveEvents.add(event);
-      });
+    _channel.stream.listen(
+          (message) {
+        final event = Event.fromJson(jsonDecode(message));
+        setState(() {
+          _liveEvents.add(event);
+        });
+      },
+      onDone: () {
+        setState(() {
+          _isWebSocketConnected = false;
+        });
+      },
+      onError: (error) {
+        setState(() {
+          _isWebSocketConnected = false;
+        });
+      },
+    );
+
+    setState(() {
+      _isWebSocketConnected = true;
     });
   }
 
@@ -92,7 +133,7 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
       if (userInfo != null && userInfo.containsKey('id')) {
         final players = await MatchService().getMatchPlayers(widget.matchId);
         final isParticipant =
-            players.any((player) => player['id'] == userInfo['id']);
+        players.any((player) => player['id'] == userInfo['id']);
         setState(() {});
       }
     } catch (e) {
@@ -273,12 +314,26 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                             indicator: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(8.0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 4.0,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
+                            indicatorSize: TabBarIndicatorSize.tab,
                             labelColor: Colors.black,
                             unselectedLabelColor: Colors.black54,
-                            tabs: const [
-                              Tab(text: 'Participants'),
-                              Tab(text: 'Live'),
+                            tabs: [
+                              Container(
+                                width: MediaQuery.of(context).size.width / 2 - 32,
+                                child: const Tab(text: 'Participants'),
+                              ),
+                              Container(
+                                width: MediaQuery.of(context).size.width / 2 - 32,
+                                child: const Tab(text: 'Live'),
+                              ),
                             ],
                           ),
                         ),
@@ -328,17 +383,17 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                 ),
                 trailing: _isOrganizer
                     ? ElevatedButton(
-                        onPressed: () => _assignReferee(participant['id']),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: Colors.black,
-                          side: BorderSide(color: Colors.black),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
-                        child: const Text('Nommer Arbitre'),
-                      )
+                  onPressed: () => _assignReferee(participant['id']),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.black,
+                    side: BorderSide(color: Colors.black),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  child: const Text('Nommer Arbitre'),
+                )
                     : null,
                 onTap: () => _navigateToUserProfile(participant['id']),
               );
@@ -372,8 +427,9 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                   ),
                 ),
                 Column(
-                  children: _liveEvents.map((event) {
-                    final playerName = _playerNames[event['player_id']] ?? 'Unknown';
+                  children: List.generate(_liveEvents.length, (index) {
+                    final event = _liveEvents[index];
+                    final playerName = _playerNames[event.playerId] ?? 'Unknown';
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: Row(
@@ -388,22 +444,25 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                             ),
                           ),
                           Expanded(
-                            child: Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('${event['minute']}\'',
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 4.0),
-                                    Text('$playerName - ${event['event_type']}'),
-                                  ],
+                            child: Transform.translate(
+                              offset: Offset(-20, 0),
+                              child: Card(
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text('${event.minute}\'',
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4.0),
+                                      Text('$playerName - ${event.eventType}'),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -411,7 +470,7 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                         ],
                       ),
                     );
-                  }).toList(),
+                  }),
                 ),
               ],
             ),
