@@ -1,13 +1,18 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:teamup/main.dart';
 
 class FirebaseApi {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String?> retrieveFCMToken() async {
     try {
       String? token = await _firebaseMessaging.getToken();
       print('FCM Token: $token');
+      if (token != null) {
+        await _storage.write(key: 'fcmToken', value: token);
+      }
       return token;
     } catch (e) {
       print('Erreur lors de la récupération du token FCM: $e');

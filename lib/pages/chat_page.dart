@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:teamup/models/message.dart';
 
-
 import '../services/friendChat_service.dart';
 
 class ChatPage extends StatefulWidget {
@@ -59,18 +58,19 @@ class _ChatPageState extends State<ChatPage> {
         createdAt: DateTime.now(),
       );
 
+      setState(() {
+        _messages.add({
+          'text': _messageController.text,
+          'isSentByMe': true,
+          'createdAt': newMessage.createdAt,
+        });
+        _messageController.clear();
+      });
+
       try {
         await _friendChatService.sendMessage(newMessage);
-        setState(() {
-          _messages.add({
-            'text': _messageController.text,
-            'isSentByMe': true,
-            'createdAt': newMessage.createdAt,
-          });
-          _messageController.clear();
-        });
-      // ignore: empty_catches
       } catch (e) {
+        // Handle the error if needed
       }
     }
   }

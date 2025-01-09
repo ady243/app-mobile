@@ -97,14 +97,6 @@ class _SettingPageState extends State<SettingPage> {
           SettingsSection(
             title: const Text('Général'),
             tiles: <SettingsTile>[
-              SettingsTile.navigation(
-                leading: const Icon(Icons.language),
-                title: const Text('Langue'),
-                value: const Text('Français'),
-                onPressed: (context) {
-                  _showLanguageDialog(context);
-                },
-              ),
               SettingsTile.switchTile(
                 onToggle: (value) {
                   themeProvider.toggleTheme();
