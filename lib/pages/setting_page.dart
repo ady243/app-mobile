@@ -88,10 +88,6 @@ class _SettingPageState extends State<SettingPage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Paramètres'),
-        backgroundColor: themeProvider.primaryColor,
-      ),
       body: SettingsList(
         sections: [
           SettingsSection(

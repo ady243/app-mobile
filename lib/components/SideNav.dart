@@ -38,6 +38,11 @@ class _SideNavState extends State<SideNav> {
     Navigator.pop(context);
   }
 
+  void _logout() async {
+    await AuthService().logout();
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -63,27 +68,14 @@ class _SideNavState extends State<SideNav> {
           Expanded(
             child: ListView(
               children: [
-                _buildListTile(FontAwesomeIcons.home, 'Accueil', Colors.blue,
-                        () => _onItemTap(0)),
-                _buildListTile(FontAwesomeIcons.userFriends, 'Amis',
-                    Colors.green, () => _onItemTap(1)),
-                _buildListTile(FontAwesomeIcons.plusCircle, 'Créer',
-                    Colors.orange, () => _onItemTap(2)),
-                _buildListTile(FontAwesomeIcons.comments, 'Chat', Colors.pink,
-                        () => _onItemTap(3)),
+                _buildListTile(FontAwesomeIcons.user, 'Profile', Colors.blue,
+                    () => _onItemTap(0)),
                 _buildListTile(FontAwesomeIcons.cog, 'Paramètres',
-                    Colors.purple, () => _onItemTap(6)),
-                _buildListTile(
-                    FontAwesomeIcons.bell, 'Notification', Colors.teal, () {
-                  _onItemTap(4);
-                }),
-                _buildListTile(
-                    FontAwesomeIcons.signOutAlt, 'Se déconnecter', Colors.brown,
-                        () {
-                      AuthService().logout();
-                      Navigator.pushNamedAndRemoveUntil(
-                          context, '/login', (route) => false);
-                    }),
+                    Colors.purple, () => _onItemTap(1)),
+                _buildListTile(FontAwesomeIcons.trophy, 'Match Participés',
+                    Colors.orange, () => _onItemTap(2)),
+                _buildListTile(FontAwesomeIcons.signOutAlt, 'Se déconnecter',
+                    Colors.brown, _logout),
               ],
             ),
           ),

@@ -28,6 +28,7 @@ class _ChatTabState extends State<ChatTab> {
   String? _currentUserId;
   String? _organizerId;
   Timer? _timer;
+  bool _isParticipant = false;
 
   @override
   void initState() {
@@ -63,6 +64,19 @@ class _ChatTabState extends State<ChatTab> {
         _organizerId = matchDetails['organizer_id'];
       });
     }
+
+    _checkIfParticipant();
+  }
+
+  void _checkIfParticipant() async {
+    if (_currentUserId == null) return;
+
+    final players = await _matchService.getMatchPlayers(widget.matchId);
+    final isParticipant =
+        players.any((player) => player['id'] == _currentUserId);
+    setState(() {
+      _isParticipant = isParticipant;
+    });
   }
 
   void _fetchMessages() async {
@@ -86,6 +100,23 @@ class _ChatTabState extends State<ChatTab> {
       return;
     }
 
+    if (!_isParticipant && _currentUserId != _organizerId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Vous ne pouvez pas envoyer de message sans être inscrit dans ce match',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
     final message = _messageController.text;
 
     if (message.isEmpty) {
@@ -100,7 +131,7 @@ class _ChatTabState extends State<ChatTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Vous ne pouvez pas envoyer de message sans être inscrit dans ce match',
+            'Erreur lors de l\'envoi du message',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
@@ -170,7 +201,8 @@ class _ChatTabState extends State<ChatTab> {
               },
             ),
           ),
-          if (_currentUserId != null)
+          if (_currentUserId != null &&
+              (_isParticipant || _currentUserId == _organizerId))
             _buildMessageInput(theme, themeProvider)
           else
             const Padding(
@@ -194,7 +226,7 @@ class _ChatTabState extends State<ChatTab> {
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       child: Row(
         mainAxisAlignment:
-        isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isCurrentUser) _buildAvatar(userId, username),
@@ -272,39 +304,39 @@ class _ChatTabState extends State<ChatTab> {
       ),
       child: _currentUserId == null
           ? const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text(
-            'Vous ne pouvez pas envoyer de messages sans être connecté.'),
-      )
+              padding: EdgeInsets.all(16.0),
+              child: Text(
+                  'Vous ne pouvez pas envoyer de messages sans être connecté.'),
+            )
           : Row(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: theme.inputDecorationTheme.fillColor,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: TextField(
-                controller: _messageController,
-                decoration: const InputDecoration(
-                  hintText: 'Entrez votre message...',
-                  border: InputBorder.none,
-                  contentPadding:
-                  EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.inputDecorationTheme.fillColor,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: TextField(
+                      controller: _messageController,
+                      decoration: const InputDecoration(
+                        hintText: 'Entrez votre message...',
+                        border: InputBorder.none,
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                CircleAvatar(
+                  backgroundColor: themeProvider.primaryColor,
+                  child: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: _sendMessage,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 8),
-          CircleAvatar(
-            backgroundColor: themeProvider.primaryColor,
-            child: IconButton(
-              icon: const Icon(Icons.send, color: Colors.white),
-              onPressed: _sendMessage,
-            ),
-          ),
-        ],
-      ),
     );
   }
 

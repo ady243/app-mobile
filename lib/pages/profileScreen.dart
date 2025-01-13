@@ -150,17 +150,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Mon Profil',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: themeProvider.primaryColor,
-      ),
       body: Container(
         color: theme.scaffoldBackgroundColor,
         child: Column(
@@ -224,10 +213,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 children: [
                   _buildInfoTile(FontAwesomeIcons.user, 'Bio' ?? 'Non spécifié',
                       _bio ?? 'Non spécifié', Colors.purple),
-                  _buildInfoTile(FontAwesomeIcons.mapMarkerAlt, 'Localisation' ?? 'Non spécifié',
-                      _location ?? 'Non spécifié', Colors.red),
-                  _buildInfoTile(FontAwesomeIcons.footballBall, 'Sport préféré' ?? 'Non spécifié',
-                      _favoriteSport ?? 'Non spécifié', Colors.green),
+                  _buildInfoTile(
+                      FontAwesomeIcons.mapMarkerAlt,
+                      'Localisation' ?? 'Non spécifié',
+                      _location ?? 'Non spécifié',
+                      Colors.red),
+                  _buildInfoTile(
+                      FontAwesomeIcons.footballBall,
+                      'Sport préféré' ?? 'Non spécifié',
+                      _favoriteSport ?? 'Non spécifié',
+                      Colors.green),
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(16.0),

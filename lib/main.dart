@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:teamup/components/theme_provider.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:teamup/services/notification_service.dart';
-import 'package:teamup/pages/notification_page.dart';
+
 import 'package:teamup/pages/login_page.dart';
 import 'package:teamup/pages/signup_page.dart';
 import 'package:teamup/entry/entry_point.dart';
@@ -68,8 +68,17 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  void _checkLoginStatus() async {
+  Future<void> _checkLoginStatus() async {
     bool loggedIn = await AuthService().isLoggedIn();
+    if (!loggedIn) {
+      // Essayez de rafraîchir le token
+      try {
+        await AuthService().refreshToken();
+        loggedIn = await AuthService().isLoggedIn();
+      } catch (e) {
+        loggedIn = false;
+      }
+    }
     setState(() {
       _isLoggedIn = loggedIn;
     });
@@ -104,10 +113,6 @@ class _MyAppState extends State<MyApp> {
         _showNotification(message);
       }
     });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      _handleNotificationClick(message);
-    });
   }
 
   void _showNotification(RemoteMessage message) {
@@ -119,21 +124,11 @@ class _MyAppState extends State<MyApp> {
             message.notification!.body ?? 'Vous avez reçu une notification'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _handleNotificationClick(message);
-            },
-            child: const Text('Voir'),
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
         ],
       ),
-    );
-  }
-
-  void _handleNotificationClick(RemoteMessage message) {
-    navigatorKey.currentState?.pushNamed(
-      '/notification',
-      arguments: message,
     );
   }
 
@@ -163,7 +158,6 @@ class _MyAppState extends State<MyApp> {
           '/login': (context) => const LoginPage(),
           '/signup': (context) => const SignupPage(),
           '/home': (context) => const EntryPoint(),
-          '/notification': (context) => const NotificationPage(),
         },
       ),
     );

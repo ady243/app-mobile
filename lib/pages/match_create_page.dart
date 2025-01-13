@@ -181,25 +181,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(80.0),
-          child: AppBar(
-            backgroundColor: themeProvider.primaryColor,
-            title: const Text(
-              'Mes Matchs',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.white,
-              ),
-            ),
-            centerTitle: true,
-          ),
-        ),
         body: Column(
           children: [
             const SizedBox(height: 10),

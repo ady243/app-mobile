@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:teamup/components/theme_provider.dart';
 import 'package:teamup/services/friend_service.dart';
 import 'package:teamup/services/auth.service.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -52,37 +50,10 @@ class _ChatListPageState extends State<ChatListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+
 
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80.0),
-        child: AppBar(
-          backgroundColor: themeProvider.primaryColor,
-          centerTitle: true,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(30.0),
-            child: Container(
-              color: themeProvider.primaryColor,
-              padding: const EdgeInsets.only(top: 5.0, bottom: 10.0),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Liste des amis',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-      backgroundColor: themeProvider.backgroundColor,
+ 
       body: Column(
         children: [
           Expanded(

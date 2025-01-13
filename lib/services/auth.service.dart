@@ -135,8 +135,7 @@ class AuthService {
             key: 'accessToken', value: response.data['accessToken']);
         await _storage.write(
             key: 'refreshToken', value: response.data['refreshToken']);
-        await _storage.write(
-            key: 'fcmToken', value: fcmToken); // Stocker le token FCM
+        await _storage.write(key: 'fcmToken', value: fcmToken);
         return true;
       } else {
         throw Exception('Erreur lors de la connexion avec Google.');
@@ -240,7 +239,6 @@ class AuthService {
     try {
       await _storage.delete(key: 'accessToken');
       await _storage.delete(key: 'refreshToken');
-      // Ne pas supprimer le token FCM
     } catch (e) {
       rethrow;
     }
@@ -293,6 +291,34 @@ class AuthService {
       }
     } catch (e) {
       throw Exception('Erreur lors de la récupération des utilisateurs: $e');
+    }
+  }
+
+  Future<void> refreshToken() async {
+    try {
+      final refreshToken = await _storage.read(key: 'refreshToken');
+      if (refreshToken == null) {
+        throw Exception('No refresh token available');
+      }
+
+      final response = await _dio.post(
+        '$baseUrl/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+
+      if (response.statusCode == 200 &&
+          response.data['accessToken'] != null &&
+          response.data['refreshToken'] != null) {
+        await _storage.write(
+            key: 'accessToken', value: response.data['accessToken']);
+        await _storage.write(
+            key: 'refreshToken', value: response.data['refreshToken']);
+      } else {
+        throw Exception('Erreur lors du rafraîchissement du token.');
+      }
+    } catch (e) {
+      await logout();
+      rethrow;
     }
   }
 }

@@ -1,6 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:teamup/main.dart';
 
 class FirebaseApi {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
@@ -35,10 +34,8 @@ class FirebaseApi {
     if (message.data['type'] == 'new_message' ||
         message.data['type'] == 'friend_request' ||
         message.data['type'] == 'match_update') {
-      navigatorKey.currentState?.pushNamed(
-        '/notification',
-        arguments: message,
-      );
+    } else {
+      print('Unknown message type: ${message.data['type']}');
     }
   }
 

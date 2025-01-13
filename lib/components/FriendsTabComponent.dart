@@ -8,14 +8,14 @@ import 'package:teamup/services/auth.service.dart';
 import 'package:teamup/pages/user_profile.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-class FriendsTabPage extends StatefulWidget {
-  const FriendsTabPage({super.key});
+class FriendsTabComponent extends StatefulWidget {
+  const FriendsTabComponent({super.key});
 
   @override
-  _FriendsTabPageState createState() => _FriendsTabPageState();
+  _FriendsTabComponentState createState() => _FriendsTabComponentState();
 }
 
-class _FriendsTabPageState extends State<FriendsTabPage>
+class _FriendsTabComponentState extends State<FriendsTabComponent>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<dynamic> _allUsers = [];
@@ -38,8 +38,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _fetchCurrentUser();
     _searchController.addListener(_onSearchChanged);
 
-    _channel = WebSocketChannel.connect(
-        Uri.parse('ws:https://api-teamup.onrender.com/ws'));
+    _channel =
+        WebSocketChannel.connect(Uri.parse('wss://api-teamup.onrender.com/ws'));
 
     _channel.stream.listen((message) {
       // Handle WebSocket messages
@@ -67,6 +67,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
     _searchController.removeListener(_onSearchChanged);
     _channel.sink.close();
     _timer?.cancel();
+    _tabController
+        .dispose(); // Ajoutez cette ligne pour nettoyer le TabController
     super.dispose();
   }
 
@@ -78,9 +80,8 @@ class _FriendsTabPageState extends State<FriendsTabPage>
       });
       _fetchAllUsers();
       _fetchFriends();
-    // ignore: empty_catches
-    } catch (e) {
-    }
+      // ignore: empty_catches
+    } catch (e) {}
   }
 
   Future<void> _fetchAllUsers() async {
@@ -298,54 +299,60 @@ class _FriendsTabPageState extends State<FriendsTabPage>
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: themeProvider.primaryColor,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              child: Stack(
-                children: [
-                  const Tab(text: 'Demandes'),
-                  if (_hasNewFriendRequests)
-                    Positioned(
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: const Text(
-                          '',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 8,
+    return Column(
+      children: [
+        Container(
+          color: themeProvider.isDarkTheme ? Colors.black : Colors.white,
+          child: TabBar(
+            controller: _tabController,
+            tabs: [
+              Tab(
+                child: Stack(
+                  children: [
+                    const Tab(text: 'Demandes'),
+                    if (_hasNewFriendRequests)
+                      Positioned(
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(1),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                          textAlign: TextAlign.center,
+                          constraints: const BoxConstraints(
+                            minWidth: 12,
+                            minHeight: 12,
+                          ),
+                          child: const Text(
+                            '',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Tab(text: 'Tous les utilisateurs'),
-          ],
+              const Tab(text: 'Tous les utilisateurs'),
+            ],
+            indicatorColor: Colors.green,
+            labelColor: const Color(0xFF01BF6B),
+            unselectedLabelColor: Colors.green,
+          ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _friendRequestsTab(),
-          _allUsersTab(),
-        ],
-      ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _friendRequestsTab(),
+              _allUsersTab(),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

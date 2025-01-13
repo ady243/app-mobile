@@ -29,8 +29,6 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 20),
                 _inputFields(context),
                 const SizedBox(height: 10),
-                _forgotPassword(context),
-                const SizedBox(height: 10),
                 _signup(context),
               ],
             ),
@@ -165,30 +163,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _forgotPassword(BuildContext context) {
-    return TextButton(
-      onPressed: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'Fonctionnalité non disponible',
-              style: TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-        );
-      },
-      child: const Text(
-        "Mot de passe oublié ?",
-        style: TextStyle(color: Colors.green),
-      ),
     );
   }
 
