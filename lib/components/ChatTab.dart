@@ -28,7 +28,6 @@ class _ChatTabState extends State<ChatTab> {
   String? _currentUserId;
   String? _organizerId;
   Timer? _timer;
-  bool _isParticipant = false;
 
   @override
   void initState() {
@@ -64,19 +63,6 @@ class _ChatTabState extends State<ChatTab> {
         _organizerId = matchDetails['organizer_id'];
       });
     }
-
-    _checkIfParticipant();
-  }
-
-  void _checkIfParticipant() async {
-    if (_currentUserId == null) return;
-
-    final players = await _matchService.getMatchPlayers(widget.matchId);
-    final isParticipant =
-        players.any((player) => player['id'] == _currentUserId);
-    setState(() {
-      _isParticipant = isParticipant;
-    });
   }
 
   void _fetchMessages() async {
@@ -100,23 +86,6 @@ class _ChatTabState extends State<ChatTab> {
       return;
     }
 
-    if (!_isParticipant && _currentUserId != _organizerId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Vous ne pouvez pas envoyer de message sans être inscrit dans ce match',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-      return;
-    }
-
     final message = _messageController.text;
 
     if (message.isEmpty) {
@@ -131,7 +100,7 @@ class _ChatTabState extends State<ChatTab> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Erreur lors de l\'envoi du message',
+            'Vous ne pouvez pas envoyer de message sans être inscrit dans ce match',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.red,
@@ -201,8 +170,7 @@ class _ChatTabState extends State<ChatTab> {
               },
             ),
           ),
-          if (_currentUserId != null &&
-              (_isParticipant || _currentUserId == _organizerId))
+          if (_currentUserId != null)
             _buildMessageInput(theme, themeProvider)
           else
             const Padding(

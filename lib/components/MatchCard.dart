@@ -7,6 +7,8 @@ import 'package:web_socket_channel/io.dart';
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../services/Match_service.dart';
+import '../services/auth.service.dart';
 
 class MatchCard extends StatefulWidget {
   final String description;
@@ -24,6 +26,7 @@ class MatchCard extends StatefulWidget {
   final String matchId;
   final String userId;
   final bool showJoinLeaveButtons;
+  final Set<String> playerIds;
 
   const MatchCard({
     super.key,
@@ -42,10 +45,10 @@ class MatchCard extends StatefulWidget {
     required this.matchId,
     required this.userId,
     this.showJoinLeaveButtons = true,
+    required this.playerIds,
   });
 
   @override
-  // ignore: library_private_types_in_public_api
   _MatchCardState createState() => _MatchCardState();
 }
 
@@ -53,12 +56,13 @@ class _MatchCardState extends State<MatchCard> {
   late DateTime _matchDateTime;
   late DateTime _endDateTime;
   String _status = '';
-  late WebSocketChannel _channel;
+  WebSocketChannel? _channel;
   final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   Timer? _timer;
   Timer? _reconnectTimer;
   bool _isJoined = false;
+  bool _isCurrentUserOrganizer = false;
 
   @override
   void initState() {
@@ -69,6 +73,7 @@ class _MatchCardState extends State<MatchCard> {
     _initializeNotifications();
     _startStatusUpdater();
     _checkIfUserIsInMatch();
+    _fetchMatchDetails();
   }
 
   void _initializeDateTime() {
@@ -88,7 +93,7 @@ class _MatchCardState extends State<MatchCard> {
   void _initializeWebSocket() {
     try {
       _channel = IOWebSocketChannel.connect('$baseUrl/matches/status/updates');
-      _channel.stream.listen(
+      _channel!.stream.listen(
         (message) {
           _updateStatus(message);
         },
@@ -150,7 +155,6 @@ class _MatchCardState extends State<MatchCard> {
           _showNotification(json['status']);
         }
       }
-      // ignore: empty_catches
     } catch (e) {}
   }
 
@@ -261,9 +265,23 @@ class _MatchCardState extends State<MatchCard> {
     });
   }
 
+  void _fetchMatchDetails() async {
+    try {
+      final matchDetails = await MatchService().getMatchDetails(widget.matchId);
+      final userInfo = await AuthService().getUserInfo();
+      if (userInfo != null && matchDetails['organizer_id'] == userInfo['id']) {
+        setState(() {
+          _isCurrentUserOrganizer = true;
+        });
+      }
+    } catch (e) {
+      // Handle error
+    }
+  }
+
   @override
   void dispose() {
-    _channel.sink.close();
+    _channel?.sink.close();
     _timer?.cancel();
     _reconnectTimer?.cancel();
     super.dispose();
@@ -389,38 +407,24 @@ class _MatchCardState extends State<MatchCard> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  if (widget.showJoinLeaveButtons && _status != 'completed')
+                  if (widget.showJoinLeaveButtons &&
+                      _status != 'completed' &&
+                      !_isCurrentUserOrganizer)
                     Align(
                       alignment: Alignment.centerRight,
-                      child: widget.isOrganizer
-                          ? ElevatedButton(
-                              onPressed: null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                              ),
-                              child: const Text(
-                                'Vous êtes le créateur',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            )
-                          : ElevatedButton(
-                              onPressed:
-                                  _isJoined ? widget.onLeave : widget.onJoin,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    _isJoined ? Colors.red : Colors.green,
-                              ),
-                              child: Text(
-                                _isJoined
-                                    ? 'Quitter le match'
-                                    : 'Réjoindre le match',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                      child: ElevatedButton(
+                        onPressed: _isJoined ? widget.onLeave : widget.onJoin,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _isJoined ? Colors.red : Colors.green,
+                        ),
+                        child: Text(
+                          _isJoined ? 'Quitter le match' : 'Rejoindre le match',
+                          style: const TextStyle(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),

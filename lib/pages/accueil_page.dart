@@ -91,6 +91,10 @@ class _AccueilPageState extends State<AccueilPage>
   }
 
   void _fetchMatches() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final matches = await _matchService.getMatches();
       setState(() {
@@ -438,14 +442,26 @@ class _AccueilPageState extends State<AccueilPage>
                                     _selectedMatch!['number_of_players'] ?? 0,
                                 isOrganizer:
                                     _selectedMatch!['organizer_id'] == _userId,
-                                onJoin: () => _joinMatch(_selectedMatch!['id']),
-                                onLeave: () =>
-                                    _leaveMatch(_selectedMatch!['id']),
+                                onJoin: () {
+                                  print('Join button pressed');
+                                  print('Match ID: ${_selectedMatch!['id']}');
+                                  print('User ID: $_userId');
+                                  _joinMatch(_selectedMatch!['id']);
+                                },
+                                onLeave: () {
+                                  print('Leave button pressed');
+                                  print('Match ID: ${_selectedMatch!['id']}');
+                                  print('User ID: $_userId');
+                                  _leaveMatch(_selectedMatch!['id']);
+                                },
                                 joinedMatches: _joinedMatches,
                                 matchId: _selectedMatch!['id'].toString(),
                                 userId: _userId ?? '',
                                 showJoinLeaveButtons:
                                     _selectedMatch!['organizer_id'] != _userId,
+                                playerIds:
+                                    _selectedMatch!['player_ids']?.toSet() ??
+                                        {}, // Ajoutez cette ligne
                               ),
                               Positioned(
                                 top: 8,

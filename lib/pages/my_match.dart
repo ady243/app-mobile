@@ -24,6 +24,10 @@ class _MyCreatedMatchesPageState extends State<MyCreatedMatchesPage> {
   }
 
   Future<void> _fetchMatches() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
       final matches = await _matchService.getMatchesByOrganizer();
       setState(() {

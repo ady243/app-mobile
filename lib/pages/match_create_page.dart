@@ -8,8 +8,6 @@ import 'dart:convert';
 import 'dart:async';
 import '../services/Match_service.dart';
 import 'my_match.dart';
-import 'package:provider/provider.dart';
-import '../components/theme_provider.dart';
 
 class CreateMatchPage extends StatefulWidget {
   const CreateMatchPage({super.key});
@@ -30,6 +28,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   final String _googleApiKey = 'AIzaSyAdNnq6m3qBSXKlKK5gbQJMdbd22OWeHCg';
 
   Timer? _debounce;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -78,13 +77,30 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       'number_of_players': numberOfPlayers,
     };
 
+    setState(() {
+      _isLoading = true;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
     try {
       await _matchService.createMatch(matchData);
       Fluttertoast.showToast(msg: 'Match créé avec succès !');
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(); // Close the loader dialog
+      Navigator.of(context).pop(); // Close the create match page
     } catch (e) {
+      Navigator.of(context).pop(); // Close the loader dialog
       Fluttertoast.showToast(msg: 'Erreur lors de la création du match : $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -133,7 +149,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
         }
       }
     } catch (error) {
-      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(

@@ -14,8 +14,9 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
-  TextEditingController();
+      TextEditingController();
   final AuthService _authService = AuthService();
+  bool _isLoading = false;
 
   void _register() async {
     final username = _usernameController.text.trim();
@@ -74,11 +75,24 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
+    setState(() {
+      _isLoading = true;
+    });
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
     try {
       await _authService.register(username, email, password);
 
+      Navigator.of(context).pop(); // Close the loader dialog
+
       showDialog(
-        // ignore: use_build_context_synchronously
         context: context,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(
@@ -109,6 +123,8 @@ class _SignupPageState extends State<SignupPage> {
         ),
       );
     } catch (e) {
+      Navigator.of(context).pop(); // Close the loader dialog
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
@@ -122,6 +138,10 @@ class _SignupPageState extends State<SignupPage> {
           ),
         ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -139,7 +159,9 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               _buildHeader(),
               _buildInputFields(),
-              _buildRegisterButton(),
+              _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : _buildRegisterButton(),
               const Center(child: Text("Ou")),
               _buildLoginOption(),
             ],

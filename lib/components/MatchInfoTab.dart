@@ -38,6 +38,7 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
   Map<String, String> _playerNames = {};
   String? _refereeId;
   bool _isOrganizer = false;
+  bool _isParticipant = false;
   bool _isWebSocketConnected = false;
 
   @override
@@ -83,11 +84,12 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
 
   void _connectWebSocket() {
     _channel = WebSocketChannel.connect(
-      Uri.parse('wss://api-teamup.onrender.com/ws/events/live/${widget.matchId}'),
+      Uri.parse(
+          'wss://api-teamup.onrender.com/ws/events/live/${widget.matchId}'),
     );
 
     _channel.stream.listen(
-          (message) {
+      (message) {
         final event = Event.fromJson(jsonDecode(message));
         setState(() {
           _liveEvents.add(event);
@@ -112,7 +114,9 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
 
   void _loadPlayerNames() async {
     final players = await MatchService().getMatchPlayers(widget.matchId);
-    final playerNames = {for (var player in players) player['id']: player['username']};
+    final playerNames = {
+      for (var player in players) player['id']: player['username']
+    };
     setState(() {
       _playerNames = playerNames.cast<String, String>();
     });
@@ -124,6 +128,9 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
       setState(() {
         _isOrganizer = true;
       });
+      print('User is the organizer');
+    } else {
+      print('User is not the organizer');
     }
   }
 
@@ -133,8 +140,15 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
       if (userInfo != null && userInfo.containsKey('id')) {
         final players = await MatchService().getMatchPlayers(widget.matchId);
         final isParticipant =
-        players.any((player) => player['id'] == userInfo['id']);
-        setState(() {});
+            players.any((player) => player['id'] == userInfo['id']);
+        setState(() {
+          _isParticipant = isParticipant;
+        });
+        if (isParticipant) {
+          print('User is a participant in the match');
+        } else {
+          print('User is not a participant in the match');
+        }
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -327,11 +341,13 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                             unselectedLabelColor: Colors.black54,
                             tabs: [
                               Container(
-                                width: MediaQuery.of(context).size.width / 2 - 32,
+                                width:
+                                    MediaQuery.of(context).size.width / 2 - 32,
                                 child: const Tab(text: 'Participants'),
                               ),
                               Container(
-                                width: MediaQuery.of(context).size.width / 2 - 32,
+                                width:
+                                    MediaQuery.of(context).size.width / 2 - 32,
                                 child: const Tab(text: 'Live'),
                               ),
                             ],
@@ -383,17 +399,17 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                 ),
                 trailing: _isOrganizer
                     ? ElevatedButton(
-                  onPressed: () => _assignReferee(participant['id']),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: Colors.black,
-                    side: BorderSide(color: Colors.black),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  child: const Text('Nommer Arbitre'),
-                )
+                        onPressed: () => _assignReferee(participant['id']),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: Colors.black,
+                          side: BorderSide(color: Colors.black),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                        child: const Text('Nommer Analyseur'),
+                      )
                     : null,
                 onTap: () => _navigateToUserProfile(participant['id']),
               );
@@ -429,13 +445,15 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                 Column(
                   children: List.generate(_liveEvents.length, (index) {
                     final event = _liveEvents[index];
-                    final playerName = _playerNames[event.playerId] ?? 'Unknown';
+                    final playerName =
+                        _playerNames[event.playerId] ?? 'Unknown';
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: Row(
                         children: [
                           Container(
-                            margin: const EdgeInsets.only(left: 12.0, right: 8.0),
+                            margin:
+                                const EdgeInsets.only(left: 12.0, right: 8.0),
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
@@ -454,7 +472,8 @@ class _MatchInfoTabState extends State<MatchInfoTab> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text('${event.minute}\'',
                                           style: const TextStyle(

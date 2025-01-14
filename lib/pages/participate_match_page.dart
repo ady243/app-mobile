@@ -25,6 +25,10 @@ class _ParticipatedMatchesPageState extends State<ParticipatedMatchesPage> {
   }
 
   void _fetchParticipatedMatches() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final userInfo = await _authService.getUserInfo();
     if (userInfo != null && userInfo.containsKey('id')) {
       final userId = userInfo['id'];
@@ -84,75 +88,77 @@ class _ParticipatedMatchesPageState extends State<ParticipatedMatchesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : _participatedMatches.isEmpty
-            ? _buildEmptyState()
-            : ListView.builder(
-                itemCount: _participatedMatches.length,
-                itemBuilder: (context, index) {
-                  final match = _participatedMatches[index];
-                  return Card(
-                    margin:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    color: _getStatusColor(match['status'] ?? 'unknown'),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      title: Text(
-                        match['description'] ?? 'No Description',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
+    return Scaffold(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _participatedMatches.isEmpty
+              ? _buildEmptyState()
+              : ListView.builder(
+                  itemCount: _participatedMatches.length,
+                  itemBuilder: (context, index) {
+                    final match = _participatedMatches[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 16),
+                      color: _getStatusColor(match['status'] ?? 'unknown'),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(
+                          match['description'] ?? 'No Description',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(Icons.calendar_today, size: 16),
-                              const SizedBox(width: 8),
-                              Text(_formatDate(match['date'])),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.access_time, size: 16),
-                              const SizedBox(width: 8),
-                              Text(_formatTime(match['time'])),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.location_on, size: 16),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  match['address'] ?? 'No Address',
-                                  overflow: TextOverflow.ellipsis,
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.calendar_today, size: 16),
+                                const SizedBox(width: 8),
+                                Text(_formatDate(match['date'])),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.access_time, size: 16),
+                                const SizedBox(width: 8),
+                                Text(_formatTime(match['time'])),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    match['address'] ?? 'No Address',
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(Icons.info, size: 16),
-                              const SizedBox(width: 8),
-                              Text(match['status'] ?? 'No Status'),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(Icons.info, size: 16),
+                                const SizedBox(width: 8),
+                                Text(match['status'] ?? 'No Status'),
+                              ],
+                            ),
+                          ],
+                        ),
+                        onTap: () =>
+                            _navigateToMatchDetails(match['id'].toString()),
                       ),
-                      onTap: () =>
-                          _navigateToMatchDetails(match['id'].toString()),
-                    ),
-                  );
-                },
-              );
+                    );
+                  },
+                ),
+    );
   }
 
   Widget _buildEmptyState() {

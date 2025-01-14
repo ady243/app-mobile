@@ -29,6 +29,7 @@ class _FriendsTabComponentState extends State<FriendsTabComponent>
   String? _currentUserId;
   final Map<String, String> _friendRequestStatus = {};
   bool _hasNewFriendRequests = false;
+  bool _isLoading = true;
   Timer? _timer;
 
   @override
@@ -80,8 +81,11 @@ class _FriendsTabComponentState extends State<FriendsTabComponent>
       });
       _fetchAllUsers();
       _fetchFriends();
-      // ignore: empty_catches
-    } catch (e) {}
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _fetchAllUsers() async {
@@ -101,6 +105,10 @@ class _FriendsTabComponentState extends State<FriendsTabComponent>
       _fetchFriendRequests();
     } catch (e) {
       print('Failed to fetch users: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -344,13 +352,15 @@ class _FriendsTabComponentState extends State<FriendsTabComponent>
           ),
         ),
         Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _friendRequestsTab(),
-              _allUsersTab(),
-            ],
-          ),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _friendRequestsTab(),
+                    _allUsersTab(),
+                  ],
+                ),
         ),
       ],
     );

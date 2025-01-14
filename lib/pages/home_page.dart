@@ -57,11 +57,11 @@ class _HomePageState extends State<HomePage> {
           ? null
           : CustomAppBar(
               title: _selectedIndex == 1
-                  ? 'Amis'
+                  ? 'Team rélations'
                   : _selectedIndex == 2
                       ? 'Créer un Match'
                       : _selectedIndex == 3
-                          ? 'Chats'
+                          ? 'Conversations'
                           : _sideNavIndex == 0
                               ? 'Mon Profil'
                               : _sideNavIndex == 1

@@ -17,12 +17,13 @@ class _ChatListPageState extends State<ChatListPage> {
   final FriendService _friendService = FriendService();
   final AuthService _authService = AuthService();
   String? _currentUserId;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchFriends();
     _fetchCurrentUser();
+    _fetchFriends();
   }
 
   Future<void> _fetchFriends() async {
@@ -33,6 +34,10 @@ class _ChatListPageState extends State<ChatListPage> {
       });
     } catch (e) {
       print('Failed to fetch friends: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -42,80 +47,78 @@ class _ChatListPageState extends State<ChatListPage> {
       setState(() {
         _currentUserId = userInfo?['id'];
       });
-    // ignore: empty_catches
     } catch (e) {
-  
+      // ignore: empty_catches
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
- 
       body: Column(
         children: [
           Expanded(
-            child: _friends.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Vous n\'avez pas encore des amis à envoyer un message.',
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _friends.length,
-                    itemBuilder: (context, index) {
-                      final friend = _friends[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            vertical: 5, horizontal: 10),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            child: friend['profile_picture'] != null &&
-                                    friend['profile_picture'].isNotEmpty
-                                ? Image.network(friend['profile_picture'])
-                                : Text(friend['username'][0]),
-                          ),
-                          title: Row(
-                            children: [
-                              Text(friend['username']),
-                              const SizedBox(width: 8),
-                            ],
-                          ),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    UserProfilePages(userId: friend['id']),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _friends.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Vous n\'avez pas encore des amis à envoyer un message.',
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _friends.length,
+                        itemBuilder: (context, index) {
+                          final friend = _friends[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 5, horizontal: 10),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                child: friend['profile_picture'] != null &&
+                                        friend['profile_picture'].isNotEmpty
+                                    ? Image.network(friend['profile_picture'])
+                                    : Text(friend['username'][0]),
                               ),
-                            );
-                          },
-                          trailing: IconButton(
-                            icon: const FaIcon(FontAwesomeIcons.comment),
-                            onPressed: () {
-                              if (_currentUserId != null) {
+                              title: Row(
+                                children: [
+                                  Text(friend['username']),
+                                  const SizedBox(width: 8),
+                                ],
+                              ),
+                              onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ChatPage(
-                                      friendName: friend['username'],
-                                      senderId: _currentUserId!,
-                                      receiverId: friend['id'],
-                                      receiverFcmToken: friend['fcm_token'],
-                                    ),
+                                    builder: (context) =>
+                                        UserProfilePages(userId: friend['id']),
                                   ),
                                 );
-                              } else {
-                                print('Current user ID is null');
-                              }
-                            },
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                              },
+                              trailing: IconButton(
+                                icon: const FaIcon(FontAwesomeIcons.comment),
+                                onPressed: () {
+                                  if (_currentUserId != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatPage(
+                                          friendName: friend['username'],
+                                          senderId: _currentUserId!,
+                                          receiverId: friend['id'],
+                                          receiverFcmToken: friend['fcm_token'],
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    print('Current user ID is null');
+                                  }
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
