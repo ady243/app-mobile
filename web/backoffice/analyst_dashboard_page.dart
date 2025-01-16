@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 import '../services/authweb_service.dart';
 import '../services/match_service.dart';
 
@@ -71,6 +72,15 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
       return '$formattedDate \u2022 $formattedTime';
     } catch (e) {
       return 'Format de date invalide';
+    }
+  }
+
+  String encodeToUtf8(String input) {
+    try {
+      final bytes = latin1.encode(input);
+      return utf8.decode(bytes);
+    } catch (e) {
+      return 'Adresse invalide';
     }
   }
 
@@ -159,7 +169,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
             cells: [
               DataCell(Text(match['description'] ?? 'N/A')),
               DataCell(Text(formatDateTime(match['date'] ?? '', match['time'] ?? ''))),
-              DataCell(Text(match['address'] ?? 'Non renseignée')),
+              DataCell(Text(encodeToUtf8(match['address'] ?? 'Non renseignée'))),
               DataCell(
                 ElevatedButton(
                   onPressed: () {
