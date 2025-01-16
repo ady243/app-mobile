@@ -3,9 +3,10 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../services/authweb_service.dart';
 import '../services/match_service.dart';
+import '../widgets/sidebar.dart';
 
 class AnalystDashboardPage extends StatefulWidget {
-  const AnalystDashboardPage({super.key});
+  const AnalystDashboardPage({Key? key}) : super(key: key);
 
   @override
   State<AnalystDashboardPage> createState() => _AnalystDashboardPageState();
@@ -69,7 +70,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
       final formattedDate = DateFormat('dd-MM-yyyy').format(dateTime);
       final formattedTime = DateFormat('HH:mm').format(dateTime);
 
-      return '$formattedDate \u2022 $formattedTime';
+      return '$formattedDate • $formattedTime';
     } catch (e) {
       return 'Format de date invalide';
     }
@@ -82,74 +83,6 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
     } catch (e) {
       return 'Adresse invalide';
     }
-  }
-
-  Widget _buildSidebar() {
-    return Container(
-      width: 250,
-      color: Colors.green[800],
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/logos/grey_logo.png',
-                  height: 60,
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'TeamUp',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Analyste',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontStyle: FontStyle.italic,
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.sports_soccer, color: Colors.white),
-            title: const Text(
-              'Gestion des matchs',
-              style: TextStyle(color: Colors.white),
-            ),
-            onTap: () {},
-          ),
-          const Divider(color: Colors.white54),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.white),
-            title: const Text(
-              'Déconnexion',
-              style: TextStyle(color: Colors.white),
-            ),
-            onTap: _logout,
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildMatchTable(List<Map<String, dynamic>> matches) {
@@ -192,7 +125,10 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
     return Scaffold(
       body: Row(
         children: [
-          _buildSidebar(),
+          Sidebar(
+            onLogout: _logout,
+            onNavigateDashboard: () {},
+          ),
           Expanded(
             child: Column(
               children: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../services/authweb_service.dart';
+import '../widgets/sidebar.dart';
 import '../utils/baseUrl.dart';
 
 class EventManagementPage extends StatefulWidget {
@@ -37,8 +38,18 @@ class _EventManagementPageState extends State<EventManagementPage> {
         '$baseUrl/matchesPlayers/${widget.matchId}',
         options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
       );
+
       setState(() {
-        _players = List<Map<String, dynamic>>.from(response.data['players'] ?? []);
+        // Filtrer les doublons par `id`
+        final uniquePlayers = <String, Map<String, dynamic>>{};
+        for (var player in response.data['players'] ?? []) {
+          uniquePlayers[player['id']] = player;
+        }
+
+        _players = uniquePlayers.values.toList();
+        if (_players.isNotEmpty && _selectedPlayerId == null) {
+          _selectedPlayerId = _players.first['id'];
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -133,78 +144,50 @@ class _EventManagementPageState extends State<EventManagementPage> {
     }
   }
 
+  void _navigateToDashboard() {
+    Navigator.pushReplacementNamed(context, '/analystDashboard');
+  }
+
+  void _logout() async {
+    await _authWebService.logout();
+    Navigator.pushReplacementNamed(context, '/loginAnalyst');
+  }
+
+  Widget _buildEventList() {
+    if (_isEventsLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_events.isEmpty) {
+      return const Center(child: Text("Aucun événement enregistré pour ce match."));
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _events.length,
+      itemBuilder: (context, index) {
+        final event = _events[index];
+        return ListTile(
+          title: Text("${event['event_type']} à la ${event['minute']}e minute"),
+          subtitle: Text("Joueur : ${event['player']['username']}"),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () => _deleteEvent(event['id']),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Row(
         children: [
-          Container(
-            width: 250,
-            color: Colors.green[800],
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/logos/grey_logo.png',
-                        height: 60,
-                      ),
-                      const SizedBox(height: 10),
-                      const Text(
-                        'TeamUp',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Analyste',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ListTile(
-                  leading: const Icon(Icons.sports_soccer, color: Colors.white),
-                  title: const Text(
-                    'Gestion des matchs',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {},
-                ),
-                const Divider(color: Colors.white54),
-                ListTile(
-                  leading: const Icon(Icons.logout, color: Colors.white),
-                  title: const Text(
-                    'Déconnexion',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  onTap: () {
-                    _authWebService.logout();
-                    Navigator.pushReplacementNamed(context, '/loginAnalyst');
-                  },
-                ),
-              ],
-            ),
+          Sidebar(
+            onLogout: _logout,
+            onNavigateDashboard: _navigateToDashboard,
           ),
           Expanded(
             child: Column(
@@ -224,12 +207,12 @@ class _EventManagementPageState extends State<EventManagementPage> {
                   ),
                   child: const Text(
                     'Gestion des événements',
-                    textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 Expanded(
@@ -244,7 +227,9 @@ class _EventManagementPageState extends State<EventManagementPage> {
                         ),
                         DropdownButton<String>(
                           isExpanded: true,
-                          value: _selectedPlayerId,
+                          value: _players.any((player) => player['id'] == _selectedPlayerId)
+                              ? _selectedPlayerId
+                              : null,
                           items: _players.map((player) {
                             return DropdownMenuItem<String>(
                               value: player['id'],
@@ -301,39 +286,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
                           "Événements enregistrés :",
                           style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        _isEventsLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : _events.isEmpty
-                            ? const Text("Aucun événement enregistré pour ce match.")
-                            : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _events.length,
-                          itemBuilder: (context, index) {
-                            final event = _events[index];
-                            return ListTile(
-                              title: Text(
-                                  "Joueur : ${event['player']['username']}"),
-                              subtitle: Text(
-                                  "${event['event_type']} à la ${event['minute']}e minute"),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit,
-                                        color: Colors.blue),
-                                    onPressed: () {},
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red),
-                                    onPressed: () {},
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+                        _buildEventList(),
                       ],
                     ),
                   ),
