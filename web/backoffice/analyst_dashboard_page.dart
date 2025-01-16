@@ -10,10 +10,8 @@ class AnalystDashboardPage extends StatefulWidget {
   State<AnalystDashboardPage> createState() => _AnalystDashboardPageState();
 }
 
-class _AnalystDashboardPageState extends State<AnalystDashboardPage>
-    with SingleTickerProviderStateMixin {
+class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
   late MatchService _matchService;
-  late TabController _tabController;
   bool _isLoading = true;
   List<Map<String, dynamic>> _futureMatches = [];
   List<Map<String, dynamic>> _pastMatches = [];
@@ -23,14 +21,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
   void initState() {
     super.initState();
     _matchService = MatchService(_authWebService);
-    _tabController = TabController(length: 2, vsync: this);
     _fetchMatches();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   void _fetchMatches() async {
@@ -39,9 +30,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
       final now = DateTime.now();
 
       final futureMatches = matches
-          .where((match) =>
-      DateTime.parse(match['date']).isAfter(now) ||
-          DateTime.parse(match['date']).isAtSameMomentAs(now))
+          .where((match) => DateTime.parse(match['date']).isAfter(now))
           .toList();
 
       final pastMatches = matches
@@ -74,75 +63,183 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
       final date = DateTime.parse(dateTime);
       final formattedDate = DateFormat('dd-MM-yyyy').format(date);
       final formattedTime = DateFormat('HH:mm').format(date);
-      return 'Date : $formattedDate\nHeure : $formattedTime';
+      return '$formattedDate \u2022 $formattedTime';
     } catch (e) {
-      print('Erreur de formatage : $e');
       return 'Format de date invalide';
     }
   }
 
-  Widget _buildMatchList(List<Map<String, dynamic>> matches) {
-    return matches.isEmpty
-        ? const Center(child: Text('Aucun match trouvé.'))
-        : ListView.builder(
-      itemCount: matches.length,
-      itemBuilder: (context, index) {
-        final match = matches[index];
-        return Card(
-          margin: const EdgeInsets.all(8.0),
-          child: ListTile(
-            leading: const Icon(Icons.sports_soccer,
-                size: 40, color: Colors.green),
-            title: Text(
-                match['description'] ?? 'Match sans description'),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(formatDateTime(match['date'] ?? '')),
-                Text(
-                    'Adresse : ${match['address'] ?? 'Non renseignée'}'),
+  Widget _buildSidebar() {
+    return Container(
+      width: 250,
+      color: Colors.green[800],
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 4,
+                  offset: Offset(0, 2),
+                ),
               ],
             ),
-            onTap: () {
-              final matchId = match['id'];
-              Navigator.pushNamed(
-                context,
-                '/eventManagement/$matchId',
-              );
-            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/logos/logo_green.png', // Remplacez par le chemin correct
+                  height: 60,
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'TeamUp',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Analyste',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white70,
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      },
+          ListTile(
+            leading: const Icon(Icons.sports_soccer, color: Colors.white),
+            title: const Text(
+              'Gestion des matchs',
+              style: TextStyle(color: Colors.white),
+            ),
+            onTap: () {},
+          ),
+          const Divider(color: Colors.white54),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.white),
+            title: const Text(
+              'Déconnexion',
+              style: TextStyle(color: Colors.white),
+            ),
+            onTap: _logout,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMatchTable(List<Map<String, dynamic>> matches) {
+    return matches.isEmpty
+        ? const Center(child: Text('Aucun match trouvé.'))
+        : SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Description')),
+          DataColumn(label: Text('Date')),
+          DataColumn(label: Text('Adresse')),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows: matches.map((match) {
+          return DataRow(
+            cells: [
+              DataCell(Text(match['description'] ?? 'N/A')),
+              DataCell(Text(formatDateTime(match['date'] ?? ''))),
+              DataCell(Text(match['address'] ?? 'Non renseignée')),
+              DataCell(
+                ElevatedButton(
+                  onPressed: () {
+                    final matchId = match['id'];
+                    Navigator.pushNamed(
+                        context, '/eventManagement/$matchId');
+                  },
+                  child: const Text('Détails'),
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard Analyste'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Déconnexion',
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Mes matchs'),
-            Tab(text: 'Anciens matchs'),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-        controller: _tabController,
+      body: Row(
         children: [
-          _buildMatchList(_futureMatches),
-          _buildMatchList(_pastMatches),
+          _buildSidebar(),
+          Expanded(
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Dashboard Analyste',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : DefaultTabController(
+                    length: 2,
+                    child: Column(
+                      children: [
+                        const TabBar(
+                          tabs: [
+                            Tab(text: 'Matchs à venir'),
+                            Tab(text: 'Anciens matchs'),
+                          ],
+                          labelColor: Colors.green,
+                          unselectedLabelColor: Colors.black54,
+                        ),
+                        Expanded(
+                          child: TabBarView(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: _buildMatchTable(_futureMatches),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: _buildMatchTable(_pastMatches),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
