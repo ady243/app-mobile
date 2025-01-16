@@ -18,7 +18,6 @@ class _LoginPageState extends State<LoginPageAnalyst> {
     return Scaffold(
       body: Row(
         children: [
-          // Section gauche (Image d'en-tête ou illustration)
           Expanded(
             flex: 2,
             child: Container(
@@ -57,7 +56,6 @@ class _LoginPageState extends State<LoginPageAnalyst> {
             ),
           ),
 
-          // Section droite (Formulaire de connexion)
           Expanded(
             flex: 3,
             child: Center(
@@ -130,16 +128,6 @@ class _LoginPageState extends State<LoginPageAnalyst> {
                       child: const Text(
                         'Connexion',
                         style: TextStyle(fontSize: 18),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextButton(
-                      onPressed: () {
-                        // Action pour le mot de passe oublié
-                      },
-                      child: const Text(
-                        'Mot de passe oublié ?',
-                        style: TextStyle(color: Colors.green),
                       ),
                     ),
                   ],

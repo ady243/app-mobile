@@ -40,7 +40,6 @@ class _EventManagementPageState extends State<EventManagementPage> {
       );
 
       setState(() {
-        // Filtrer les doublons par `id`
         final uniquePlayers = <String, Map<String, dynamic>>{};
         for (var player in response.data['players'] ?? []) {
           uniquePlayers[player['id']] = player;
