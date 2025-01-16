@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class Sidebar extends StatelessWidget {
-  final VoidCallback onLogout;
-  final VoidCallback onNavigateDashboard;
+  final Function onLogout;
+  final Function onNavigateDashboard;
+  final List<Widget>? extraItems;
 
   const Sidebar({
     required this.onLogout,
     required this.onNavigateDashboard,
+    this.extraItems,
     Key? key,
   }) : super(key: key);
 
@@ -58,13 +60,15 @@ class Sidebar extends StatelessWidget {
             ),
           ),
           ListTile(
-            leading: const Icon(Icons.sports_soccer, color: Colors.white),
+            leading: const Icon(Icons.dashboard, color: Colors.white),
             title: const Text(
-              'Gestion des matchs',
+              'Dashboard',
               style: TextStyle(color: Colors.white),
             ),
-            onTap: onNavigateDashboard,
+            onTap: () => onNavigateDashboard(),
           ),
+          const Divider(color: Colors.white54),
+          if (extraItems != null) ...extraItems!,
           const Divider(color: Colors.white54),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.white),
@@ -72,7 +76,7 @@ class Sidebar extends StatelessWidget {
               'Déconnexion',
               style: TextStyle(color: Colors.white),
             ),
-            onTap: onLogout,
+            onTap: () => onLogout(),
           ),
         ],
       ),

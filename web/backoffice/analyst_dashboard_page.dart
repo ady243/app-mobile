@@ -17,6 +17,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _futureMatches = [];
   List<Map<String, dynamic>> _pastMatches = [];
+  String _currentView = "Matchs à venir";
   final AuthWebService _authWebService = AuthWebService();
 
   @override
@@ -58,6 +59,12 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
   void _logout() async {
     await _authWebService.logout();
     Navigator.pushReplacementNamed(context, '/loginAnalyst');
+  }
+
+  void _changeView(String view) {
+    setState(() {
+      _currentView = view;
+    });
   }
 
   String formatDateTime(String date, String time) {
@@ -128,6 +135,24 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
           Sidebar(
             onLogout: _logout,
             onNavigateDashboard: () {},
+            extraItems: [
+              ListTile(
+                leading: const Icon(Icons.sports_soccer, color: Colors.white),
+                title: const Text(
+                  'Matchs à venir',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => _changeView('Matchs à venir'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.history, color: Colors.white),
+                title: const Text(
+                  'Anciens matchs',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => _changeView('Anciens matchs'),
+              ),
+            ],
           ),
           Expanded(
             child: Column(
@@ -145,10 +170,10 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
                       ),
                     ],
                   ),
-                  child: const Text(
-                    'Dashboard Analyste',
+                  child: Text(
+                    _currentView,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -158,34 +183,11 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
                 Expanded(
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator())
-                      : DefaultTabController(
-                    length: 2,
-                    child: Column(
-                      children: [
-                        const TabBar(
-                          tabs: [
-                            Tab(text: 'Matchs à venir'),
-                            Tab(text: 'Anciens matchs'),
-                          ],
-                          labelColor: Colors.green,
-                          unselectedLabelColor: Colors.black54,
-                        ),
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: _buildMatchTable(_futureMatches),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: _buildMatchTable(_pastMatches),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                      : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _currentView == "Matchs à venir"
+                        ? _buildMatchTable(_futureMatches)
+                        : _buildMatchTable(_pastMatches),
                   ),
                 ),
               ],
