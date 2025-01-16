@@ -1,36 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 import '../services/authweb_service.dart';
 import '../services/match_service.dart';
+import '../widgets/sidebar.dart';
 
 class AnalystDashboardPage extends StatefulWidget {
-  const AnalystDashboardPage({super.key});
+  const AnalystDashboardPage({Key? key}) : super(key: key);
 
   @override
   State<AnalystDashboardPage> createState() => _AnalystDashboardPageState();
 }
 
-class _AnalystDashboardPageState extends State<AnalystDashboardPage>
-    with SingleTickerProviderStateMixin {
+class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
   late MatchService _matchService;
-  late TabController _tabController;
   bool _isLoading = true;
   List<Map<String, dynamic>> _futureMatches = [];
   List<Map<String, dynamic>> _pastMatches = [];
+  String _currentView = "Matchs à venir";
   final AuthWebService _authWebService = AuthWebService();
 
   @override
   void initState() {
     super.initState();
     _matchService = MatchService(_authWebService);
-    _tabController = TabController(length: 2, vsync: this);
     _fetchMatches();
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
   }
 
   void _fetchMatches() async {
@@ -39,9 +33,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
       final now = DateTime.now();
 
       final futureMatches = matches
-          .where((match) =>
-      DateTime.parse(match['date']).isAfter(now) ||
-          DateTime.parse(match['date']).isAtSameMomentAs(now))
+          .where((match) => DateTime.parse(match['date']).isAfter(now))
           .toList();
 
       final pastMatches = matches
@@ -69,80 +61,138 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage>
     Navigator.pushReplacementNamed(context, '/loginAnalyst');
   }
 
-  String formatDateTime(String dateTime) {
+  void _changeView(String view) {
+    setState(() {
+      _currentView = view;
+    });
+  }
+
+  String formatDateTime(String date, String time) {
     try {
-      final date = DateTime.parse(dateTime);
-      final formattedDate = DateFormat('dd-MM-yyyy').format(date);
-      final formattedTime = DateFormat('HH:mm').format(date);
-      return 'Date : $formattedDate\nHeure : $formattedTime';
+      final datePart = date.split('T')[0];
+      final timePart = time.split('T')[1];
+
+      final dateTime = DateTime.parse('$datePart $timePart');
+
+      final formattedDate = DateFormat('dd-MM-yyyy').format(dateTime);
+      final formattedTime = DateFormat('HH:mm').format(dateTime);
+
+      return '$formattedDate • $formattedTime';
     } catch (e) {
-      print('Erreur de formatage : $e');
       return 'Format de date invalide';
     }
   }
 
-  Widget _buildMatchList(List<Map<String, dynamic>> matches) {
+  String encodeToUtf8(String input) {
+    try {
+      final bytes = latin1.encode(input);
+      return utf8.decode(bytes);
+    } catch (e) {
+      return 'Adresse invalide';
+    }
+  }
+
+  Widget _buildMatchTable(List<Map<String, dynamic>> matches) {
     return matches.isEmpty
         ? const Center(child: Text('Aucun match trouvé.'))
-        : ListView.builder(
-      itemCount: matches.length,
-      itemBuilder: (context, index) {
-        final match = matches[index];
-        return Card(
-          margin: const EdgeInsets.all(8.0),
-          child: ListTile(
-            leading: const Icon(Icons.sports_soccer,
-                size: 40, color: Colors.green),
-            title: Text(
-                match['description'] ?? 'Match sans description'),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(formatDateTime(match['date'] ?? '')),
-                Text(
-                    'Adresse : ${match['address'] ?? 'Non renseignée'}'),
-              ],
-            ),
-            onTap: () {
-              final matchId = match['id'];
-              Navigator.pushNamed(
-                context,
-                '/eventManagement/$matchId',
-              );
-            },
-          ),
-        );
-      },
+        : SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        columns: const [
+          DataColumn(label: Text('Description')),
+          DataColumn(label: Text('Date')),
+          DataColumn(label: Text('Adresse')),
+          DataColumn(label: Text('Actions')),
+        ],
+        rows: matches.map((match) {
+          return DataRow(
+            cells: [
+              DataCell(Text(match['description'] ?? 'N/A')),
+              DataCell(Text(formatDateTime(match['date'] ?? '', match['time'] ?? ''))),
+              DataCell(Text(encodeToUtf8(match['address'] ?? 'Non renseignée'))),
+              DataCell(
+                ElevatedButton(
+                  onPressed: () {
+                    final matchId = match['id'];
+                    Navigator.pushNamed(
+                        context, '/eventManagement/$matchId');
+                  },
+                  child: const Text('Détails'),
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard Analyste'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Déconnexion',
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Mes matchs'),
-            Tab(text: 'Anciens matchs'),
-          ],
-        ),
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-        controller: _tabController,
+      body: Row(
         children: [
-          _buildMatchList(_futureMatches),
-          _buildMatchList(_pastMatches),
+          Sidebar(
+            onLogout: _logout,
+            onNavigateDashboard: () {},
+            extraItems: [
+              ListTile(
+                leading: const Icon(Icons.sports_soccer, color: Colors.white),
+                title: const Text(
+                  'Matchs à venir',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => _changeView('Matchs à venir'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.history, color: Colors.white),
+                title: const Text(
+                  'Anciens matchs',
+                  style: TextStyle(color: Colors.white),
+                ),
+                onTap: () => _changeView('Anciens matchs'),
+              ),
+            ],
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  decoration: const BoxDecoration(
+                    color: Colors.green,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    _currentView,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: _currentView == "Matchs à venir"
+                        ? _buildMatchTable(_futureMatches)
+                        : _buildMatchTable(_pastMatches),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
