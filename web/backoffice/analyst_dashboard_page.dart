@@ -58,11 +58,16 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
     Navigator.pushReplacementNamed(context, '/loginAnalyst');
   }
 
-  String formatDateTime(String dateTime) {
+  String formatDateTime(String date, String time) {
     try {
-      final date = DateTime.parse(dateTime);
-      final formattedDate = DateFormat('dd-MM-yyyy').format(date);
-      final formattedTime = DateFormat('HH:mm').format(date);
+      final datePart = date.split('T')[0];
+      final timePart = time.split('T')[1];
+
+      final dateTime = DateTime.parse('$datePart $timePart');
+
+      final formattedDate = DateFormat('dd-MM-yyyy').format(dateTime);
+      final formattedTime = DateFormat('HH:mm').format(dateTime);
+
       return '$formattedDate \u2022 $formattedTime';
     } catch (e) {
       return 'Format de date invalide';
@@ -91,7 +96,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Image.asset(
-                  'assets/logos/logo_green.png', // Remplacez par le chemin correct
+                  'assets/logos/grey_logo.png',
                   height: 60,
                 ),
                 const SizedBox(height: 10),
@@ -153,7 +158,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
           return DataRow(
             cells: [
               DataCell(Text(match['description'] ?? 'N/A')),
-              DataCell(Text(formatDateTime(match['date'] ?? ''))),
+              DataCell(Text(formatDateTime(match['date'] ?? '', match['time'] ?? ''))),
               DataCell(Text(match['address'] ?? 'Non renseignée')),
               DataCell(
                 ElevatedButton(
