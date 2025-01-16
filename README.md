@@ -91,7 +91,6 @@ Chaque utilisateur dispose d'une page de profil contenant :
 
 ## Organisation des matchs
 
-- Une fois le nombre de participants requis atteint, le match est verrouillé et ne peut plus accepter d'autres joueurs.
 - Une IA suggère la formation et le placement optimal des joueurs en fonction des statistiques et préférences.
 
 ---
