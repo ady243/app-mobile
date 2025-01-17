@@ -21,22 +21,15 @@ class Sidebar extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: Colors.green,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
+            decoration: BoxDecoration(
+              color: Colors.green[800],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Image.asset(
                   'assets/logos/grey_logo.png',
-                  height: 60,
+                  height: 150,
                 ),
                 const SizedBox(height: 10),
                 const Text(

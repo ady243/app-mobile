@@ -88,7 +88,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
       final bytes = latin1.encode(input);
       return utf8.decode(bytes);
     } catch (e) {
-      return 'Adresse invalide';
+      return 'Text invalide';
     }
   }
 
@@ -107,7 +107,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
         rows: matches.map((match) {
           return DataRow(
             cells: [
-              DataCell(Text(match['description'] ?? 'N/A')),
+              DataCell(Text(encodeToUtf8(match['description']) ?? 'N/A')),
               DataCell(Text(formatDateTime(match['date'] ?? '', match['time'] ?? ''))),
               DataCell(Text(encodeToUtf8(match['address'] ?? 'Non renseignée'))),
               DataCell(
@@ -130,6 +130,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Row(
         children: [
           Sidebar(
@@ -161,7 +162,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   decoration: BoxDecoration(
-                    color: Colors.green[800],
+                    color: Colors.white,
                   ),
                   child: Text(
                     _currentView,
@@ -169,7 +170,7 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                 ),
