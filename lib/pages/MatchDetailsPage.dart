@@ -35,6 +35,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
   String? _selectedParticipantId;
   String? _currentUserId;
   bool _isLoading = true;
+  bool _isAiLoading = false; // Nouvel état pour le chargement de l'IA
 
   @override
   void initState() {
@@ -77,7 +78,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
   Future<void> _fetchMatchDetails() async {
     try {
       final matchDetailsJson =
-          await _matchService.getMatchDetails(widget.matchId);
+      await _matchService.getMatchDetails(widget.matchId);
       print('Match details fetched: $matchDetailsJson');
       final matchDetails = Match.fromJson(matchDetailsJson);
       print('Organizer ID: ${matchDetails.organizer.id}');
@@ -148,12 +149,16 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
   }
 
   Future<void> _fetchAndShowAiResponse() async {
+    setState(() {
+      _isAiLoading = true; // Démarre le chargement de l'IA
+    });
     try {
       final aiData = await _matchService.isAi(widget.matchId);
       if (aiData.containsKey('formation')) {
         setState(() {
           _aiResponse = _cleanAiResponse(aiData['formation'].join('\n'));
           _showAiResponse = true;
+          _isAiLoading = false; // Arrête le chargement de l'IA
         });
         _controller.forward();
       } else {
@@ -163,6 +168,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
       setState(() {
         _aiResponse = "Erreur lors de la récupération de la suggestion d'IA.";
         _showAiResponse = true;
+        _isAiLoading = false; // Arrête le chargement de l'IA
       });
       _controller.forward();
     }
@@ -178,7 +184,7 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
       await _matchService.leaveMatch(widget.matchId);
       setState(() {
         _participants.removeWhere(
-            (participant) => participant['id'] == _selectedParticipantId);
+                (participant) => participant['id'] == _selectedParticipantId);
         _selectedParticipantId = null;
       });
       ScaffoldMessenger.of(context).showSnackBar(
@@ -224,57 +230,73 @@ class _MatchDetailsPageState extends State<MatchDetailsPage>
         backgroundColor: themeProvider.primaryColor,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 20),
+            Text(
+              'Chargement des données...',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+          ],
+        ),
+      )
           : Stack(
-              children: [
-                Column(
+        children: [
+          Column(
+            children: [
+              TopBarDetail(
+                currentIndex: _currentTabIndex,
+                onTabSelected: _onTabSelected,
+                hasNewMessages: _hasNewMessages,
+              ),
+              Expanded(
+                child: IndexedStack(
+                  index: _currentTabIndex,
                   children: [
-                    TopBarDetail(
-                      currentIndex: _currentTabIndex,
-                      onTabSelected: _onTabSelected,
-                      hasNewMessages: _hasNewMessages,
+                    MatchInfoTab(
+                      matchId: widget.matchId,
+                      organizerId: _organizerId,
+                      participants: _participants,
+                      selectedParticipantId: _selectedParticipantId,
+                      onParticipantSelected: (String? newValue) {
+                        setState(() {
+                          _selectedParticipantId = newValue;
+                        });
+                        if (newValue != null) {
+                          _assignReferee(newValue);
+                        }
+                      },
+                      onLeaveMatch: _organizerId == _currentUserId
+                          ? () {}
+                          : _handleLeaveMatch,
                     ),
-                    Expanded(
-                      child: IndexedStack(
-                        index: _currentTabIndex,
-                        children: [
-                          MatchInfoTab(
-                            matchId: widget.matchId,
-                            organizerId: _organizerId,
-                            participants: _participants,
-                            selectedParticipantId: _selectedParticipantId,
-                            onParticipantSelected: (String? newValue) {
-                              setState(() {
-                                _selectedParticipantId = newValue;
-                              });
-                              if (newValue != null) {
-                                _assignReferee(newValue);
-                              }
-                            },
-                            onLeaveMatch: _organizerId == _currentUserId
-                                ? () {}
-                                : _handleLeaveMatch,
-                          ),
-                          ChatTab(matchId: widget.matchId),
-                        ],
-                      ),
-                    ),
+                    ChatTab(matchId: widget.matchId),
                   ],
                 ),
-                if (_showAiResponse)
-                  AiSuggestionOverlay(
-                    aiResponse: _aiResponse,
-                    onClose: _closeAiResponse,
-                    offsetAnimation: _offsetAnimation,
-                  ),
-              ],
+              ),
+            ],
+          ),
+          if (_showAiResponse)
+            AiSuggestionOverlay(
+              aiResponse: _aiResponse,
+              onClose: _closeAiResponse,
+              offsetAnimation: _offsetAnimation,
             ),
+        ],
+      ),
       floatingActionButton: _currentTabIndex == 0
           ? FloatingActionButton(
-              onPressed: _fetchAndShowAiResponse,
-              backgroundColor: const Color(0xFFFFFFFF),
-              child: Image.asset('assets/images/ia.png'),
-            )
+        onPressed: _isAiLoading ? null : _fetchAndShowAiResponse,
+        backgroundColor: const Color(0xFFFFFFFF),
+        child: _isAiLoading
+            ? CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+        )
+            : Image.asset('assets/images/ia.png'),
+      )
           : null,
     );
   }
