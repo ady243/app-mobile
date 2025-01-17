@@ -160,15 +160,8 @@ class _AnalystDashboardPageState extends State<AnalystDashboardPage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 20),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+                  decoration: BoxDecoration(
+                    color: Colors.green[800],
                   ),
                   child: Text(
                     _currentView,

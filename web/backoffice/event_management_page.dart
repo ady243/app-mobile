@@ -194,15 +194,8 @@ class _EventManagementPageState extends State<EventManagementPage> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 20),
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
+                  decoration: BoxDecoration(
+                    color: Colors.green[800],
                   ),
                   child: const Text(
                     'Gestion des événements',
