@@ -143,6 +143,98 @@ class _EventManagementPageState extends State<EventManagementPage> {
     }
   }
 
+  void _editEvent(Map<String, dynamic> event) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String? editedPlayerId = event['player']['id'];
+        String? editedEventType = event['event_type'];
+        int? editedMinute = event['minute'];
+
+        return AlertDialog(
+          title: const Text('Modifier l\'événement'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<String>(
+                isExpanded: true,
+                value: editedPlayerId,
+                items: _players.map((player) {
+                  return DropdownMenuItem<String>(
+                    value: player['id'],
+                    child: Text(player['username'] ?? "Joueur inconnu"),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    editedPlayerId = value;
+                  });
+                },
+              ),
+              DropdownButton<String>(
+                isExpanded: true,
+                value: editedEventType,
+                items: _eventTypes.map((event) {
+                  return DropdownMenuItem<String>(
+                    value: event,
+                    child: Text(event),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    editedEventType = value;
+                  });
+                },
+              ),
+              TextField(
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(hintText: "Minute"),
+                controller: TextEditingController(text: editedMinute.toString()),
+                onChanged: (value) {
+                  setState(() {
+                    editedMinute = int.tryParse(value);
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  final accessToken = await _authWebService.getToken();
+                  await _dio.put(
+                    '$baseUrl/analyst/events/${event['id']}',
+                    options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+                    data: {
+                      "player_id": editedPlayerId,
+                      "event_type": editedEventType,
+                      "minute": editedMinute,
+                    },
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Événement modifié avec succès !')),
+                  );
+                  Navigator.pop(context);
+                  _fetchMatchEvents();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur lors de la modification : $e')),
+                  );
+                }
+              },
+              child: const Text('Sauvegarder'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _navigateToDashboard() {
     Navigator.pushReplacementNamed(context, '/analystDashboard');
   }
@@ -170,9 +262,18 @@ class _EventManagementPageState extends State<EventManagementPage> {
         return ListTile(
           title: Text("${event['event_type']} à la ${event['minute']}e minute"),
           subtitle: Text("Joueur : ${event['player']['username']}"),
-          trailing: IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () => _deleteEvent(event['id']),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: Colors.blue),
+                onPressed: () => _editEvent(event),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _deleteEvent(event['id']),
+              ),
+            ],
           ),
         );
       },
@@ -182,6 +283,7 @@ class _EventManagementPageState extends State<EventManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Row(
         children: [
           Sidebar(
@@ -195,14 +297,14 @@ class _EventManagementPageState extends State<EventManagementPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 20),
                   decoration: BoxDecoration(
-                    color: Colors.green[800],
+                    color: Colors.white,
                   ),
                   child: const Text(
                     'Gestion des événements',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                     textAlign: TextAlign.center,
                   ),
